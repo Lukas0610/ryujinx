@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Threading;
+using PeanutButter.INI;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
@@ -29,11 +30,14 @@ namespace Ryujinx.Ava
         public static string ConfigurationPath { get; private set; }
         public static bool PreviewerDetached { get; private set; }
         public static bool UseHardwareAcceleration { get; private set; }
+        public static INIFile UserAppConfig { get; private set; }
 
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial int MessageBoxA(IntPtr hWnd, [MarshalAs(UnmanagedType.LPStr)] string text, [MarshalAs(UnmanagedType.LPStr)] string caption, uint type);
 
         private const uint MbIconwarning = 0x30;
+
+        private const int UserAppConfigDepth = 20;
 
         public static void Main(string[] args)
         {
@@ -95,8 +99,18 @@ namespace Ryujinx.Ava
             AppDomain.CurrentDomain.UnhandledException += (sender, e) => ProcessUnhandledException(e.ExceptionObject as Exception, e.IsTerminating);
             AppDomain.CurrentDomain.ProcessExit += (sender, e) => Exit();
 
+            // Attempt to load persistent user-configuration
+            UserAppConfig = LoadUserAppConfig();
+
             // Setup base data directory.
-            AppDataManager.Initialize(CommandLineState.BaseDirPathArg);
+            var baseDirPathConf = UserAppConfig?.GetValue("Ryujinx", "BaseDirPath", null);
+
+            if (!string.IsNullOrWhiteSpace(CommandLineState.BaseDirPathArg))
+                AppDataManager.Initialize(CommandLineState.BaseDirPathArg);
+            else if (!string.IsNullOrWhiteSpace(baseDirPathConf))
+                AppDataManager.Initialize(baseDirPathConf);
+            else
+                AppDataManager.Initialize(null);
 
             // Initialize the configuration.
             ConfigurationState.Initialize();
@@ -133,6 +147,29 @@ namespace Ryujinx.Ava
             {
                 MainWindow.DeferLoadApplication(CommandLineState.LaunchPathArg, CommandLineState.LaunchApplicationId, CommandLineState.StartFullscreenArg);
             }
+        }
+
+        public static INIFile LoadUserAppConfig()
+        {
+            var directory = AppDomain.CurrentDomain.BaseDirectory;
+            var prevDirectory = directory;
+            var depth = UserAppConfigDepth;
+
+            do
+            {
+                var appConfigPath = Path.Combine(directory, "Ryujinx.user.ini");
+                if (File.Exists(appConfigPath))
+                    return new INIFile(appConfigPath);
+
+                // Look for the user app-config in the parent directory next
+                prevDirectory = directory;
+                directory = Path.GetDirectoryName(directory);
+
+                // Repeat the loop until either the parent-directory equals the previous directory
+                // or we exceeded the built-in iteration limit
+            } while (directory != prevDirectory && (--depth) > 0);
+
+            return null;
         }
 
         public static void ReloadConfig()
