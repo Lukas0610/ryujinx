@@ -1247,24 +1247,32 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         private void ThreadStart()
         {
-            _schedulerWaitEvent.WaitOne();
-            KernelStatic.SetKernelContext(KernelContext, this);
-
-            if (_customThreadStart != null)
+            Thread.BeginThreadAffinity();
+            try
             {
-                _customThreadStart();
+                _schedulerWaitEvent.WaitOne();
+                KernelStatic.SetKernelContext(KernelContext, this);
 
-                // Ensure that anything trying to join the HLE thread is unblocked.
-                Exit();
-                HandlePostSyscall();
+                if (_customThreadStart != null)
+                {
+                    _customThreadStart();
+
+                    // Ensure that anything trying to join the HLE thread is unblocked.
+                    Exit();
+                    HandlePostSyscall();
+                }
+                else
+                {
+                    Owner.Context.Execute(Context, _entrypoint);
+                }
+
+                Context.Dispose();
+                _schedulerWaitEvent.Dispose();
             }
-            else
+            finally
             {
-                Owner.Context.Execute(Context, _entrypoint);
+                Thread.EndThreadAffinity();
             }
-
-            Context.Dispose();
-            _schedulerWaitEvent.Dispose();
         }
 
         public void MakeUnschedulable()
