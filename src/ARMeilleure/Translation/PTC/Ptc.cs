@@ -811,7 +811,7 @@ namespace ARMeilleure.Translation.PTC
 
             Thread progressReportThread = new(ReportProgress)
             {
-                Name = "Ptc.ProgressReporter",
+                Name = "CPU.PTC.TranslationProgressReporterThread",
                 Priority = ThreadPriority.Lowest,
                 IsBackground = true,
             };
@@ -849,6 +849,7 @@ namespace ARMeilleure.Translation.PTC
             {
                 Thread thread = new(TranslateFuncs)
                 {
+                    Name = $"CPU.PTC.TranslationThread.{i}",
                     IsBackground = true,
                 };
 
@@ -879,6 +880,7 @@ namespace ARMeilleure.Translation.PTC
 
             Thread preSaveThread = new(PreSave)
             {
+                Name = "CPU.PTC.TranslationPreSaveThread",
                 IsBackground = true,
             };
             preSaveThread.Start();
