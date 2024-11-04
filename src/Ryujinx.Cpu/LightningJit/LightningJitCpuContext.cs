@@ -40,7 +40,7 @@ namespace Ryujinx.Cpu.LightningJit
         }
 
         /// <inheritdoc/>
-        public IDiskCacheLoadState LoadDiskCache(string titleIdText, string displayVersion, bool enabled)
+        public IDiskCacheLoadState LoadDiskCache(string titleIdText, string buildIdHashText, string displayVersion, bool enabled)
         {
             return new DummyDiskCacheLoadState();
         }

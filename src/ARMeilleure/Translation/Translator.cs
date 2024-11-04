@@ -81,9 +81,9 @@ namespace ARMeilleure.Translation
             FunctionTable.Fill = (ulong)Stubs.SlowDispatchStub;
         }
 
-        public IPtcLoadState LoadDiskCache(string titleIdText, string displayVersion, bool enabled)
+        public IPtcLoadState LoadDiskCache(string titleIdText, string buildIdHashText, string displayVersion, bool enabled)
         {
-            _ptc.Initialize(titleIdText, displayVersion, enabled, Memory.Type);
+            _ptc.Initialize(titleIdText, buildIdHashText, displayVersion, enabled, Memory.Type);
             return _ptc;
         }
 

@@ -19,6 +19,7 @@ namespace Ryujinx.HLE.HOS
         private readonly ITickSource _tickSource;
         private readonly GpuContext _gpu;
         private readonly string _titleIdText;
+        private readonly string _buildIdHash;
         private readonly string _displayVersion;
         private readonly bool _diskCacheEnabled;
         private readonly ulong _codeAddress;
@@ -30,6 +31,7 @@ namespace Ryujinx.HLE.HOS
             ITickSource tickSource,
             GpuContext gpu,
             string titleIdText,
+            string buildIdHash,
             string displayVersion,
             bool diskCacheEnabled,
             ulong codeAddress,
@@ -38,6 +40,7 @@ namespace Ryujinx.HLE.HOS
             _tickSource = tickSource;
             _gpu = gpu;
             _titleIdText = titleIdText;
+            _buildIdHash = buildIdHash;
             _displayVersion = displayVersion;
             _diskCacheEnabled = diskCacheEnabled;
             _codeAddress = codeAddress;
@@ -118,7 +121,7 @@ namespace Ryujinx.HLE.HOS
                 }
             }
 
-            DiskCacheLoadState = processContext.Initialize(_titleIdText, _displayVersion, _diskCacheEnabled, _codeAddress, _codeSize);
+            DiskCacheLoadState = processContext.Initialize(_titleIdText, _buildIdHash, _displayVersion, _diskCacheEnabled, _codeAddress, _codeSize);
 
             return processContext;
         }

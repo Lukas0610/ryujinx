@@ -47,9 +47,9 @@ namespace Ryujinx.Cpu.Jit
         }
 
         /// <inheritdoc/>
-        public IDiskCacheLoadState LoadDiskCache(string titleIdText, string displayVersion, bool enabled)
+        public IDiskCacheLoadState LoadDiskCache(string titleIdText, string buildIdHashText, string displayVersion, bool enabled)
         {
-            return new JitDiskCacheLoadState(_translator.LoadDiskCache(titleIdText, displayVersion, enabled));
+            return new JitDiskCacheLoadState(_translator.LoadDiskCache(titleIdText, buildIdHashText, displayVersion, enabled));
         }
 
         /// <inheritdoc/>

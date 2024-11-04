@@ -45,10 +45,11 @@ namespace Ryujinx.Cpu
         /// If the execution engine is recompiling guest code, this can be used to load cached code from disk.
         /// </remarks>
         /// <param name="titleIdText">Title ID of the application in padded hex form</param>
+        /// <param name="buildIdHashText">Hash of build IDs of all programs within the application in padded hex form</param>
         /// <param name="displayVersion">Version of the application</param>
         /// <param name="enabled">True if the cache should be loaded from disk if it exists, false otherwise</param>
         /// <returns>Disk cache load progress reporter and manager</returns>
-        IDiskCacheLoadState LoadDiskCache(string titleIdText, string displayVersion, bool enabled);
+        IDiskCacheLoadState LoadDiskCache(string titleIdText, string buildIdHashText, string displayVersion, bool enabled);
 
         /// <summary>
         /// Indicates that code has been loaded into guest memory, and that it might be executed in the future.

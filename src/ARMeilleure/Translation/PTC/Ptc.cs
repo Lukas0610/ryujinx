@@ -35,6 +35,7 @@ namespace ARMeilleure.Translation.PTC
         private const string BackupDir = "1";
 
         private const string TitleIdTextDefault = "0000000000000000";
+        private const string BuildIdHashTextDefault = "0000000000000000";
         private const string DisplayVersionDefault = "0";
 
         public static readonly Symbol PageTableSymbol = new(SymbolType.Special, 1);
@@ -62,6 +63,7 @@ namespace ARMeilleure.Translation.PTC
         private bool _disposed;
 
         public string TitleIdText { get; private set; }
+        public string BuildIdHashText { get; private set; }
         public string DisplayVersion { get; private set; }
 
         private MemoryManagerType _memoryMode;
@@ -92,6 +94,7 @@ namespace ARMeilleure.Translation.PTC
             _disposed = false;
 
             TitleIdText = TitleIdTextDefault;
+            BuildIdHashText = BuildIdHashTextDefault;
             DisplayVersion = DisplayVersionDefault;
 
             CachePathActual = string.Empty;
@@ -100,7 +103,7 @@ namespace ARMeilleure.Translation.PTC
             Disable();
         }
 
-        public void Initialize(string titleIdText, string displayVersion, bool enabled, MemoryManagerType memoryMode)
+        public void Initialize(string titleIdText, string buildIdHashText, string displayVersion, bool enabled, MemoryManagerType memoryMode)
         {
             Wait();
 
@@ -112,6 +115,7 @@ namespace ARMeilleure.Translation.PTC
             if (!enabled || string.IsNullOrEmpty(titleIdText) || titleIdText == TitleIdTextDefault)
             {
                 TitleIdText = TitleIdTextDefault;
+                BuildIdHashText = BuildIdHashTextDefault;
                 DisplayVersion = DisplayVersionDefault;
 
                 CachePathActual = string.Empty;
@@ -123,6 +127,7 @@ namespace ARMeilleure.Translation.PTC
             }
 
             TitleIdText = titleIdText;
+            BuildIdHashText = !string.IsNullOrEmpty(buildIdHashText) ? buildIdHashText : BuildIdHashTextDefault;
             DisplayVersion = !string.IsNullOrEmpty(displayVersion) ? displayVersion : DisplayVersionDefault;
             _memoryMode = memoryMode;
 
@@ -139,8 +144,8 @@ namespace ARMeilleure.Translation.PTC
                 Directory.CreateDirectory(workPathBackup);
             }
 
-            CachePathActual = Path.Combine(workPathActual, DisplayVersion);
-            CachePathBackup = Path.Combine(workPathBackup, DisplayVersion);
+            CachePathActual = Path.Combine(workPathActual, BuildIdHashText);
+            CachePathBackup = Path.Combine(workPathBackup, BuildIdHashText);
 
             PreLoad();
             Profiler.PreLoad();

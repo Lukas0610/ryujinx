@@ -11,6 +11,7 @@ namespace Ryujinx.HLE.HOS
     {
         IDiskCacheLoadState Initialize(
             string titleIdText,
+            string buildIdHashText,
             string displayVersion,
             bool diskCacheEnabled,
             ulong codeAddress,
@@ -66,13 +67,14 @@ namespace Ryujinx.HLE.HOS
 
         public IDiskCacheLoadState Initialize(
             string titleIdText,
+            string buildIdHashText,
             string displayVersion,
             bool diskCacheEnabled,
             ulong codeAddress,
             ulong codeSize)
         {
             _cpuContext.PrepareCodeRange(codeAddress, codeSize);
-            return _cpuContext.LoadDiskCache(titleIdText, displayVersion, diskCacheEnabled);
+            return _cpuContext.LoadDiskCache(titleIdText, buildIdHashText, displayVersion, diskCacheEnabled);
         }
 
         public void InvalidateCacheRegion(ulong address, ulong size)

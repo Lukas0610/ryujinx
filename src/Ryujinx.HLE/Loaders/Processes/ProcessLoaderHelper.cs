@@ -18,9 +18,12 @@ using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
+using Ryujinx.HLE.Utilities;
 using Ryujinx.Horizon.Common;
 using Ryujinx.Horizon.Sdk.Arp;
 using System;
+using System.Collections.Generic;
+using System.IO.Hashing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ApplicationId = LibHac.Ncm.ApplicationId;
@@ -183,6 +186,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             var processContextFactory = new ArmProcessContextFactory(
                 context.Device.System.TickSource,
                 context.Device.Gpu,
+                string.Empty,
                 string.Empty,
                 string.Empty,
                 false,
@@ -368,10 +372,13 @@ namespace Ryujinx.HLE.Loaders.Processes
                 displayVersion = device.System.ContentManager.GetCurrentFirmwareVersion()?.VersionString ?? string.Empty;
             }
 
+            Hash128 combinedBuildIdHash = ExecutableUtils.CreateCombinedBuildIdHash(executables);
+
             var processContextFactory = new ArmProcessContextFactory(
                 context.Device.System.TickSource,
                 context.Device.Gpu,
                 $"{programId:x16}",
+                $"{combinedBuildIdHash:x32}",
                 displayVersion,
                 diskCacheEnabled,
                 codeStart,
