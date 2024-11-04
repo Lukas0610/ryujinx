@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Audio.Renderer.Server
         [Test]
         public void EnsureTypeSize()
         {
-            Assert.AreEqual(0x940, Unsafe.SizeOf<MixState>());
+            Assert.That(Unsafe.SizeOf<MixState>(), Is.EqualTo(0x940));
         }
     }
 }

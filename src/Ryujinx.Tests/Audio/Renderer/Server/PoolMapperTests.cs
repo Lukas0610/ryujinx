@@ -23,12 +23,12 @@ namespace Ryujinx.Tests.Audio.Renderer.Server
             const DspAddress DspAddress = CpuAddress; // TODO: DSP LLE
             const ulong CpuSize = 0x1000;
 
-            Assert.IsFalse(poolMapper.InitializeSystemPool(ref memoryPoolCpu, CpuAddress, CpuSize));
-            Assert.IsTrue(poolMapper.InitializeSystemPool(ref memoryPoolDsp, CpuAddress, CpuSize));
+            Assert.That(poolMapper.InitializeSystemPool(ref memoryPoolCpu, CpuAddress, CpuSize), Is.False);
+            Assert.That(poolMapper.InitializeSystemPool(ref memoryPoolDsp, CpuAddress, CpuSize), Is.True);
 
-            Assert.AreEqual(CpuAddress, memoryPoolDsp.CpuAddress);
-            Assert.AreEqual(CpuSize, memoryPoolDsp.Size);
-            Assert.AreEqual(DspAddress, memoryPoolDsp.DspAddress);
+            Assert.That(memoryPoolDsp.CpuAddress, Is.EqualTo(CpuAddress));
+            Assert.That(memoryPoolDsp.Size, Is.EqualTo(CpuSize));
+            Assert.That(memoryPoolDsp.DspAddress, Is.EqualTo(DspAddress));
         }
 
         [Test]
@@ -38,8 +38,8 @@ namespace Ryujinx.Tests.Audio.Renderer.Server
             MemoryPoolState memoryPoolDsp = MemoryPoolState.Create(MemoryPoolState.LocationType.Dsp);
             MemoryPoolState memoryPoolCpu = MemoryPoolState.Create(MemoryPoolState.LocationType.Cpu);
 
-            Assert.AreEqual(0xFFFF8001, poolMapper.GetProcessHandle(ref memoryPoolCpu));
-            Assert.AreEqual(DummyProcessHandle, poolMapper.GetProcessHandle(ref memoryPoolDsp));
+            Assert.That(poolMapper.GetProcessHandle(ref memoryPoolCpu), Is.EqualTo(0xFFFF8001));
+            Assert.That(poolMapper.GetProcessHandle(ref memoryPoolDsp), Is.EqualTo(DummyProcessHandle));
         }
 
         [Test]
@@ -56,15 +56,15 @@ namespace Ryujinx.Tests.Audio.Renderer.Server
             memoryPoolDsp.SetCpuAddress(CpuAddress, CpuSize);
             memoryPoolCpu.SetCpuAddress(CpuAddress, CpuSize);
 
-            Assert.AreEqual(DspAddress, poolMapper.Map(ref memoryPoolCpu));
-            Assert.AreEqual(DspAddress, poolMapper.Map(ref memoryPoolDsp));
-            Assert.AreEqual(DspAddress, memoryPoolDsp.DspAddress);
-            Assert.IsTrue(poolMapper.Unmap(ref memoryPoolCpu));
+            Assert.That(poolMapper.Map(ref memoryPoolCpu), Is.EqualTo(DspAddress));
+            Assert.That(poolMapper.Map(ref memoryPoolDsp), Is.EqualTo(DspAddress));
+            Assert.That(memoryPoolDsp.DspAddress, Is.EqualTo(DspAddress));
+            Assert.That(poolMapper.Unmap(ref memoryPoolCpu), Is.True);
 
             memoryPoolDsp.IsUsed = true;
-            Assert.IsFalse(poolMapper.Unmap(ref memoryPoolDsp));
+            Assert.That(poolMapper.Unmap(ref memoryPoolDsp), Is.False);
             memoryPoolDsp.IsUsed = false;
-            Assert.IsTrue(poolMapper.Unmap(ref memoryPoolDsp));
+            Assert.That(poolMapper.Unmap(ref memoryPoolDsp), Is.True);
         }
 
         [Test]
@@ -90,45 +90,45 @@ namespace Ryujinx.Tests.Audio.Renderer.Server
 
             PoolMapper poolMapper = new(DummyProcessHandle, true);
 
-            Assert.IsTrue(poolMapper.TryAttachBuffer(out ErrorInfo errorInfo, ref addressInfo, 0, 0));
+            Assert.That(poolMapper.TryAttachBuffer(out ErrorInfo errorInfo, ref addressInfo, 0, 0), Is.True);
 
-            Assert.AreEqual(ResultCode.InvalidAddressInfo, errorInfo.ErrorCode);
-            Assert.AreEqual(0, errorInfo.ExtraErrorInfo);
-            Assert.AreEqual(0, addressInfo.ForceMappedDspAddress);
+            Assert.That(errorInfo.ErrorCode, Is.EqualTo(ResultCode.InvalidAddressInfo));
+            Assert.That(errorInfo.ExtraErrorInfo, Is.EqualTo(0));
+            Assert.That(addressInfo.ForceMappedDspAddress, Is.EqualTo(0));
 
-            Assert.IsTrue(poolMapper.TryAttachBuffer(out errorInfo, ref addressInfo, CpuAddress, CpuSize));
+            Assert.That(poolMapper.TryAttachBuffer(out errorInfo, ref addressInfo, CpuAddress, CpuSize), Is.True);
 
-            Assert.AreEqual(ResultCode.InvalidAddressInfo, errorInfo.ErrorCode);
-            Assert.AreEqual(CpuAddress, errorInfo.ExtraErrorInfo);
-            Assert.AreEqual(DspAddress, addressInfo.ForceMappedDspAddress);
+            Assert.That(errorInfo.ErrorCode, Is.EqualTo(ResultCode.InvalidAddressInfo));
+            Assert.That(errorInfo.ExtraErrorInfo, Is.EqualTo(CpuAddress));
+            Assert.That(addressInfo.ForceMappedDspAddress, Is.EqualTo(DspAddress));
 
             poolMapper = new PoolMapper(DummyProcessHandle, false);
 
-            Assert.IsFalse(poolMapper.TryAttachBuffer(out _, ref addressInfo, 0, 0));
+            Assert.That(poolMapper.TryAttachBuffer(out _, ref addressInfo, 0, 0), Is.False);
 
             addressInfo.ForceMappedDspAddress = 0;
 
-            Assert.IsFalse(poolMapper.TryAttachBuffer(out errorInfo, ref addressInfo, CpuAddress, CpuSize));
+            Assert.That(poolMapper.TryAttachBuffer(out errorInfo, ref addressInfo, CpuAddress, CpuSize), Is.False);
 
-            Assert.AreEqual(ResultCode.InvalidAddressInfo, errorInfo.ErrorCode);
-            Assert.AreEqual(CpuAddress, errorInfo.ExtraErrorInfo);
-            Assert.AreEqual(0, addressInfo.ForceMappedDspAddress);
+            Assert.That(errorInfo.ErrorCode, Is.EqualTo(ResultCode.InvalidAddressInfo));
+            Assert.That(errorInfo.ExtraErrorInfo, Is.EqualTo(CpuAddress));
+            Assert.That(addressInfo.ForceMappedDspAddress, Is.EqualTo(0));
 
             poolMapper = new PoolMapper(DummyProcessHandle, memoryPoolStateArray.AsMemory(), false);
 
-            Assert.IsFalse(poolMapper.TryAttachBuffer(out errorInfo, ref addressInfo, CpuAddressRegionEnding, CpuSize));
+            Assert.That(poolMapper.TryAttachBuffer(out errorInfo, ref addressInfo, CpuAddressRegionEnding, CpuSize), Is.False);
 
-            Assert.AreEqual(ResultCode.InvalidAddressInfo, errorInfo.ErrorCode);
-            Assert.AreEqual(CpuAddressRegionEnding, errorInfo.ExtraErrorInfo);
-            Assert.AreEqual(0, addressInfo.ForceMappedDspAddress);
-            Assert.IsFalse(addressInfo.HasMemoryPoolState);
+            Assert.That(errorInfo.ErrorCode, Is.EqualTo(ResultCode.InvalidAddressInfo));
+            Assert.That(errorInfo.ExtraErrorInfo, Is.EqualTo(CpuAddressRegionEnding));
+            Assert.That(addressInfo.ForceMappedDspAddress, Is.EqualTo(0));
+            Assert.That(addressInfo.HasMemoryPoolState, Is.False);
 
-            Assert.IsTrue(poolMapper.TryAttachBuffer(out errorInfo, ref addressInfo, CpuAddress, CpuSize));
+            Assert.That(poolMapper.TryAttachBuffer(out errorInfo, ref addressInfo, CpuAddress, CpuSize), Is.True);
 
-            Assert.AreEqual(ResultCode.Success, errorInfo.ErrorCode);
-            Assert.AreEqual(0, errorInfo.ExtraErrorInfo);
-            Assert.AreEqual(0, addressInfo.ForceMappedDspAddress);
-            Assert.IsTrue(addressInfo.HasMemoryPoolState);
+            Assert.That(errorInfo.ErrorCode, Is.EqualTo(ResultCode.Success));
+            Assert.That(errorInfo.ExtraErrorInfo, Is.EqualTo(0));
+            Assert.That(addressInfo.ForceMappedDspAddress, Is.EqualTo(0));
+            Assert.That(addressInfo.HasMemoryPoolState, Is.True);
         }
     }
 }

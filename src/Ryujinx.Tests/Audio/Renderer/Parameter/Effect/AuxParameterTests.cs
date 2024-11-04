@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Audio.Renderer.Parameter.Effect
         [Test]
         public void EnsureTypeSize()
         {
-            Assert.AreEqual(0x6C, Unsafe.SizeOf<AuxiliaryBufferParameter>());
+            Assert.That(Unsafe.SizeOf<AuxiliaryBufferParameter>(), Is.EqualTo(0x6C));
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Ryujinx.Tests.Audio.Renderer.Server
         [Test]
         public void EnsureTypeSize()
         {
-            Assert.AreEqual(0x20, Unsafe.SizeOf<AddressInfo>());
+            Assert.That(Unsafe.SizeOf<AddressInfo>(), Is.EqualTo(0x20));
         }
 
         [Test]
@@ -25,11 +25,11 @@ namespace Ryujinx.Tests.Audio.Renderer.Server
 
             addressInfo.ForceMappedDspAddress = 0x2000000;
 
-            Assert.AreEqual(0x2000000, addressInfo.GetReference(true));
+            Assert.That(addressInfo.GetReference(true), Is.EqualTo(0x2000000));
 
             addressInfo.SetupMemoryPool(memoryPoolState.AsSpan());
 
-            Assert.AreEqual(0x4000000, addressInfo.GetReference(true));
+            Assert.That(addressInfo.GetReference(true), Is.EqualTo(0x4000000));
         }
     }
 }

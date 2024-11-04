@@ -11,7 +11,7 @@ namespace Ryujinx.Tests.Time
             [Test]
             public void EnsureTypeSize()
             {
-                Assert.AreEqual(0x4000, Unsafe.SizeOf<TimeZoneRule>());
+                Assert.That(Unsafe.SizeOf<TimeZoneRule>(), Is.EqualTo(0x4000));
             }
         }
     }

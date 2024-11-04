@@ -9,7 +9,7 @@ namespace Ryujinx.Tests.Audio.Renderer.Parameter.Effect
         [Test]
         public void EnsureTypeSize()
         {
-            Assert.AreEqual(0x41, Unsafe.SizeOf<ReverbParameter>());
+            Assert.That(Unsafe.SizeOf<ReverbParameter>(), Is.EqualTo(0x41));
         }
     }
 }

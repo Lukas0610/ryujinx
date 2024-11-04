@@ -76,7 +76,7 @@ namespace Ryujinx.Tests.Cpu
 
             ExecutionContext context = GetContext();
             ulong result = context.GetX((int)rd);
-            Assert.That(result == test.Results[size]);
+            Assert.That(result, Is.EqualTo(test.Results[size]));
         }
 
         [Test, Pairwise, Description("CRC32X <Wd>, <Wn>, <Xm>"), Ignore("Unicorn fails.")]
