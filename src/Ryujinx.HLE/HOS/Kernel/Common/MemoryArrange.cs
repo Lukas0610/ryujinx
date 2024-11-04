@@ -8,5 +8,9 @@ namespace Ryujinx.HLE.HOS.Kernel.Common
         MemoryArrange6GiB,
         MemoryArrange6GiBAppletDev,
         MemoryArrange8GiB,
+        MemoryArrange10GiB,
+        MemoryArrange12GiB,
+        MemoryArrange14GiB,
+        MemoryArrange16GiB,
     }
 }

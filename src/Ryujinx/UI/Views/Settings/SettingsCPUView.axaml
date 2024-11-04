@@ -105,6 +105,26 @@
                                 <TextBlock
                                     Text="{locale:Locale MemoryConfiguration8GiB}" />
                             </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration10GiB}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration10GiB}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration12GiB}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration12GiB}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration14GiB}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration14GiB}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration16GiB}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration16GiB}" />
+                            </ComboBoxItem>
                         </ComboBox>
                     </StackPanel>
                     <CheckBox IsChecked="{Binding UseHypervisor}"
