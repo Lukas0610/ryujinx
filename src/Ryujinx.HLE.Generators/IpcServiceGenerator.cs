@@ -1,3 +1,5 @@
+#pragma warning disable RS1035 // Do not use APIs banned for analyzers
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
