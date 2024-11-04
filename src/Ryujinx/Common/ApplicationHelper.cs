@@ -436,13 +436,11 @@ namespace Ryujinx.Ava.Common
             if (mainDir.Exists)
             {
                 cacheFiles.AddRange(mainDir.EnumerateFiles("*.cache"));
-                cacheFiles.AddRange(mainDir.EnumerateFiles("*.info"));
             }
 
             if (backupDir.Exists)
             {
                 cacheFiles.AddRange(backupDir.EnumerateFiles("*.cache"));
-                cacheFiles.AddRange(backupDir.EnumerateFiles("*.info"));
             }
 
             bool successful = true;
