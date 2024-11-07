@@ -1,5 +1,4 @@
 using ARMeilleure.Memory;
-using ARMeilleure.Translation;
 using System.Runtime.Versioning;
 
 namespace Ryujinx.Cpu.AppleHv
@@ -15,7 +14,7 @@ namespace Ryujinx.Cpu.AppleHv
         }
 
         /// <inheritdoc/>
-        public ICpuContext CreateCpuContext(TranslatorConfiguration configuration, IMemoryManager memoryManager, bool for64Bit)
+        public ICpuContext CreateCpuContext(CpuContextConfiguration cpuContextConfiguration, IMemoryManager memoryManager, bool for64Bit)
         {
             return new HvCpuContext(_tickSource, memoryManager, for64Bit);
         }

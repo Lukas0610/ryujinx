@@ -156,6 +156,9 @@ namespace Ryujinx.Headless.SDL2
         [Option("use-hypervisor", Required = false, Default = true, HelpText = "Uses Hypervisor over JIT if available.")]
         public bool? UseHypervisor { get; set; }
 
+        [Option("use-sparse-address-table", Required = false, Default = true, HelpText = "Use sparse function address tables if available.")]
+        public bool UseSparseAddressTable { get; set; }
+
         [Option("lan-interface-id", Required = false, Default = "0", HelpText = "GUID for the network interface used by LAN.")]
         public string MultiplayerLanInterfaceId { get; set; }
 

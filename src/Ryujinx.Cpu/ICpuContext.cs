@@ -8,6 +8,11 @@ namespace Ryujinx.Cpu
     public interface ICpuContext : IDisposable
     {
         /// <summary>
+        /// Indicates whether the function address table uses sparse memory mapping
+        /// </summary>
+        bool HasSparseAddressTable { get; }
+
+        /// <summary>
         /// Creates a new execution context that will store thread CPU register state when executing guest code.
         /// </summary>
         /// <param name="exceptionCallbacks">Optional functions to be called when the CPU receives an interrupt</param>

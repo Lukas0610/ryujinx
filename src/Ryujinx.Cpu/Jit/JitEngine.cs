@@ -13,9 +13,9 @@ namespace Ryujinx.Cpu.Jit
         }
 
         /// <inheritdoc/>
-        public ICpuContext CreateCpuContext(TranslatorConfiguration translatorConfiguration, IMemoryManager memoryManager, bool for64Bit)
+        public ICpuContext CreateCpuContext(CpuContextConfiguration cpuContextConfiguration, IMemoryManager memoryManager, bool for64Bit)
         {
-            return new JitCpuContext(translatorConfiguration, _tickSource, memoryManager, for64Bit);
+            return new JitCpuContext(cpuContextConfiguration, _tickSource, memoryManager, for64Bit);
         }
     }
 }

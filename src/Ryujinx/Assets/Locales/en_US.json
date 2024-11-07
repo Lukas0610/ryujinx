@@ -825,5 +825,7 @@
   "SettingsTabCPUPtcBackgroundThreadsCPUSet": "CPU-Set for PTC Background Threads",
   "SettingsTabCPUPtcBackgroundThreadsCPUSetTooltip": "List of logical CPU cores the PTC background translation threads are allowed to run on.\n\nSet to '*' for all CPU cores to be considered.",
   "SettingsTabCPUPtcBackgroundThreadCount": "Number of PTC Background Threads",
-  "SettingsTabCPUPtcBackgroundThreadCountTooltip": "Number of PTC background threads to be started concurrently."
+  "SettingsTabCPUPtcBackgroundThreadCountTooltip": "Number of PTC background threads to be started concurrently.",
+  "SettingsTabSystemUseSparseAddressTable": "Use sparse address-tables",
+  "SettingsTabSystemUseSparseAddressTableTooltip": "Use sparsley mapped memory for function address-tables.\n\nMay improve performance for CPU-heavy games by allocating moderate amounts of memory.\n\nIf your game expirences repetitive crashes, try to disable this.\n\nLeave OFF if unsure."
 }

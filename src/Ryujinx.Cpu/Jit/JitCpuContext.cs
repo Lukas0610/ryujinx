@@ -12,12 +12,21 @@ namespace Ryujinx.Cpu.Jit
         private readonly Translator _translator;
         private readonly AddressTable<ulong> _functionTable;
 
-        public JitCpuContext(TranslatorConfiguration translatorConfiguration, ITickSource tickSource, IMemoryManager memory, bool for64Bit)
+        /// <inheritdoc/>
+        public bool HasSparseAddressTable
+        {
+            get => _functionTable.Sparse;
+        }
+
+        public JitCpuContext(CpuContextConfiguration cpuContextConfiguration, ITickSource tickSource, IMemoryManager memory, bool for64Bit)
         {
             _tickSource = tickSource;
-            _functionTable = AddressTable<ulong>.CreateForArm(for64Bit, memory.Type);
+            _functionTable = AddressTable<ulong>.CreateForArm(for64Bit, memory.Type, cpuContextConfiguration.UseSparseAddressTable);
 
-            _translator = new Translator(translatorConfiguration, new JitMemoryAllocator(forJit: true), memory, _functionTable);
+            _translator = new Translator(cpuContextConfiguration.TranslatorConfiguration,
+                                         new JitMemoryAllocator(forJit: true),
+                                         memory,
+                                         _functionTable);
 
             if (memory.Type.IsHostMappedOrTracked())
             {

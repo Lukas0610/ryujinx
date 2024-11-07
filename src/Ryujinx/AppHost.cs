@@ -916,6 +916,7 @@ namespace Ryujinx.Ava
                                                  ConfigurationState.Instance.Graphics.AspectRatio,
                                                  ConfigurationState.Instance.System.AudioVolume,
                                                  ConfigurationState.Instance.System.UseHypervisor,
+                                                 ConfigurationState.Instance.System.UseSparseAddressTable,
                                                  ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value,
                                                  ConfigurationState.Instance.Multiplayer.Mode,
                                                  CPUSet.ParseOrDefault(ConfigurationState.Instance.System.HleKernelThreadsCPUSet),

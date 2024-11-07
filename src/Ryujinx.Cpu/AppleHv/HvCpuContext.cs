@@ -9,6 +9,12 @@ namespace Ryujinx.Cpu.AppleHv
         private readonly ITickSource _tickSource;
         private readonly HvMemoryManager _memoryManager;
 
+        /// <inheritdoc/>
+        public bool HasSparseAddressTable
+        {
+            get => false;
+        }
+
         public HvCpuContext(ITickSource tickSource, IMemoryManager memory, bool for64Bit)
         {
             _tickSource = tickSource;

@@ -1,5 +1,4 @@
 using ARMeilleure.Memory;
-using ARMeilleure.Translation;
 using Ryujinx.Cpu;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -9,6 +8,8 @@ namespace Ryujinx.HLE.HOS
 {
     interface IArmProcessContext : IProcessContext
     {
+        bool HasSparseAddressTable { get; }
+
         IDiskCacheLoadState Initialize(
             string titleIdText,
             string buildIdHashText,
@@ -29,9 +30,14 @@ namespace Ryujinx.HLE.HOS
 
         public ulong AddressSpaceSize { get; }
 
+        public bool HasSparseAddressTable
+        {
+            get => _cpuContext.HasSparseAddressTable;
+        }
+
         public ArmProcessContext(
             ulong pid,
-            TranslatorConfiguration translatorConfiguration,
+            CpuContextConfiguration cpuContextConfiguration,
             ICpuEngine cpuEngine,
             GpuContext gpuContext,
             T memoryManager,
@@ -47,7 +53,7 @@ namespace Ryujinx.HLE.HOS
 
             _pid = pid;
             _gpuContext = gpuContext;
-            _cpuContext = cpuEngine.CreateCpuContext(translatorConfiguration, memoryManager, for64Bit);
+            _cpuContext = cpuEngine.CreateCpuContext(cpuContextConfiguration, memoryManager, for64Bit);
             _memoryManager = memoryManager;
 
             AddressSpaceSize = addressSpaceSize;

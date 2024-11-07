@@ -17,7 +17,7 @@ namespace Ryujinx.Tests.Cpu
                 translatorConfiguration,
                 new JitMemoryAllocator(),
                 memory,
-                AddressTable<ulong>.CreateForArm(for64Bit, memory.Type));
+                AddressTable<ulong>.CreateForArm(for64Bit, memory.Type, true));
 
             memory.UnmapEvent += UnmapHandler;
         }

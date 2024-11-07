@@ -11,10 +11,16 @@ namespace Ryujinx.Cpu.LightningJit
         private readonly Translator _translator;
         private readonly AddressTable<ulong> _functionTable;
 
-        public LightningJitCpuContext(ITickSource tickSource, IMemoryManager memory, bool for64Bit)
+        /// <inheritdoc/>
+        public bool HasSparseAddressTable
+        {
+            get => _functionTable.Sparse;
+        }
+
+        public LightningJitCpuContext(CpuContextConfiguration cpuContextConfiguration, ITickSource tickSource, IMemoryManager memory, bool for64Bit)
         {
             _tickSource = tickSource;
-            _functionTable = AddressTable<ulong>.CreateForArm(for64Bit, memory.Type);
+            _functionTable = AddressTable<ulong>.CreateForArm(for64Bit, memory.Type, cpuContextConfiguration.UseSparseAddressTable);
 
             _translator = new Translator(memory, _functionTable);
 

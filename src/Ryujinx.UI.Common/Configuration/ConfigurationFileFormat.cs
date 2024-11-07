@@ -17,7 +17,7 @@ namespace Ryujinx.UI.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 54;
+        public const int CurrentVersion = 55;
 
         /// <summary>
         /// Version of the configuration file format
@@ -408,6 +408,11 @@ namespace Ryujinx.UI.Common.Configuration
         /// Uses Hypervisor over JIT if available
         /// </summary>
         public bool UseHypervisor { get; set; }
+
+        /// <summary>
+        /// Use sparse function address tables if available
+        /// </summary>
+        public bool UseSparseAddressTable { get; set; }
 
         /// <summary>
         /// List of logical CPU cores the HLE kernel threads are allowed to run on

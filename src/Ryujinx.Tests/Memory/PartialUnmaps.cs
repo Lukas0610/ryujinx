@@ -59,7 +59,7 @@ namespace Ryujinx.Tests.Memory
                 TranslatorConfiguration.Default(),
                 new JitMemoryAllocator(),
                 new MockMemoryManager(),
-                AddressTable<ulong>.CreateForArm(true, ARMeilleure.Memory.MemoryManagerType.SoftwarePageTable));
+                AddressTable<ulong>.CreateForArm(true, ARMeilleure.Memory.MemoryManagerType.SoftwarePageTable, true));
         }
 
         [Test]

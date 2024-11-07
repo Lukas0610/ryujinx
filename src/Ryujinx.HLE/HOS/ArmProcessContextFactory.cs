@@ -56,11 +56,14 @@ namespace Ryujinx.HLE.HOS
             TranslatorConfiguration translatorConfiguration = new(context.Device.Configuration.PtcBackgroundThreadsCPUSet,
                                                                   context.Device.Configuration.PtcBackgroundThreadCount);
 
+            CpuContextConfiguration cpuContextConfiguration = new(translatorConfiguration,
+                                                                  context.Device.Configuration.UseSparseAddressTable);
+
             if (OperatingSystem.IsMacOS() && isArm64Host && for64Bit && context.Device.Configuration.UseHypervisor)
             {
                 var cpuEngine = new HvEngine(_tickSource);
                 var memoryManager = new HvMemoryManager(context.Memory, addressSpaceSize, invalidAccessHandler);
-                processContext = new ArmProcessContext<HvMemoryManager>(pid, translatorConfiguration, cpuEngine, _gpu, memoryManager, addressSpaceSize, for64Bit);
+                processContext = new ArmProcessContext<HvMemoryManager>(pid, cpuContextConfiguration, cpuEngine, _gpu, memoryManager, addressSpaceSize, for64Bit);
             }
             else
             {
@@ -94,7 +97,7 @@ namespace Ryujinx.HLE.HOS
                 {
                     case MemoryManagerMode.SoftwarePageTable:
                         var memoryManager = new MemoryManager(context.Memory, addressSpaceSize, invalidAccessHandler);
-                        processContext = new ArmProcessContext<MemoryManager>(pid, translatorConfiguration, cpuEngine, _gpu, memoryManager, addressSpaceSize, for64Bit);
+                        processContext = new ArmProcessContext<MemoryManager>(pid, cpuContextConfiguration, cpuEngine, _gpu, memoryManager, addressSpaceSize, for64Bit);
                         break;
 
                     case MemoryManagerMode.HostMapped:
@@ -102,7 +105,7 @@ namespace Ryujinx.HLE.HOS
                         if (addressSpace == null)
                         {
                             var memoryManagerHostTracked = new MemoryManagerHostTracked(context.Memory, addressSpaceSize, mode == MemoryManagerMode.HostMappedUnsafe, invalidAccessHandler);
-                            processContext = new ArmProcessContext<MemoryManagerHostTracked>(pid, translatorConfiguration, cpuEngine, _gpu, memoryManagerHostTracked, addressSpaceSize, for64Bit);
+                            processContext = new ArmProcessContext<MemoryManagerHostTracked>(pid, cpuContextConfiguration, cpuEngine, _gpu, memoryManagerHostTracked, addressSpaceSize, for64Bit);
                         }
                         else
                         {
@@ -112,13 +115,22 @@ namespace Ryujinx.HLE.HOS
                             }
 
                             var memoryManagerHostMapped = new MemoryManagerHostMapped(addressSpace, mode == MemoryManagerMode.HostMappedUnsafe, invalidAccessHandler);
-                            processContext = new ArmProcessContext<MemoryManagerHostMapped>(pid, translatorConfiguration, cpuEngine, _gpu, memoryManagerHostMapped, addressSpace.AddressSpaceSize, for64Bit);
+                            processContext = new ArmProcessContext<MemoryManagerHostMapped>(pid, cpuContextConfiguration, cpuEngine, _gpu, memoryManagerHostMapped, addressSpace.AddressSpaceSize, for64Bit);
                         }
                         break;
 
                     default:
                         throw new InvalidOperationException($"{nameof(mode)} contains an invalid value: {mode}");
                 }
+            }
+
+            if (processContext.HasSparseAddressTable)
+            {
+                Logger.Info?.Print(LogClass.Emulation, "Using sparse address-table");
+            }
+            else
+            {
+                Logger.Info?.Print(LogClass.Emulation, "Using static address-table");
             }
 
             DiskCacheLoadState = processContext.Initialize(_titleIdText, _buildIdHash, _displayVersion, _diskCacheEnabled, _codeAddress, _codeSize);

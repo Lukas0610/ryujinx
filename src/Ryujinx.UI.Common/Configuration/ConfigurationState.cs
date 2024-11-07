@@ -383,6 +383,11 @@ namespace Ryujinx.UI.Common.Configuration
             public ReactiveObject<bool> UseHypervisor { get; private set; }
 
             /// <summary>
+            /// Use sparse function address tables if available
+            /// </summary>
+            public ReactiveObject<bool> UseSparseAddressTable { get; set; }
+
+            /// <summary>
             /// List of logical CPU cores the HLE kernel threads are allowed to run on
             /// </summary>
             public ReactiveObject<string> HleKernelThreadsCPUSet { get; set; }
@@ -436,6 +441,8 @@ namespace Ryujinx.UI.Common.Configuration
                 AudioVolume.Event += static (sender, e) => LogValueChange(e, nameof(AudioVolume));
                 UseHypervisor = new ReactiveObject<bool>();
                 UseHypervisor.Event += static (sender, e) => LogValueChange(e, nameof(UseHypervisor));
+                UseSparseAddressTable = new ReactiveObject<bool>();
+                UseSparseAddressTable.Event += static (sender, e) => LogValueChange(e, nameof(UseSparseAddressTable));
                 HleKernelThreadsCPUSet = new ReactiveObject<string>();
                 HleKernelThreadsCPUSet.Event += static (sender, e) => LogValueChange(e, nameof(HleKernelThreadsCPUSet));
                 HleKernelThreadsCPUSetStaticCore = new ReactiveObject<bool>();
@@ -762,6 +769,7 @@ namespace Ryujinx.UI.Common.Configuration
                 MemoryConfiguration = System.MemoryConfiguration,
                 IgnoreMissingServices = System.IgnoreMissingServices,
                 UseHypervisor = System.UseHypervisor,
+                UseSparseAddressTable = System.UseSparseAddressTable,
                 HleKernelThreadsCPUSet = System.HleKernelThreadsCPUSet,
                 HleKernelThreadsCPUSetStaticCore = System.HleKernelThreadsCPUSetStaticCore,
                 PtcBackgroundThreadsCPUSet = System.PtcBackgroundThreadsCPUSet,
@@ -881,6 +889,7 @@ namespace Ryujinx.UI.Common.Configuration
             System.MemoryConfiguration.Value = MemoryConfiguration.MemoryConfiguration4GiB;
             System.IgnoreMissingServices.Value = false;
             System.UseHypervisor.Value = true;
+            System.UseSparseAddressTable.Value = true;
             System.HleKernelThreadsCPUSet.Value = "*";
             System.HleKernelThreadsCPUSetStaticCore.Value = false;
             System.PtcBackgroundThreadsCPUSet.Value = "*";
@@ -1578,6 +1587,15 @@ namespace Ryujinx.UI.Common.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 55)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 55.");
+
+                configurationFileFormat.UseSparseAddressTable = true;
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value = configurationFileFormat.ResScaleCustom;
@@ -1629,6 +1647,7 @@ namespace Ryujinx.UI.Common.Configuration
             System.MemoryConfiguration.Value = configurationFileFormat.MemoryConfiguration;
             System.IgnoreMissingServices.Value = configurationFileFormat.IgnoreMissingServices;
             System.UseHypervisor.Value = configurationFileFormat.UseHypervisor;
+            System.UseSparseAddressTable.Value = configurationFileFormat.UseSparseAddressTable;
             System.HleKernelThreadsCPUSet.Value = configurationFileFormat.HleKernelThreadsCPUSet;
             System.HleKernelThreadsCPUSetStaticCore.Value = configurationFileFormat.HleKernelThreadsCPUSetStaticCore;
             System.PtcBackgroundThreadsCPUSet.Value = configurationFileFormat.PtcBackgroundThreadsCPUSet;

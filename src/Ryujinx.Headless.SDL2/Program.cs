@@ -585,6 +585,7 @@ namespace Ryujinx.Headless.SDL2
                 options.AspectRatio,
                 options.AudioVolume,
                 options.UseHypervisor ?? true,
+                options.UseSparseAddressTable,
                 options.MultiplayerLanInterfaceId,
                 Common.Configuration.Multiplayer.MultiplayerMode.Disabled,
                 CPUSet.ParseOrDefault(options.HleKernelThreadsCPUSet),

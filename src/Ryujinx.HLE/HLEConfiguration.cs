@@ -156,6 +156,11 @@ namespace Ryujinx.HLE
         internal readonly bool UseHypervisor;
 
         /// <summary>
+        /// Use sparse function address tables if available
+        /// </summary>
+        internal readonly bool UseSparseAddressTable;
+
+        /// <summary>
         /// Multiplayer LAN Interface ID (device GUID)
         /// </summary>
         public string MultiplayerLanInterfaceId { internal get; set; }
@@ -232,6 +237,7 @@ namespace Ryujinx.HLE
                                 AspectRatio aspectRatio,
                                 float audioVolume,
                                 bool useHypervisor,
+                                bool useSparseAddressTable,
                                 string multiplayerLanInterfaceId,
                                 MultiplayerMode multiplayerMode,
                                 CPUSet hleKernelThreadsCPUSet,
@@ -266,6 +272,7 @@ namespace Ryujinx.HLE
             AspectRatio = aspectRatio;
             AudioVolume = audioVolume;
             UseHypervisor = useHypervisor;
+            UseSparseAddressTable = useSparseAddressTable;
             MultiplayerLanInterfaceId = multiplayerLanInterfaceId;
             MultiplayerMode = multiplayerMode;
             HleKernelThreadsCPUSet = hleKernelThreadsCPUSet;

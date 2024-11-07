@@ -133,6 +133,12 @@
                         <TextBlock Text="{locale:Locale SettingsTabSystemUseHypervisor}"
                                    ToolTip.Tip="{locale:Locale UseHypervisorTooltip}" />
                     </CheckBox>
+                    <CheckBox IsChecked="{Binding UseSparseAddressTable}"
+                              IsEnabled="{Binding SparseAddressTableAvailable}"
+                              ToolTip.Tip="{locale:Locale SettingsTabSystemUseSparseAddressTableTooltip}">
+                        <TextBlock Text="{locale:Locale SettingsTabSystemUseSparseAddressTable}"
+                                   ToolTip.Tip="{locale:Locale SettingsTabSystemUseSparseAddressTableTooltip}" />
+                    </CheckBox>
                 </StackPanel>
                 <Separator Height="1" />
                 <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCPUAdvancedThreadingOptions}" />

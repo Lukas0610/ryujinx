@@ -23,7 +23,7 @@ namespace Ryujinx.Tests.Cpu
                 TranslatorConfiguration.Default(),
                 new JitMemoryAllocator(),
                 new MockMemoryManager(),
-                AddressTable<ulong>.CreateForArm(true, ARMeilleure.Memory.MemoryManagerType.SoftwarePageTable));
+                AddressTable<ulong>.CreateForArm(true, ARMeilleure.Memory.MemoryManagerType.SoftwarePageTable, true));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]

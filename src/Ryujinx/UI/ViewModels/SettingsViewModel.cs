@@ -53,6 +53,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private int _scalingFilterLevel;
         private bool _enableHostFsBuffering;
         private long _hostFsBufferingMaxCacheSize;
+        private int _memoryMode;
 
         public event Action CloseWindow;
         public event Action SaveSettingsEvent;
@@ -119,6 +120,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool IsHypervisorAvailable => OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
 
+        public bool SparseAddressTableAvailable => (!IsHypervisorAvailable || !UseHypervisor) && (MemoryMode != (int)MemoryManagerMode.SoftwarePageTable);
+
         public bool DirectoryChanged
         {
             get => _directoryChanged;
@@ -171,6 +174,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool HleKernelThreadsCPUSetStaticCore { get; set; }
         public string PtcBackgroundThreadsCPUSet { get; set; }
         public int PtcBackgroundThreadCount { get; set; }
+        public bool UseSparseAddressTable { get; set; }
 
         public string TimeZone { get; set; }
         public string ShaderDumpPath { get; set; }
@@ -194,7 +198,18 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
         public int OpenglDebugLevel { get; set; }
-        public int MemoryMode { get; set; }
+        public int MemoryMode
+        {
+            get => _memoryMode;
+            set
+            {
+                _memoryMode = value;
+
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SparseAddressTableAvailable));
+            }
+        }
+
         public int MemoryConfiguration { get; set; }
         public int BaseStyleIndex { get; set; }
         public int GraphicsBackendIndex
@@ -480,6 +495,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             MemoryMode = (int)config.System.MemoryManagerMode.Value;
             MemoryConfiguration = (int)config.System.MemoryConfiguration.Value;
             UseHypervisor = config.System.UseHypervisor;
+            UseSparseAddressTable = config.System.UseSparseAddressTable;
             HleKernelThreadsCPUSet = config.System.HleKernelThreadsCPUSet;
             HleKernelThreadsCPUSetStaticCore = config.System.HleKernelThreadsCPUSetStaticCore;
             PtcBackgroundThreadsCPUSet = config.System.PtcBackgroundThreadsCPUSet;
@@ -581,6 +597,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
             config.System.MemoryConfiguration.Value = (MemoryConfiguration)MemoryConfiguration;
             config.System.UseHypervisor.Value = UseHypervisor;
+            config.System.UseSparseAddressTable.Value = UseSparseAddressTable;
             config.System.HleKernelThreadsCPUSet.Value = HleKernelThreadsCPUSet;
             config.System.HleKernelThreadsCPUSetStaticCore.Value = HleKernelThreadsCPUSetStaticCore;
             config.System.PtcBackgroundThreadsCPUSet.Value = PtcBackgroundThreadsCPUSet;
