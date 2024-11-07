@@ -159,6 +159,18 @@ namespace Ryujinx.Headless.SDL2
         [Option("lan-interface-id", Required = false, Default = "0", HelpText = "GUID for the network interface used by LAN.")]
         public string MultiplayerLanInterfaceId { get; set; }
 
+        [Option("hle-kernel-threads-cpuset", Required = false, Default = "*", HelpText = "List of logical CPU cores the HLE kernel threads are allowed to run on.")]
+        public string HleKernelThreadsCPUSet { get; set; }
+
+        [Option("hle-kernel-threads-cpuset-static-core", Required = false, Default = true, HelpText = "Whether to assign a HLE kernel-thread to a single logical CPU core from the configured CPU set.")]
+        public bool HleKernelThreadsCPUSetStaticCore { get; set; }
+
+        [Option("ptc-background-threads-cpuset", Required = false, Default = "*", HelpText = "List of logical CPU cores the PTC background threads are allowed to run on.")]
+        public string PtcBackgroundThreadsCPUSet { get; set; }
+
+        [Option("ptc-background-thread-count", Required = false, Default = 4, HelpText = "Number of PTC background threads to start.")]
+        public int PtcBackgroundThreadCount { get; set; }
+
         // Logging
 
         [Option("disable-file-logging", Required = false, Default = false, HelpText = "Disables logging to a file on disk.")]

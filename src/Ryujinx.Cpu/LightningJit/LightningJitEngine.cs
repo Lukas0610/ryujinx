@@ -1,4 +1,5 @@
 using ARMeilleure.Memory;
+using ARMeilleure.Translation;
 
 namespace Ryujinx.Cpu.LightningJit
 {
@@ -12,7 +13,7 @@ namespace Ryujinx.Cpu.LightningJit
         }
 
         /// <inheritdoc/>
-        public ICpuContext CreateCpuContext(IMemoryManager memoryManager, bool for64Bit)
+        public ICpuContext CreateCpuContext(TranslatorConfiguration translatorConfiguration, IMemoryManager memoryManager, bool for64Bit)
         {
             return new LightningJitCpuContext(_tickSource, memoryManager, for64Bit);
         }

@@ -2,6 +2,7 @@ using ARMeilleure.Signal;
 using ARMeilleure.Translation;
 using NUnit.Framework;
 using Ryujinx.Common.Memory.PartialUnmaps;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
 using Ryujinx.Cpu.Jit;
 using Ryujinx.Memory;
@@ -53,7 +54,7 @@ namespace Ryujinx.Tests.Memory
         private static void EnsureTranslator()
         {
             // Create a translator, as one is needed to register the signal handler or emit methods.
-            _translator ??= new Translator(new JitMemoryAllocator(), new MockMemoryManager(), true);
+            _translator ??= new Translator(TranslatorConfiguration.Default(), new JitMemoryAllocator(), new MockMemoryManager(), true);
         }
 
         [Test]

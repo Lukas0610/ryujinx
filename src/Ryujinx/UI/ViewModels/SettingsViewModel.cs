@@ -167,6 +167,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool IsVulkanSelected => GraphicsBackendIndex == 0;
         public bool UseHypervisor { get; set; }
+        public string HleKernelThreadsCPUSet { get; set; }
+        public bool HleKernelThreadsCPUSetStaticCore { get; set; }
+        public string PtcBackgroundThreadsCPUSet { get; set; }
+        public int PtcBackgroundThreadCount { get; set; }
 
         public string TimeZone { get; set; }
         public string ShaderDumpPath { get; set; }
@@ -266,6 +270,11 @@ namespace Ryujinx.Ava.UI.ViewModels
         internal AvaloniaList<TimeZone> TimeZones { get; set; }
         public AvaloniaList<string> GameDirectories { get; set; }
         public ObservableCollection<ComboBoxItem> AvailableGpus { get; set; }
+
+        public int EnvironmentProcessorCount
+        {
+            get => Environment.ProcessorCount;
+        }
 
         public AvaloniaList<string> NetworkInterfaceList
         {
@@ -471,6 +480,10 @@ namespace Ryujinx.Ava.UI.ViewModels
             MemoryMode = (int)config.System.MemoryManagerMode.Value;
             MemoryConfiguration = (int)config.System.MemoryConfiguration.Value;
             UseHypervisor = config.System.UseHypervisor;
+            HleKernelThreadsCPUSet = config.System.HleKernelThreadsCPUSet;
+            HleKernelThreadsCPUSetStaticCore = config.System.HleKernelThreadsCPUSetStaticCore;
+            PtcBackgroundThreadsCPUSet = config.System.PtcBackgroundThreadsCPUSet;
+            PtcBackgroundThreadCount = config.System.PtcBackgroundThreadCount;
 
             // Graphics
             GraphicsBackendIndex = (int)config.Graphics.GraphicsBackend.Value;
@@ -568,6 +581,10 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
             config.System.MemoryConfiguration.Value = (MemoryConfiguration)MemoryConfiguration;
             config.System.UseHypervisor.Value = UseHypervisor;
+            config.System.HleKernelThreadsCPUSet.Value = HleKernelThreadsCPUSet;
+            config.System.HleKernelThreadsCPUSetStaticCore.Value = HleKernelThreadsCPUSetStaticCore;
+            config.System.PtcBackgroundThreadsCPUSet.Value = PtcBackgroundThreadsCPUSet;
+            config.System.PtcBackgroundThreadCount.Value = PtcBackgroundThreadCount;
 
             // Graphics
             config.Graphics.GraphicsBackend.Value = (GraphicsBackend)GraphicsBackendIndex;

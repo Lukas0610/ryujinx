@@ -914,7 +914,11 @@ namespace Ryujinx.Ava
                                                  ConfigurationState.Instance.System.AudioVolume,
                                                  ConfigurationState.Instance.System.UseHypervisor,
                                                  ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value,
-                                                 ConfigurationState.Instance.Multiplayer.Mode);
+                                                 ConfigurationState.Instance.Multiplayer.Mode,
+                                                 CPUSet.ParseOrDefault(ConfigurationState.Instance.System.HleKernelThreadsCPUSet),
+                                                 ConfigurationState.Instance.System.HleKernelThreadsCPUSetStaticCore,
+                                                 CPUSet.ParseOrDefault(ConfigurationState.Instance.System.PtcBackgroundThreadsCPUSet),
+                                                 ConfigurationState.Instance.System.PtcBackgroundThreadCount);
 
             Device = new Switch(configuration);
         }

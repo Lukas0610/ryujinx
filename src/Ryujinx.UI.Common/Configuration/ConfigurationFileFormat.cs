@@ -17,7 +17,7 @@ namespace Ryujinx.UI.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 53;
+        public const int CurrentVersion = 54;
 
         /// <summary>
         /// Version of the configuration file format
@@ -408,6 +408,26 @@ namespace Ryujinx.UI.Common.Configuration
         /// Uses Hypervisor over JIT if available
         /// </summary>
         public bool UseHypervisor { get; set; }
+
+        /// <summary>
+        /// List of logical CPU cores the HLE kernel threads are allowed to run on
+        /// </summary>
+        public string HleKernelThreadsCPUSet { get; set; }
+
+        /// <summary>
+        /// Whether to assign a HLE kernel-thread to a single logical CPU core picked from the configured CPU set
+        /// </summary>
+        public bool HleKernelThreadsCPUSetStaticCore { get; set; }
+
+        /// <summary>
+        /// List of logical CPU cores the PTC background threads are allowed to run on
+        /// </summary>
+        public string PtcBackgroundThreadsCPUSet { get; set; }
+
+        /// <summary>
+        /// Number of PTC background threads to start
+        /// </summary>
+        public int PtcBackgroundThreadCount { get; set; }
 
         /// <summary>
         /// Loads a configuration file from disk

@@ -2,6 +2,7 @@ using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Multiplayer;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
@@ -184,6 +185,26 @@ namespace Ryujinx.HLE
         /// </summary>
         public long HostFsBufferingMaxCacheSize { get; set; }
 
+        /// <summary>
+        /// List of logical CPU cores the HLE kernel threads are allowed to run on
+        /// </summary>
+        public CPUSet HleKernelThreadsCPUSet { get; }
+
+        /// <summary>
+        /// Whether to assign a HLE kernel-thread to a single logical CPU core from the configured CPU set
+        /// </summary>
+        public bool HleKernelThreadsCPUSetStaticCore { get; }
+
+        /// <summary>
+        /// List of logical CPU cores the PTC background threads are allowed to run on
+        /// </summary>
+        public CPUSet PtcBackgroundThreadsCPUSet { get; }
+
+        /// <summary>
+        /// Number of PTC background threads to start
+        /// </summary>
+        public int PtcBackgroundThreadCount { get; }
+
         public HLEConfiguration(VirtualFileSystem virtualFileSystem,
                                 LibHacHorizonManager libHacHorizonManager,
                                 ContentManager contentManager,
@@ -212,7 +233,11 @@ namespace Ryujinx.HLE
                                 float audioVolume,
                                 bool useHypervisor,
                                 string multiplayerLanInterfaceId,
-                                MultiplayerMode multiplayerMode)
+                                MultiplayerMode multiplayerMode,
+                                CPUSet hleKernelThreadsCPUSet,
+                                bool hleKernelThreadsCPUSetStaticCore,
+                                CPUSet ptcBackgroundThreadsCPUSet,
+                                int ptcBackgroundThreadCount)
         {
             VirtualFileSystem = virtualFileSystem;
             LibHacHorizonManager = libHacHorizonManager;
@@ -243,6 +268,10 @@ namespace Ryujinx.HLE
             UseHypervisor = useHypervisor;
             MultiplayerLanInterfaceId = multiplayerLanInterfaceId;
             MultiplayerMode = multiplayerMode;
+            HleKernelThreadsCPUSet = hleKernelThreadsCPUSet;
+            HleKernelThreadsCPUSetStaticCore = hleKernelThreadsCPUSetStaticCore;
+            PtcBackgroundThreadsCPUSet = ptcBackgroundThreadsCPUSet;
+            PtcBackgroundThreadCount = ptcBackgroundThreadCount;
         }
     }
 }

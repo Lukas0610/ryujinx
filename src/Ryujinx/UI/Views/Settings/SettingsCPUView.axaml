@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     mc:Ignorable="d"
@@ -112,6 +113,56 @@
                         <TextBlock Text="{locale:Locale SettingsTabSystemUseHypervisor}"
                                    ToolTip.Tip="{locale:Locale UseHypervisorTooltip}" />
                     </CheckBox>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCPUAdvancedThreadingOptions}" />
+                <TextBlock Classes="h2" Text="{locale:Locale SettingsTabCPUAdvancedThreadingOptionsSubtitle}" />
+                <StackPanel
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical"
+                    Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCPUHleKernelThreadsCPUSetTooltip}"
+                                   Text="{locale:Locale SettingsTabCPUHleKernelThreadsCPUSet}"
+                                   Width="250" />
+                        <TextBox Text="{Binding HleKernelThreadsCPUSet}"
+                                 Width="350"
+                                 ToolTip.Tip="{locale:Locale SettingsTabCPUHleKernelThreadsCPUSetTooltip}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCPUHleKernelThreadsCPUSetStaticCoreTooltip}"
+                                   Text="{locale:Locale SettingsTabCPUHleKernelThreadsCPUSetStaticCore}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding HleKernelThreadsCPUSetStaticCore}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCPUHleKernelThreadsCPUSetStaticCoreTooltip}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCPUPtcBackgroundThreadsCPUSetTooltip}"
+                                   Text="{locale:Locale SettingsTabCPUPtcBackgroundThreadsCPUSet}"
+                                   Width="250" />
+                        <TextBox Text="{Binding PtcBackgroundThreadsCPUSet}"
+                                 Width="350"
+                                 ToolTip.Tip="{locale:Locale SettingsTabCPUPtcBackgroundThreadsCPUSetTooltip}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCPUPtcBackgroundThreadCountTooltip}"
+                                   Text="{locale:Locale SettingsTabCPUPtcBackgroundThreadCount}"
+                                   Width="250" />
+                        <ui:NumberBox
+                            Maximum="{Binding EnvironmentProcessorCount}"
+                            Minimum="1"
+                            Width="350"
+                            SpinButtonPlacementMode="Inline"
+                            SmallChange="1"
+                            LargeChange="1"
+                            Value="{Binding PtcBackgroundThreadCount}"
+                            ToolTip.Tip="{locale:Locale SettingsTabCPUPtcBackgroundThreadCountTooltip}" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
         </Border>

@@ -811,5 +811,15 @@
   "MemoryConfiguration6GiBAppletDev": "6GiB [Applet-Dev]",
   "MemoryConfiguration8GiB": "8GiB",
   "DialogClearGameCachesAfterCrash": "Clear Game-Caches?",
-  "DialogClearGameCachesAfterCrashMessage": "A crash/unsafe shutdown has been detected. Do you want to clear all game-caches (PTC, Shaders, etc.)?\n\nPlease note that the game-performance will be degraded for the next few launches if you decide to clear the caches."
+  "DialogClearGameCachesAfterCrashMessage": "A crash/unsafe shutdown has been detected. Do you want to clear all game-caches (PTC, Shaders, etc.)?\n\nPlease note that the game-performance will be degraded for the next few launches if you decide to clear the caches.",
+  "SettingsTabCPUAdvancedThreadingOptions": "Advanced Threading Options",
+  "SettingsTabCPUAdvancedThreadingOptionsSubtitle": "Do not change any of these options if you are unsure about what they do",
+  "SettingsTabCPUHleKernelThreadsCPUSet": "CPU-Set for HLE Kernel Threads",
+  "SettingsTabCPUHleKernelThreadsCPUSetTooltip": "List of logical CPU cores the HLE kernel threads are allowed to run on.\n\nSet to '*' for all CPU cores to be considered.",
+  "SettingsTabCPUHleKernelThreadsCPUSetStaticCore": "Fixed CPU Core for HLE Kernel Threads",
+  "SettingsTabCPUHleKernelThreadsCPUSetStaticCoreTooltip": "Whether to assign a HLE kernel-thread to a single logical CPU core picked from the configured CPU set.\n\nUnless there are as many CPU cores on the host as there are threads running, this options is likely to degrade performance as the host-OS can not schedule work on idling cores in the configured CPU-set.",
+  "SettingsTabCPUPtcBackgroundThreadsCPUSet": "CPU-Set for PTC Background Threads",
+  "SettingsTabCPUPtcBackgroundThreadsCPUSetTooltip": "List of logical CPU cores the PTC background translation threads are allowed to run on.\n\nSet to '*' for all CPU cores to be considered.",
+  "SettingsTabCPUPtcBackgroundThreadCount": "Number of PTC Background Threads",
+  "SettingsTabCPUPtcBackgroundThreadCountTooltip": "Number of PTC background threads to be started concurrently."
 }

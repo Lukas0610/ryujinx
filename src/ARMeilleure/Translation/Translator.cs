@@ -10,6 +10,7 @@ using ARMeilleure.State;
 using ARMeilleure.Translation.Cache;
 using ARMeilleure.Translation.PTC;
 using Ryujinx.Common;
+using Ryujinx.Common.Utilities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -42,6 +43,7 @@ namespace ARMeilleure.Translation
                 new( 1,  6),
             };
 
+        private readonly TranslatorConfiguration _configuration;
         private readonly IJitMemoryAllocator _allocator;
         private readonly ConcurrentQueue<KeyValuePair<ulong, TranslatedFunction>> _oldFuncs;
 
@@ -57,8 +59,9 @@ namespace ARMeilleure.Translation
         private Thread[] _backgroundTranslationThreads;
         private volatile int _threadCount;
 
-        public Translator(IJitMemoryAllocator allocator, IMemoryManager memory, bool for64Bits)
+        public Translator(TranslatorConfiguration configuration, IJitMemoryAllocator allocator, IMemoryManager memory, bool for64Bits)
         {
+            _configuration = configuration;
             _allocator = allocator;
             Memory = memory;
 
@@ -108,21 +111,15 @@ namespace ARMeilleure.Translation
 
                 _ptc.Disable();
 
-                // Simple heuristic, should be user configurable in future. (1 for 4 core/ht or less, 2 for 6 core + ht
-                // etc). All threads are normal priority except from the last, which just fills as much of the last core
+                // All threads are normal priority except from the last, which just fills as much of the last core
                 // as the os lets it with a low priority. If we only have one rejit thread, it should be normal priority
                 // as highCq code is performance critical.
-                //
-                // TODO: Use physical cores rather than logical. This only really makes sense for processors with
-                // hyperthreading. Requires OS specific code.
-                int unboundedThreadCount = Math.Max(1, (Environment.ProcessorCount - 6) / 3);
-                int threadCount = Math.Min(4, unboundedThreadCount);
-
+                int threadCount = _configuration.BackgroundTranslationThreadCount;
                 Thread[] backgroundTranslationThreads = new Thread[threadCount];
 
                 for (int i = 0; i < threadCount; i++)
                 {
-                    bool last = i != 0 && i == unboundedThreadCount - 1;
+                    bool last = i != 0 && threadCount > 1;
 
                     backgroundTranslationThreads[i] = new(BackgroundTranslate)
                     {
@@ -307,22 +304,32 @@ namespace ARMeilleure.Translation
 
         private void BackgroundTranslate()
         {
-            while (_threadCount != 0 && Queue.TryDequeue(out RejitRequest request))
+            Thread.BeginThreadAffinity();
+            try
             {
-                TranslatedFunction func = Translate(request.Address, request.Mode, highCq: true);
+                HostThreadHelper.SetCurrentThreadAffinity(_configuration.BackgroundTranslationThreadsCPUSet);
 
-                Functions.AddOrUpdate(request.Address, func.GuestSize, func, (key, oldFunc) =>
+                while (_threadCount != 0 && Queue.TryDequeue(out RejitRequest request))
                 {
-                    EnqueueForDeletion(key, oldFunc);
-                    return func;
-                });
+                    TranslatedFunction func = Translate(request.Address, request.Mode, highCq: true);
 
-                if (_ptc.Profiler.Enabled)
-                {
-                    _ptc.Profiler.UpdateEntry(request.Address, request.Mode, highCq: true);
+                    Functions.AddOrUpdate(request.Address, func.GuestSize, func, (key, oldFunc) =>
+                    {
+                        EnqueueForDeletion(key, oldFunc);
+                        return func;
+                    });
+
+                    if (_ptc.Profiler.Enabled)
+                    {
+                        _ptc.Profiler.UpdateEntry(request.Address, request.Mode, highCq: true);
+                    }
+
+                    RegisterFunction(request.Address, func);
                 }
-
-                RegisterFunction(request.Address, func);
+            }
+            finally
+            {
+                Thread.EndThreadAffinity();
             }
         }
 

@@ -1,4 +1,5 @@
 using ARMeilleure.Memory;
+using ARMeilleure.Translation;
 using Ryujinx.Cpu;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -29,6 +30,7 @@ namespace Ryujinx.HLE.HOS
 
         public ArmProcessContext(
             ulong pid,
+            TranslatorConfiguration translatorConfiguration,
             ICpuEngine cpuEngine,
             GpuContext gpuContext,
             T memoryManager,
@@ -44,7 +46,7 @@ namespace Ryujinx.HLE.HOS
 
             _pid = pid;
             _gpuContext = gpuContext;
-            _cpuContext = cpuEngine.CreateCpuContext(memoryManager, for64Bit);
+            _cpuContext = cpuEngine.CreateCpuContext(translatorConfiguration, memoryManager, for64Bit);
             _memoryManager = memoryManager;
 
             AddressSpaceSize = addressSpaceSize;

@@ -1,3 +1,4 @@
+using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Memory;
@@ -53,6 +54,9 @@ namespace Ryujinx.HLE.HOS.Kernel
         private ulong _processId;
         private ulong _threadUid;
 
+        private CPUSet _threadsCPUSet;
+        private int _threadsCPUSetIndex;
+
         public KernelContext(
             ITickSource tickSource,
             Switch device,
@@ -107,6 +111,9 @@ namespace Ryujinx.HLE.HOS.Kernel
 
             _kipId = KernelConstants.InitialKipId;
             _processId = KernelConstants.InitialProcessId;
+
+            _threadsCPUSet = device.Configuration.HleKernelThreadsCPUSet;
+            _threadsCPUSetIndex = 0;
         }
 
         private void StartPreemptionThread()
@@ -133,6 +140,23 @@ namespace Ryujinx.HLE.HOS.Kernel
         public ulong NewThreadUid()
         {
             return Interlocked.Increment(ref _threadUid) - 1;
+        }
+
+        public CPUSet NextThreadCPUSet()
+        {
+            if (Device.Configuration.HleKernelThreadsCPUSetStaticCore)
+            {
+                int coreIndex = _threadsCPUSetIndex++;
+
+                if (_threadsCPUSetIndex >= _threadsCPUSet.Cores.Length)
+                    _threadsCPUSetIndex = 0;
+
+                return CPUSet.FromSingleCore(_threadsCPUSet.Cores[coreIndex]);
+            }
+            else
+            {
+                return _threadsCPUSet;
+            }
         }
 
         public ulong NewKipId()

@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -112,6 +113,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public bool WaitingInArbitration { get; set; }
 
+        public CPUSet HostCPUSet { get; private set; }
+
         private readonly object _activityOperationLock = new();
 
         public KThread(KernelContext context) : base(context)
@@ -204,6 +207,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             Context.TpidrroEl0 = (long)_tlsAddress;
 
             ThreadUid = KernelContext.NewThreadUid();
+            HostCPUSet = KernelContext.NextThreadCPUSet();
 
             HostThread.Name = customThreadStart != null ? $"HLE.OsThread.{ThreadUid}" : $"HLE.GuestThread.{ThreadUid}";
 
@@ -1250,6 +1254,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
             Thread.BeginThreadAffinity();
             try
             {
+                HostThreadHelper.SetCurrentThreadAffinity(HostCPUSet);
+
                 _schedulerWaitEvent.WaitOne();
                 KernelStatic.SetKernelContext(KernelContext, this);
 

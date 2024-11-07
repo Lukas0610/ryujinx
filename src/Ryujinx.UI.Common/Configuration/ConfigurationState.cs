@@ -382,6 +382,26 @@ namespace Ryujinx.UI.Common.Configuration
             /// </summary>
             public ReactiveObject<bool> UseHypervisor { get; private set; }
 
+            /// <summary>
+            /// List of logical CPU cores the HLE kernel threads are allowed to run on
+            /// </summary>
+            public ReactiveObject<string> HleKernelThreadsCPUSet { get; set; }
+
+            /// <summary>
+            /// Whether to assign a HLE kernel-thread to a single logical CPU core picked from the configured CPU set
+            /// </summary>
+            public ReactiveObject<bool> HleKernelThreadsCPUSetStaticCore { get; set; }
+
+            /// <summary>
+            /// List of logical CPU cores the PTC background threads are allowed to run on
+            /// </summary>
+            public ReactiveObject<string> PtcBackgroundThreadsCPUSet { get; set; }
+
+            /// <summary>
+            /// Number of PTC background threads to start
+            /// </summary>
+            public ReactiveObject<int> PtcBackgroundThreadCount { get; set; }
+
             public SystemSection()
             {
                 Language = new ReactiveObject<Language>();
@@ -416,6 +436,14 @@ namespace Ryujinx.UI.Common.Configuration
                 AudioVolume.Event += static (sender, e) => LogValueChange(e, nameof(AudioVolume));
                 UseHypervisor = new ReactiveObject<bool>();
                 UseHypervisor.Event += static (sender, e) => LogValueChange(e, nameof(UseHypervisor));
+                HleKernelThreadsCPUSet = new ReactiveObject<string>();
+                HleKernelThreadsCPUSet.Event += static (sender, e) => LogValueChange(e, nameof(HleKernelThreadsCPUSet));
+                HleKernelThreadsCPUSetStaticCore = new ReactiveObject<bool>();
+                HleKernelThreadsCPUSetStaticCore.Event += static (sender, e) => LogValueChange(e, nameof(HleKernelThreadsCPUSetStaticCore));
+                PtcBackgroundThreadsCPUSet = new ReactiveObject<string>();
+                PtcBackgroundThreadsCPUSet.Event += static (sender, e) => LogValueChange(e, nameof(PtcBackgroundThreadsCPUSet));
+                PtcBackgroundThreadCount = new ReactiveObject<int>();
+                PtcBackgroundThreadCount.Event += static (sender, e) => LogValueChange(e, nameof(PtcBackgroundThreadCount));
             }
         }
 
@@ -734,6 +762,10 @@ namespace Ryujinx.UI.Common.Configuration
                 MemoryConfiguration = System.MemoryConfiguration,
                 IgnoreMissingServices = System.IgnoreMissingServices,
                 UseHypervisor = System.UseHypervisor,
+                HleKernelThreadsCPUSet = System.HleKernelThreadsCPUSet,
+                HleKernelThreadsCPUSetStaticCore = System.HleKernelThreadsCPUSetStaticCore,
+                PtcBackgroundThreadsCPUSet = System.PtcBackgroundThreadsCPUSet,
+                PtcBackgroundThreadCount = System.PtcBackgroundThreadCount,
                 GuiColumns = new GuiColumns
                 {
                     FavColumn = UI.GuiColumns.FavColumn,
@@ -849,6 +881,10 @@ namespace Ryujinx.UI.Common.Configuration
             System.MemoryConfiguration.Value = MemoryConfiguration.MemoryConfiguration4GiB;
             System.IgnoreMissingServices.Value = false;
             System.UseHypervisor.Value = true;
+            System.HleKernelThreadsCPUSet.Value = "*";
+            System.HleKernelThreadsCPUSetStaticCore.Value = false;
+            System.PtcBackgroundThreadsCPUSet.Value = "*";
+            System.PtcBackgroundThreadCount.Value = Math.Min(4, Math.Max(1, (Environment.ProcessorCount - 6) / 3));
             Multiplayer.LanInterfaceId.Value = "0";
             Multiplayer.Mode.Value = MultiplayerMode.Disabled;
             UI.GuiColumns.FavColumn.Value = true;
@@ -1530,6 +1566,18 @@ namespace Ryujinx.UI.Common.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 54)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 54.");
+
+                configurationFileFormat.HleKernelThreadsCPUSet = "*";
+                configurationFileFormat.HleKernelThreadsCPUSetStaticCore = false;
+                configurationFileFormat.PtcBackgroundThreadsCPUSet = "*";
+                configurationFileFormat.PtcBackgroundThreadCount = Math.Min(4, Math.Max(1, (Environment.ProcessorCount - 6) / 3));
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value = configurationFileFormat.ResScaleCustom;
@@ -1581,6 +1629,10 @@ namespace Ryujinx.UI.Common.Configuration
             System.MemoryConfiguration.Value = configurationFileFormat.MemoryConfiguration;
             System.IgnoreMissingServices.Value = configurationFileFormat.IgnoreMissingServices;
             System.UseHypervisor.Value = configurationFileFormat.UseHypervisor;
+            System.HleKernelThreadsCPUSet.Value = configurationFileFormat.HleKernelThreadsCPUSet;
+            System.HleKernelThreadsCPUSetStaticCore.Value = configurationFileFormat.HleKernelThreadsCPUSetStaticCore;
+            System.PtcBackgroundThreadsCPUSet.Value = configurationFileFormat.PtcBackgroundThreadsCPUSet;
+            System.PtcBackgroundThreadCount.Value = configurationFileFormat.PtcBackgroundThreadCount;
             UI.GuiColumns.FavColumn.Value = configurationFileFormat.GuiColumns.FavColumn;
             UI.GuiColumns.IconColumn.Value = configurationFileFormat.GuiColumns.IconColumn;
             UI.GuiColumns.AppColumn.Value = configurationFileFormat.GuiColumns.AppColumn;
