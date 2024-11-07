@@ -1,5 +1,6 @@
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;
+using Ryujinx.Common.Host.IO.Stats;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.GAL.Multithreading;
@@ -16,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using static SDL2.SDL;
@@ -308,13 +310,22 @@ namespace Ryujinx.Headless.SDL2
                             dockedMode += $" ({scale}x)";
                         }
 
+                        IHostIOStat[] hostIoStats = Device.HostFileSystem.GetStats().ToArray();
+
+                        long? sizeOfHostIoFileReads = hostIoStats.SingleOrDefault(x => x.Name == "SizeOfFileReads")?.Value;
+                        long? sizeOfHostIoBufferedReads = hostIoStats.SingleOrDefault(x => x.Name == "SizeOfBufferedReads")?.Value;
+                        double hostIoBufferHitRatio = (sizeOfHostIoFileReads != null && sizeOfHostIoBufferedReads != null)
+                            ? ((double)sizeOfHostIoBufferedReads.Value / (sizeOfHostIoFileReads.Value + sizeOfHostIoBufferedReads.Value)) * 100
+                            : 0;
+
                         StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
                             Device.EnableDeviceVsync,
                             dockedMode,
                             Device.Configuration.AspectRatio.ToText(),
                             $"Game: {Device.Statistics.GetGameFrameRate():00.00} FPS ({Device.Statistics.GetGameFrameTime():00.00} ms)",
                             $"FIFO: {Device.Statistics.GetFifoPercent():0.00} %",
-                            $"GPU: {_gpuDriverName}"));
+                            $"GPU: {_gpuDriverName}",
+                            $"I/O Cache: {hostIoBufferHitRatio:00.00}%"));
 
                         _ticks = Math.Min(_ticks - _ticksPerFrame, _ticksPerFrame);
                     }

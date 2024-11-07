@@ -1,10 +1,11 @@
-﻿<UserControl
+<UserControl
     x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsSystemView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
     xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
     xmlns:helpers="clr-namespace:Ryujinx.Ava.UI.Helpers"
     mc:Ignorable="d"
@@ -191,6 +192,64 @@
                             Text="{locale:Locale SettingsTabSystemEnableFsIntegrityChecks}"
                             ToolTip.Tip="{locale:Locale FsIntegrityToggleTooltip}" />
                     </CheckBox>
+                </StackPanel>
+                <Separator Height="1" />
+                <StackPanel
+                    Orientation="Vertical"
+                    Spacing="2">
+                    <TextBlock
+                        Classes="h1"
+                        Text="{locale:Locale SettingsTabSystemIO}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical">
+                    <CheckBox IsChecked="{Binding EnableHostFsBuffering}"
+                              ToolTip.Tip="{locale:Locale SettingsTabSystemEnableHostFsBufferingTooltip}">
+                        <TextBlock
+                            Text="{locale:Locale SettingsTabSystemEnableHostFsBuffering}"
+                            ToolTip.Tip="{locale:Locale SettingsTabSystemEnableHostFsBufferingTooltip}" />
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding EnableHostFsBufferingPrefetch}"
+                              IsEnabled="{Binding EnableHostFsBuffering}"
+                              ToolTip.Tip="{locale:Locale SettingsTabSystemEnableHostFsBufferingPrefetchTooltip}">
+                        <TextBlock
+                            Text="{locale:Locale SettingsTabSystemEnableHostFsBufferingPrefetch}"
+                            ToolTip.Tip="{locale:Locale SettingsTabSystemEnableHostFsBufferingPrefetchTooltip}" />
+                    </CheckBox>
+                    <StackPanel
+                        Margin="0,0,0,10"
+                        Orientation="Horizontal">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{locale:Locale SettingsTabSystemHostFsBufferingMaxCacheSize}"
+                            ToolTip.Tip="{locale:Locale SettingsTabSystemHostFsBufferingMaxCacheSizeTooltip}"
+                            Width="250"/>
+                        <StackPanel>
+                            <controls:SliderScroll
+                                Value="{Binding HostFsBufferingMaxCacheSize}"
+                                ToolTip.Tip="{locale:Locale SettingsTabSystemHostFsBufferingMaxCacheSizeTooltip}"
+                                Width="350"
+                                Height="32"
+                                Padding="0,-5"
+                                IsEnabled="{Binding EnableHostFsBuffering}"
+                                TickFrequency="536870912"
+                                IsSnapToTickEnabled="True"
+                                LargeChange="1073741824"
+                                SmallChange="536870912"
+                                VerticalAlignment="Center"
+                                Minimum="0"
+                                Maximum="25769803776" />
+                            <TextBlock
+                                Margin="0,0,0,0"
+                                Width="350"
+                                TextAlignment="Center"
+                                IsVisible="{Binding EnableHostFsBuffering}"
+                                Text="{Binding HostFsBufferingMaxCacheSizeString}"
+                                ToolTip.Tip="{locale:Locale SettingsTabSystemHostFsBufferingMaxCacheSizeTooltip}"/>
+                        </StackPanel>
+                    </StackPanel>
                 </StackPanel>
                 <Separator Height="1" />
                 <StackPanel

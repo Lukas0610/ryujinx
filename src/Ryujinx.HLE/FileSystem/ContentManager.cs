@@ -8,6 +8,7 @@ using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using LibHac.Tools.Ncm;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
@@ -53,10 +54,11 @@ namespace Ryujinx.HLE.FileSystem
         private SortedList<ulong, AocItem> AocData { get; }
 
         private readonly VirtualFileSystem _virtualFileSystem;
+        private readonly HostFileSystem _hostFileSystem;
 
         private readonly object _lock = new();
 
-        public ContentManager(VirtualFileSystem virtualFileSystem)
+        public ContentManager(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem)
         {
             _contentDictionary = new SortedDictionary<(ulong, NcaContentType), string>();
             _locationEntries = new Dictionary<StorageId, LinkedList<LocationEntry>>();
@@ -92,6 +94,7 @@ namespace Ryujinx.HLE.FileSystem
             };
 
             _virtualFileSystem = virtualFileSystem;
+            _hostFileSystem = hostFileSystem;
 
             AocData = new SortedList<ulong, AocItem>();
         }
@@ -198,7 +201,7 @@ namespace Ryujinx.HLE.FileSystem
 
                 if (!mergedToContainer)
                 {
-                    using var pfs = PartitionFileSystemUtils.OpenApplicationFileSystem(containerPath, _virtualFileSystem);
+                    using var pfs = PartitionFileSystemUtils.OpenApplicationFileSystem(containerPath, _virtualFileSystem, _hostFileSystem);
                 }
             }
         }
@@ -209,13 +212,13 @@ namespace Ryujinx.HLE.FileSystem
 
         public IList<ulong> GetAocTitleIds() => AocData.Select(e => e.Key).ToList();
 
-        public bool GetAocDataStorage(ulong aocTitleId, out IStorage aocStorage, IntegrityCheckLevel integrityCheckLevel)
+        public bool GetAocDataStorage(Switch device, ulong aocTitleId, out IStorage aocStorage)
         {
             aocStorage = null;
 
             if (AocData.TryGetValue(aocTitleId, out AocItem aoc))
             {
-                var file = new FileStream(aoc.ContainerPath, FileMode.Open, FileAccess.Read);
+                var file = device.HostFileSystem.OpenFileRead(aoc.ContainerPath);
                 using var ncaFile = new UniqueRef<IFile>();
 
                 switch (Path.GetExtension(aoc.ContainerPath))
@@ -233,7 +236,7 @@ namespace Ryujinx.HLE.FileSystem
                         return false; // Print error?
                 }
 
-                aocStorage = new Nca(_virtualFileSystem.KeySet, ncaFile.Get.AsStorage()).OpenStorage(NcaSectionType.Data, integrityCheckLevel);
+                aocStorage = new Nca(_virtualFileSystem.KeySet, ncaFile.Get.AsStorage()).OpenStorage(NcaSectionType.Data, device.Configuration.FsIntegrityCheckLevel);
 
                 return true;
             }

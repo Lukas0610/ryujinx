@@ -169,6 +169,21 @@ namespace Ryujinx.HLE
         /// </summary>
         public Action RefreshInputConfig { internal get; set; }
 
+        /// <summary>
+        /// Whether to enable managed buffering of game file contents
+        /// </summary>
+        public bool EnableHostFsBuffering { get; set; }
+
+        /// <summary>
+        /// Whether to attempt to fully buffer game file contents before booting
+        /// </summary>
+        public bool EnableHostFsBufferingPrefetch { get; set; }
+
+        /// <summary>
+        /// Limit the size of the shared host file I/O cache
+        /// </summary>
+        public long HostFsBufferingMaxCacheSize { get; set; }
+
         public HLEConfiguration(VirtualFileSystem virtualFileSystem,
                                 LibHacHorizonManager libHacHorizonManager,
                                 ContentManager contentManager,
@@ -185,6 +200,9 @@ namespace Ryujinx.HLE
                                 bool enablePtc,
                                 bool enableInternetAccess,
                                 IntegrityCheckLevel fsIntegrityCheckLevel,
+                                bool enableHostFsBuffering,
+                                bool enableHostFsBufferingPrefetch,
+                                long hostFsBufferingMaxCacheSize,
                                 int fsGlobalAccessLogMode,
                                 long systemTimeOffset,
                                 string timeZone,
@@ -212,6 +230,9 @@ namespace Ryujinx.HLE
             EnablePtc = enablePtc;
             EnableInternetAccess = enableInternetAccess;
             FsIntegrityCheckLevel = fsIntegrityCheckLevel;
+            EnableHostFsBuffering = enableHostFsBuffering;
+            EnableHostFsBufferingPrefetch = enableHostFsBufferingPrefetch;
+            HostFsBufferingMaxCacheSize = hostFsBufferingMaxCacheSize;
             FsGlobalAccessLogMode = fsGlobalAccessLogMode;
             SystemTimeOffset = systemTimeOffset;
             TimeZone = timeZone;

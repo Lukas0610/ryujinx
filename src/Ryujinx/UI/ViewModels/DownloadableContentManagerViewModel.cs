@@ -13,6 +13,7 @@ using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
@@ -34,6 +35,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private readonly string _downloadableContentJsonPath;
 
         private readonly VirtualFileSystem _virtualFileSystem;
+        private readonly HostFileSystem _hostFileSystem;
         private AvaloniaList<DownloadableContentModel> _downloadableContents = new();
         private AvaloniaList<DownloadableContentModel> _views = new();
         private AvaloniaList<DownloadableContentModel> _selectedDownloadableContents = new();
@@ -92,9 +94,10 @@ namespace Ryujinx.Ava.UI.ViewModels
             get => string.Format(LocaleManager.Instance[LocaleKeys.DlcWindowHeading], DownloadableContents.Count);
         }
 
-        public DownloadableContentManagerViewModel(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
+        public DownloadableContentManagerViewModel(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, ApplicationData applicationData)
         {
             _virtualFileSystem = virtualFileSystem;
+            _hostFileSystem = hostFileSystem;
 
             _applicationData = applicationData;
 
@@ -131,7 +134,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 if (File.Exists(downloadableContentContainer.ContainerPath))
                 {
-                    using IFileSystem partitionFileSystem = PartitionFileSystemUtils.OpenApplicationFileSystem(downloadableContentContainer.ContainerPath, _virtualFileSystem);
+                    using IFileSystem partitionFileSystem = PartitionFileSystemUtils.OpenApplicationFileSystem(downloadableContentContainer.ContainerPath, _virtualFileSystem, _hostFileSystem);
 
                     foreach (DownloadableContentNca downloadableContentNca in downloadableContentContainer.DownloadableContentNcaList)
                     {
@@ -239,7 +242,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return true;
             }
 
-            using IFileSystem partitionFileSystem = PartitionFileSystemUtils.OpenApplicationFileSystem(path, _virtualFileSystem);
+            using IFileSystem partitionFileSystem = PartitionFileSystemUtils.OpenApplicationFileSystem(path, _virtualFileSystem, _hostFileSystem);
 
             bool success = false;
             foreach (DirectoryEntryEx fileEntry in partitionFileSystem.EnumerateEntries("/", "*.nca"))

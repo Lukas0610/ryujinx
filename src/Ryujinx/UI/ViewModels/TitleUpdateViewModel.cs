@@ -13,6 +13,7 @@ using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
@@ -37,6 +38,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public TitleUpdateMetadata TitleUpdateWindowData;
         public readonly string TitleUpdateJsonPath;
         private VirtualFileSystem VirtualFileSystem { get; }
+        private HostFileSystem HostFileSystem { get; }
         private ApplicationData ApplicationData { get; }
 
         private AvaloniaList<TitleUpdateModel> _titleUpdates = new();
@@ -77,9 +79,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public IStorageProvider StorageProvider;
 
-        public TitleUpdateViewModel(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
+        public TitleUpdateViewModel(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, ApplicationData applicationData)
         {
             VirtualFileSystem = virtualFileSystem;
+            HostFileSystem = hostFileSystem;
 
             ApplicationData = applicationData;
 
@@ -167,7 +170,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             try
             {
-                using IFileSystem pfs = PartitionFileSystemUtils.OpenApplicationFileSystem(path, VirtualFileSystem);
+                using IFileSystem pfs = PartitionFileSystemUtils.OpenApplicationFileSystem(path, VirtualFileSystem, HostFileSystem);
 
                 Dictionary<ulong, ContentMetaData> updates = pfs.GetContentData(ContentMetaType.Patch, VirtualFileSystem, checkLevel);
 

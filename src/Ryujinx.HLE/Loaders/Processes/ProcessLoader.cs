@@ -9,9 +9,11 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
+using SkiaSharp;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.Loaders.Processes
@@ -34,7 +36,15 @@ namespace Ryujinx.HLE.Loaders.Processes
 
         public bool LoadXci(string path, ulong applicationId)
         {
-            FileStream stream = new(path, FileMode.Open, FileAccess.Read);
+            Stream stream = _device.HostFileSystem.OpenFileRead(path);
+            if (stream == null)
+            {
+                if (!_device.HostFileSystem.RequestsCancelled)
+                    Logger.Error?.Print(LogClass.Loader, "Unable to load XCI: Failed to open file");
+
+                return false;
+            }
+
             Xci xci = new(_device.Configuration.VirtualFileSystem.KeySet, stream.AsStorage());
 
             if (!xci.HasPartition(XciPartitionType.Secure))
@@ -68,7 +78,15 @@ namespace Ryujinx.HLE.Loaders.Processes
 
         public bool LoadNsp(string path, ulong applicationId)
         {
-            FileStream file = new(path, FileMode.Open, FileAccess.Read);
+            Stream file = _device.HostFileSystem.OpenFileRead(path);
+            if (file == null)
+            {
+                if (!_device.HostFileSystem.RequestsCancelled)
+                    Logger.Error?.Print(LogClass.Loader, "Unable to load NSP: Failed to open file");
+
+                return false;
+            }
+
             PartitionFileSystem partitionFileSystem = new();
             partitionFileSystem.Initialize(file.AsStorage()).ThrowIfFailure();
 
@@ -100,7 +118,15 @@ namespace Ryujinx.HLE.Loaders.Processes
 
         public bool LoadNca(string path)
         {
-            FileStream file = new(path, FileMode.Open, FileAccess.Read);
+            Stream file = _device.HostFileSystem.OpenFileRead(path);
+            if (file == null)
+            {
+                if (!_device.HostFileSystem.RequestsCancelled)
+                    Logger.Error?.Print(LogClass.Loader, "Unable to load NCA: Failed to open file");
+
+                return false;
+            }
+
             Nca nca = new(_device.Configuration.VirtualFileSystem.KeySet, file.AsStorage(false));
 
             ProcessResult processResult = nca.Load(_device, null, null);
@@ -139,7 +165,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             return false;
         }
 
-        public bool LoadNxo(string path)
+        public bool LoadNxo(string path, CancellationToken? cancellationToken = null)
         {
             var nacpData = new BlitStruct<ApplicationControlProperty>(1);
             IFileSystem dummyExeFs = null;
@@ -153,7 +179,15 @@ namespace Ryujinx.HLE.Loaders.Processes
 
             if (Path.GetExtension(path).ToLower() == ".nro")
             {
-                FileStream input = new(path, FileMode.Open);
+                Stream input = _device.HostFileSystem.OpenFileRead(path);
+                if (input == null)
+                {
+                    if (!_device.HostFileSystem.RequestsCancelled)
+                        Logger.Error?.Print(LogClass.Loader, "Unable to load NXO: Failed to open file");
+
+                    return false;
+                }
+
                 NroExecutable nro = new(input.AsStorage());
 
                 executable = nro;

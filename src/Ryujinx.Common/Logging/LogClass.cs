@@ -17,6 +17,7 @@ namespace Ryujinx.Common.Logging
         Gpu,
         Hid,
         Host1x,
+        IO,
         Kernel,
         KernelIpc,
         KernelScheduler,

@@ -20,6 +20,7 @@ using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Multiplayer;
+using Ryujinx.Common.Host.IO.Stats;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInterop;
 using Ryujinx.Common.Utilities;
@@ -46,6 +47,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -75,6 +77,14 @@ namespace Ryujinx.Ava
         private readonly long _ticksPerFrame;
         private readonly Stopwatch _chrono;
         private long _ticks;
+
+        private readonly Timer _hostFsStatsTimer;
+        private readonly Stopwatch _hostFsStatsChrono;
+        private long _hostFsStatsUpdateCounter;
+        private long _hostFsIoLastTotal;
+        private TimeSpan _hostFsIoLastElapased;
+        private double _hostFsIoSpeed;
+        private double _hostFsCacheHitRatio;
 
         private readonly AccountManager _accountManager;
         private readonly UserChannelPersistence _userChannelPersistence;
@@ -185,6 +195,9 @@ namespace Ryujinx.Ava
             _topLevel.PointerMoved += TopLevel_PointerEnteredOrMoved;
             _topLevel.PointerEntered += TopLevel_PointerEnteredOrMoved;
             _topLevel.PointerExited += TopLevel_PointerExited;
+
+            _hostFsStatsTimer = new Timer(UpdateHostFsStats, null, Timeout.Infinite, Timeout.Infinite);
+            _hostFsStatsChrono = new Stopwatch();
 
             if (OperatingSystem.IsWindows())
             {
@@ -409,6 +422,9 @@ namespace Ryujinx.Ava
 
         public void Start()
         {
+            _hostFsStatsChrono.Start();
+            _hostFsStatsTimer.Change(0, 1000);
+
             if (OperatingSystem.IsWindows())
             {
                 _windowsMultimediaTimerResolution = new WindowsMultimediaTimerResolution(1);
@@ -498,6 +514,12 @@ namespace Ryujinx.Ava
             _renderer.Window.ChangeVSyncMode(Device.EnableDeviceVsync);
         }
 
+        public void StopLoading()
+        {
+            Device.HostFileSystem.AbortRequests();
+            AppExit?.Invoke(this, EventArgs.Empty);
+        }
+
         public void Stop()
         {
             _isActive = false;
@@ -561,6 +583,7 @@ namespace Ryujinx.Ava
             _gpuCancellationTokenSource.Cancel();
             _gpuCancellationTokenSource.Dispose();
 
+            _hostFsStatsTimer.Dispose();
             _chrono.Stop();
         }
 
@@ -666,6 +689,11 @@ namespace Ryujinx.Ava
 
             Logger.Notice.Print(LogClass.Application, $"Using Firmware Version: {firmwareVersion?.VersionString}");
 
+            return true;
+        }
+
+        internal bool LoadTitle()
+        {
             if (_isFirmwareTitle)
             {
                 Logger.Info?.Print(LogClass.Application, "Loading as Firmware Title (NCA).");
@@ -866,6 +894,9 @@ namespace Ryujinx.Ava
                                                  ConfigurationState.Instance.System.EnablePtc,
                                                  ConfigurationState.Instance.System.EnableInternetAccess,
                                                  ConfigurationState.Instance.System.EnableFsIntegrityChecks ? IntegrityCheckLevel.ErrorOnInvalid : IntegrityCheckLevel.None,
+                                                 ConfigurationState.Instance.System.EnableHostFsBuffering,
+                                                 ConfigurationState.Instance.System.EnableHostFsBufferingPrefetch,
+                                                 ConfigurationState.Instance.System.HostFsBufferingMaxCacheSize,
                                                  ConfigurationState.Instance.System.FsGlobalAccessLogMode,
                                                  ConfigurationState.Instance.System.SystemTimeOffset,
                                                  ConfigurationState.Instance.System.TimeZone,
@@ -1045,6 +1076,36 @@ namespace Ryujinx.Ava
             (RendererHost.EmbeddedWindow as EmbeddedWindowOpenGL)?.MakeCurrent(true);
         }
 
+        private void UpdateHostFsStats(object state)
+        {
+            Dictionary<string, IHostIOStat> hostFsStats = Device.HostFileSystem.GetStats().ToDictionary(x => x.Name);
+
+            if (hostFsStats.TryGetValue("SizeOfFileReads", out IHostIOStat sizeOfHostFsFileReads) &&
+                hostFsStats.TryGetValue("SizeOfBufferedReads", out IHostIOStat sizeOfHostFsBufferedReads))
+            {
+                TimeSpan elapsed = _hostFsStatsChrono.Elapsed;
+
+                long hostFsIoTotal = sizeOfHostFsFileReads.Value + sizeOfHostFsBufferedReads.Value;
+                long hostFsIoDelta = hostFsIoTotal - _hostFsIoLastTotal;
+                TimeSpan hostFsIoDeltaTime = elapsed - _hostFsIoLastElapased;
+
+                _hostFsIoLastTotal = hostFsIoTotal;
+                _hostFsIoLastElapased = elapsed;
+                _hostFsIoSpeed = hostFsIoDelta / hostFsIoDeltaTime.TotalSeconds;
+                _hostFsCacheHitRatio = (double)sizeOfHostFsBufferedReads.Value / hostFsIoTotal;
+            }
+
+            // Write full stats to log roughly every 30 seconds
+            if (_hostFsStatsUpdateCounter++ >= 30)
+            {
+                string hostFsStatsString = string.Join(", ", hostFsStats.Select(e => $"{e.Key}={e.Value.GetFormattedValue()}"));
+
+                Logger.Info?.Print(LogClass.IO, $"HostFS I/O stats: {hostFsStatsString}");
+
+                _hostFsStatsUpdateCounter = 0;
+            }
+        }
+
         public void InitStatus()
         {
             StatusInitEvent?.Invoke(this, new StatusInitEventArgs(
@@ -1067,13 +1128,16 @@ namespace Ryujinx.Ava
                 dockedMode += $" ({GraphicsConfig.ResScale}x)";
             }
 
+            double hostFsCacheHitRatioPercentage = _hostFsCacheHitRatio * 100;
+
             StatusUpdatedEvent?.Invoke(this, new StatusUpdatedEventArgs(
                 Device.EnableDeviceVsync,
                 LocaleManager.Instance[LocaleKeys.VolumeShort] + $": {(int)(Device.GetVolume() * 100)}%",
                 dockedMode,
                 ConfigurationState.Instance.Graphics.AspectRatio.Value.ToText(),
                 LocaleManager.Instance[LocaleKeys.Game] + $": {Device.Statistics.GetGameFrameRate():00.00} FPS ({Device.Statistics.GetGameFrameTime():00.00} ms)",
-                $"FIFO: {Device.Statistics.GetFifoPercent():00.00} %"));
+                $"FIFO: {Device.Statistics.GetFifoPercent():00.00} %",
+                $"I/O: {ReadableStringUtils.FormatSize(_hostFsIoSpeed, 2, null, true)}/s ({hostFsCacheHitRatioPercentage:00.00}% cached)"));
         }
 
         public async Task ShowExitPrompt()

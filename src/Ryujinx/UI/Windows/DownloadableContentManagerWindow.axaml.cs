@@ -5,6 +5,7 @@ using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.ViewModels;
+using Ryujinx.Common.Host;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.UI.App.Common;
 using Ryujinx.UI.Common.Helper;
@@ -23,21 +24,21 @@ namespace Ryujinx.Ava.UI.Windows
             InitializeComponent();
         }
 
-        public DownloadableContentManagerWindow(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
+        public DownloadableContentManagerWindow(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, ApplicationData applicationData)
         {
-            DataContext = ViewModel = new DownloadableContentManagerViewModel(virtualFileSystem, applicationData);
+            DataContext = ViewModel = new DownloadableContentManagerViewModel(virtualFileSystem, hostFileSystem, applicationData);
 
             InitializeComponent();
         }
 
-        public static async Task Show(VirtualFileSystem virtualFileSystem, ApplicationData applicationData)
+        public static async Task Show(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, ApplicationData applicationData)
         {
             ContentDialog contentDialog = new()
             {
                 PrimaryButtonText = "",
                 SecondaryButtonText = "",
                 CloseButtonText = "",
-                Content = new DownloadableContentManagerWindow(virtualFileSystem, applicationData),
+                Content = new DownloadableContentManagerWindow(virtualFileSystem, hostFileSystem, applicationData),
                 Title = string.Format(LocaleManager.Instance[LocaleKeys.DlcWindowTitle], applicationData.Name, applicationData.IdBaseString),
             };
 

@@ -13,6 +13,7 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
 using Ryujinx.Graphics.Vulkan;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
@@ -49,6 +50,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         private int _graphicsBackendIndex;
         private int _scalingFilter;
         private int _scalingFilterLevel;
+        private bool _enableHostFsBuffering;
+        private long _hostFsBufferingMaxCacheSize;
 
         public event Action CloseWindow;
         public event Action SaveSettingsEvent;
@@ -227,6 +230,37 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public DateTimeOffset CurrentDate { get; set; }
         public TimeSpan CurrentTime { get; set; }
+
+        public bool EnableHostFsBuffering
+        {
+            get => _enableHostFsBuffering;
+            set
+            {
+                _enableHostFsBuffering = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool EnableHostFsBufferingPrefetch { get; set; }
+
+        public long HostFsBufferingMaxCacheSize
+        {
+            get => _hostFsBufferingMaxCacheSize;
+            set
+            {
+                _hostFsBufferingMaxCacheSize = value;
+
+                if (value > 0)
+                    HostFsBufferingMaxCacheSizeString = ReadableStringUtils.FormatSize(value, 2);
+                else
+                    HostFsBufferingMaxCacheSizeString = "Auto";
+
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HostFsBufferingMaxCacheSizeString));
+            }
+        }
+
+        internal string HostFsBufferingMaxCacheSizeString { get; private set; }
 
         internal AvaloniaList<TimeZone> TimeZones { get; set; }
         public AvaloniaList<string> GameDirectories { get; set; }
@@ -427,6 +461,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             EnableVsync = config.Graphics.EnableVsync;
             EnableFsIntegrityChecks = config.System.EnableFsIntegrityChecks;
             ExpandDramSize = config.System.ExpandRam;
+            EnableHostFsBuffering = config.System.EnableHostFsBuffering;
+            EnableHostFsBufferingPrefetch = config.System.EnableHostFsBufferingPrefetch;
+            HostFsBufferingMaxCacheSize = config.System.HostFsBufferingMaxCacheSize;
             IgnoreMissingServices = config.System.IgnoreMissingServices;
 
             // CPU
@@ -521,6 +558,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.Graphics.EnableVsync.Value = EnableVsync;
             config.System.EnableFsIntegrityChecks.Value = EnableFsIntegrityChecks;
             config.System.ExpandRam.Value = ExpandDramSize;
+            config.System.EnableHostFsBuffering.Value = EnableHostFsBuffering;
+            config.System.EnableHostFsBufferingPrefetch.Value = EnableHostFsBufferingPrefetch;
+            config.System.HostFsBufferingMaxCacheSize.Value = HostFsBufferingMaxCacheSize;
             config.System.IgnoreMissingServices.Value = IgnoreMissingServices;
 
             // CPU

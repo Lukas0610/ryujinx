@@ -181,6 +181,7 @@ namespace Ryujinx.Ava.UI.Views.Main
 
             await new CheatWindow(
                 Window.VirtualFileSystem,
+                Window.HostFileSystem,
                 ViewModel.AppHost.Device.Processes.ActiveApplication.ProgramIdText,
                 name,
                 Window.ViewModel.SelectedApplication.Path).ShowDialog(Window);

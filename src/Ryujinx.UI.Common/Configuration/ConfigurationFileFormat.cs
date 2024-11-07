@@ -15,7 +15,7 @@ namespace Ryujinx.UI.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 51;
+        public const int CurrentVersion = 52;
 
         /// <summary>
         /// Version of the configuration file format
@@ -216,6 +216,21 @@ namespace Ryujinx.UI.Common.Configuration
         /// Enables integrity checks on Game content files
         /// </summary>
         public bool EnableFsIntegrityChecks { get; set; }
+
+        /// <summary>
+        /// Whether to enable managed buffering of game file contents
+        /// </summary>
+        public bool EnableHostFsBuffering { get; set; }
+
+        /// <summary>
+        /// Whether to attempt to fully buffer game file contents before booting
+        /// </summary>
+        public bool EnableHostFsBufferingPrefetch { get; set; }
+
+        /// <summary>
+        /// Limit the size of the shared host file I/O cache
+        /// </summary>
+        public long HostFsBufferingMaxCacheSize { get; set; }
 
         /// <summary>
         /// Enables FS access log output to the console. Possible modes are 0-3

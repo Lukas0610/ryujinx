@@ -9,6 +9,7 @@ using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using LibHac.Tools.Ncm;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
@@ -127,7 +128,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
             return nca.Header.ContentType == NcaContentType.Control;
         }
 
-        public static (Nca, Nca) GetUpdateData(this Nca mainNca, VirtualFileSystem fileSystem, IntegrityCheckLevel checkLevel, int programIndex, out string updatePath)
+        public static (Nca, Nca) GetUpdateData(this Nca mainNca, VirtualFileSystem fileSystem, HostFileSystem hostFileSystem, IntegrityCheckLevel checkLevel, int programIndex, out string updatePath)
         {
             updatePath = null;
 
@@ -145,7 +146,7 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                 updatePath = JsonHelper.DeserializeFromFile(titleUpdateMetadataPath, _applicationSerializerContext.TitleUpdateMetadata).Selected;
                 if (File.Exists(updatePath))
                 {
-                    IFileSystem updatePartitionFileSystem = PartitionFileSystemUtils.OpenApplicationFileSystem(updatePath, fileSystem);
+                    IFileSystem updatePartitionFileSystem = PartitionFileSystemUtils.OpenApplicationFileSystem(updatePath, fileSystem, hostFileSystem);
 
                     foreach ((ulong applicationTitleId, ContentMetaData content) in updatePartitionFileSystem.GetContentData(ContentMetaType.Patch, fileSystem, checkLevel))
                     {

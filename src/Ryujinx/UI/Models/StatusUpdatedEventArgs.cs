@@ -10,8 +10,9 @@ namespace Ryujinx.Ava.UI.Models
         public string DockedMode { get; }
         public string FifoStatus { get; }
         public string GameStatus { get; }
+        public string HostIoCacheStatus { get; }
 
-        public StatusUpdatedEventArgs(bool vSyncEnabled, string volumeStatus, string dockedMode, string aspectRatio, string gameStatus, string fifoStatus)
+        public StatusUpdatedEventArgs(bool vSyncEnabled, string volumeStatus, string dockedMode, string aspectRatio, string gameStatus, string fifoStatus, string hostIoCacheStatus)
         {
             VSyncEnabled = vSyncEnabled;
             VolumeStatus = volumeStatus;
@@ -19,6 +20,7 @@ namespace Ryujinx.Ava.UI.Models
             AspectRatio = aspectRatio;
             GameStatus = gameStatus;
             FifoStatus = fifoStatus;
+            HostIoCacheStatus = hostIoCacheStatus;
         }
     }
 }

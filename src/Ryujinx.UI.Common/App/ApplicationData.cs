@@ -7,6 +7,7 @@ using LibHac.Ns;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
@@ -44,7 +45,7 @@ namespace Ryujinx.UI.App.Common
 
         [JsonIgnore] public string IdBaseString => IdBase.ToString("x16");
 
-        public static string GetBuildId(VirtualFileSystem virtualFileSystem, IntegrityCheckLevel checkLevel, string titleFilePath)
+        public static string GetBuildId(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, IntegrityCheckLevel checkLevel, string titleFilePath)
         {
             using FileStream file = new(titleFilePath, FileMode.Open, FileAccess.Read);
 
@@ -113,7 +114,7 @@ namespace Ryujinx.UI.App.Common
                 return string.Empty;
             }
 
-            (Nca updatePatchNca, _) = mainNca.GetUpdateData(virtualFileSystem, checkLevel, 0, out string _);
+            (Nca updatePatchNca, _) = mainNca.GetUpdateData(virtualFileSystem, hostFileSystem, checkLevel, 0, out string _);
 
             if (updatePatchNca != null)
             {

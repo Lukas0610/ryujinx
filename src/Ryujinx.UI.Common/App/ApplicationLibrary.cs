@@ -10,6 +10,7 @@ using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.FileSystem;
@@ -45,14 +46,16 @@ namespace Ryujinx.UI.App.Common
         private readonly byte[] _nsoIcon;
 
         private readonly VirtualFileSystem _virtualFileSystem;
+        private readonly HostFileSystem _hostFileSystem;
         private readonly IntegrityCheckLevel _checkLevel;
         private CancellationTokenSource _cancellationToken;
 
         private static readonly ApplicationJsonSerializerContext _serializerContext = new(JsonHelper.GetDefaultSerializerOptions());
 
-        public ApplicationLibrary(VirtualFileSystem virtualFileSystem, IntegrityCheckLevel checkLevel)
+        public ApplicationLibrary(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, IntegrityCheckLevel checkLevel)
         {
             _virtualFileSystem = virtualFileSystem;
+            _hostFileSystem = hostFileSystem;
             _checkLevel = checkLevel;
 
             _nspIcon = GetResourceBytes("Ryujinx.UI.Common.Resources.Icon_NSP.png");
@@ -916,7 +919,7 @@ namespace Ryujinx.UI.App.Common
 
             try
             {
-                (Nca patchNca, Nca controlNca) = mainNca.GetUpdateData(_virtualFileSystem, _checkLevel, 0, out updatePath);
+                (Nca patchNca, Nca controlNca) = mainNca.GetUpdateData(_virtualFileSystem, _hostFileSystem, _checkLevel, 0, out updatePath);
 
                 if (patchNca != null && controlNca != null)
                 {

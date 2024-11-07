@@ -184,14 +184,26 @@
                                 Minimum="0"
                                 Value="{Binding ProgressValue}" />
                         </Border>
-                        <TextBlock
+                        <StackPanel
                             Grid.Row="2"
                             Margin="10"
-                            FontSize="18"
-                            IsVisible="{Binding ShowLoadProgress}"
-                            Text="{Binding CacheLoadStatus}"
-                            TextAlignment="Start"
-                            MaxWidth="500" />
+                            Orientation="Vertical"
+                            Spacing="10"
+                            MaxWidth="500"
+                            IsVisible="{Binding ShowLoadProgress}">
+                            <TextBlock
+                                FontSize="18"
+                                IsVisible="{Binding HasCacheLoadStatus}"
+                                Text="{Binding CacheLoadStatus}"
+                                TextAlignment="Start"
+                                MaxWidth="500" />
+                            <TextBlock
+                                FontSize="14"
+                                IsVisible="{Binding HasCacheLoadDetailedStatus}"
+                                Text="{Binding CacheLoadDetailedStatus}"
+                                TextAlignment="Start"
+                                MaxWidth="500" />
+                        </StackPanel>
                     </Grid>
                 </Grid>
             </Grid>

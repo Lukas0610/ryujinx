@@ -332,6 +332,21 @@ namespace Ryujinx.UI.Common.Configuration
             public ReactiveObject<bool> EnableFsIntegrityChecks { get; private set; }
 
             /// <summary>
+            /// Whether to enable managed buffering of game file contents
+            /// </summary>
+            public ReactiveObject<bool> EnableHostFsBuffering { get; set; }
+
+            /// <summary>
+            /// Whether to attempt to fully buffer game file contents before booting
+            /// </summary>
+            public ReactiveObject<bool> EnableHostFsBufferingPrefetch { get; set; }
+
+            /// <summary>
+            /// Limit the size of the shared host file I/O cache
+            /// </summary>
+            public ReactiveObject<long> HostFsBufferingMaxCacheSize { get; set; }
+
+            /// <summary>
             /// Enables FS access log output to the console. Possible modes are 0-3
             /// </summary>
             public ReactiveObject<int> FsGlobalAccessLogMode { get; private set; }
@@ -380,6 +395,12 @@ namespace Ryujinx.UI.Common.Configuration
                 EnableInternetAccess.Event += static (sender, e) => LogValueChange(e, nameof(EnableInternetAccess));
                 EnableFsIntegrityChecks = new ReactiveObject<bool>();
                 EnableFsIntegrityChecks.Event += static (sender, e) => LogValueChange(e, nameof(EnableFsIntegrityChecks));
+                EnableHostFsBuffering = new ReactiveObject<bool>();
+                EnableHostFsBuffering.Event += static (sender, e) => LogValueChange(e, nameof(EnableHostFsBuffering));
+                EnableHostFsBufferingPrefetch = new ReactiveObject<bool>();
+                EnableHostFsBufferingPrefetch.Event += static (sender, e) => LogValueChange(e, nameof(EnableHostFsBufferingPrefetch));
+                HostFsBufferingMaxCacheSize = new ReactiveObject<long>();
+                HostFsBufferingMaxCacheSize.Event += static (sender, e) => LogValueChange(e, nameof(HostFsBufferingMaxCacheSize));
                 FsGlobalAccessLogMode = new ReactiveObject<int>();
                 FsGlobalAccessLogMode.Event += static (sender, e) => LogValueChange(e, nameof(FsGlobalAccessLogMode));
                 AudioBackend = new ReactiveObject<AudioBackend>();
@@ -702,6 +723,9 @@ namespace Ryujinx.UI.Common.Configuration
                 EnablePtc = System.EnablePtc,
                 EnableInternetAccess = System.EnableInternetAccess,
                 EnableFsIntegrityChecks = System.EnableFsIntegrityChecks,
+                EnableHostFsBuffering = System.EnableHostFsBuffering,
+                EnableHostFsBufferingPrefetch = System.EnableHostFsBufferingPrefetch,
+                HostFsBufferingMaxCacheSize = System.HostFsBufferingMaxCacheSize,
                 FsGlobalAccessLogMode = System.FsGlobalAccessLogMode,
                 AudioBackend = System.AudioBackend,
                 AudioVolume = System.AudioVolume,
@@ -814,6 +838,9 @@ namespace Ryujinx.UI.Common.Configuration
             System.EnablePtc.Value = true;
             System.EnableInternetAccess.Value = false;
             System.EnableFsIntegrityChecks.Value = true;
+            System.EnableHostFsBuffering.Value = true;
+            System.EnableHostFsBufferingPrefetch.Value = false;
+            System.HostFsBufferingMaxCacheSize.Value = 2L * 1024 * 1024 * 1024; // 2 GiB
             System.FsGlobalAccessLogMode.Value = 0;
             System.AudioBackend.Value = AudioBackend.SDL2;
             System.AudioVolume.Value = 1;
@@ -1477,6 +1504,17 @@ namespace Ryujinx.UI.Common.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 52)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 52.");
+
+                configurationFileFormat.EnableHostFsBuffering = true;
+                configurationFileFormat.EnableHostFsBufferingPrefetch = false;
+                configurationFileFormat.HostFsBufferingMaxCacheSize = 2L * 1024 * 1024 * 1024; // GiB
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value = configurationFileFormat.ResScaleCustom;
@@ -1518,6 +1556,9 @@ namespace Ryujinx.UI.Common.Configuration
             System.EnablePtc.Value = configurationFileFormat.EnablePtc;
             System.EnableInternetAccess.Value = configurationFileFormat.EnableInternetAccess;
             System.EnableFsIntegrityChecks.Value = configurationFileFormat.EnableFsIntegrityChecks;
+            System.EnableHostFsBuffering.Value = configurationFileFormat.EnableHostFsBuffering;
+            System.EnableHostFsBufferingPrefetch.Value = configurationFileFormat.EnableHostFsBufferingPrefetch;
+            System.HostFsBufferingMaxCacheSize.Value = configurationFileFormat.HostFsBufferingMaxCacheSize;
             System.FsGlobalAccessLogMode.Value = configurationFileFormat.FsGlobalAccessLogMode;
             System.AudioBackend.Value = configurationFileFormat.AudioBackend;
             System.AudioVolume.Value = configurationFileFormat.AudioVolume;

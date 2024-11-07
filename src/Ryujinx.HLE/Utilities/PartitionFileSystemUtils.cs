@@ -3,6 +3,7 @@ using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
+using Ryujinx.Common.Host;
 using Ryujinx.HLE.FileSystem;
 using System.IO;
 
@@ -10,9 +11,13 @@ namespace Ryujinx.HLE.Utilities
 {
     public static class PartitionFileSystemUtils
     {
-        public static IFileSystem OpenApplicationFileSystem(string path, VirtualFileSystem fileSystem, bool throwOnFailure = true)
+        public static IFileSystem OpenApplicationFileSystem(string path, VirtualFileSystem fileSystem, HostFileSystem hostFileSystem, bool throwOnFailure = true)
         {
-            FileStream file = File.OpenRead(path);
+            Stream file = hostFileSystem.OpenFileRead(path);
+            if (file == null)
+            {
+                return null;
+            }
 
             IFileSystem partitionFileSystem;
 

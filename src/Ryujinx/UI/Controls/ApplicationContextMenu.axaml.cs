@@ -89,7 +89,7 @@ namespace Ryujinx.Ava.UI.Controls
 
             if (viewModel?.SelectedApplication != null)
             {
-                await TitleUpdateWindow.Show(viewModel.VirtualFileSystem, viewModel.SelectedApplication);
+                await TitleUpdateWindow.Show(viewModel.VirtualFileSystem, viewModel.HostFileSystem, viewModel.SelectedApplication);
             }
         }
 
@@ -99,7 +99,7 @@ namespace Ryujinx.Ava.UI.Controls
 
             if (viewModel?.SelectedApplication != null)
             {
-                await DownloadableContentManagerWindow.Show(viewModel.VirtualFileSystem, viewModel.SelectedApplication);
+                await DownloadableContentManagerWindow.Show(viewModel.VirtualFileSystem, viewModel.HostFileSystem, viewModel.SelectedApplication);
             }
         }
 
@@ -111,6 +111,7 @@ namespace Ryujinx.Ava.UI.Controls
             {
                 await new CheatWindow(
                     viewModel.VirtualFileSystem,
+                    viewModel.HostFileSystem,
                     viewModel.SelectedApplication.IdString,
                     viewModel.SelectedApplication.Name,
                     viewModel.SelectedApplication.Path).ShowDialog(viewModel.TopLevel as Window);

@@ -1,6 +1,7 @@
 using Ryujinx.Audio.Backends.CompatLayer;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Host;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
@@ -10,6 +11,7 @@ using Ryujinx.HLE.Loaders.Processes;
 using Ryujinx.HLE.UI;
 using Ryujinx.Memory;
 using System;
+using System.Threading;
 
 namespace Ryujinx.HLE
 {
@@ -20,6 +22,7 @@ namespace Ryujinx.HLE
         public MemoryBlock Memory { get; }
         public GpuContext Gpu { get; }
         public VirtualFileSystem FileSystem { get; }
+        public HostFileSystem HostFileSystem { get; }
         public HOS.Horizon System { get; }
         public ProcessLoader Processes { get; }
         public PerformanceStatistics Statistics { get; }
@@ -40,6 +43,10 @@ namespace Ryujinx.HLE
             Configuration = configuration;
             FileSystem = Configuration.VirtualFileSystem;
             UIHandler = Configuration.HostUIHandler;
+
+            HostFileSystem = new HostFileSystem(configuration.EnableHostFsBuffering,
+                                                configuration.EnableHostFsBufferingPrefetch,
+                                                configuration.HostFsBufferingMaxCacheSize);
 
             MemoryAllocationFlags memoryAllocationFlags = configuration.MemoryManagerMode == MemoryManagerMode.SoftwarePageTable
                 ? MemoryAllocationFlags.Reserve
@@ -152,6 +159,7 @@ namespace Ryujinx.HLE
             {
                 System.Dispose();
                 AudioDeviceDriver.Dispose();
+                HostFileSystem.Dispose();
                 FileSystem.Dispose();
                 Memory.Dispose();
             }

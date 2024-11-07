@@ -8,6 +8,7 @@ using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.Common.GraphicsDriver;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Logging.Targets;
 using Ryujinx.Common.SystemInterop;
@@ -47,6 +48,7 @@ namespace Ryujinx.Headless.SDL2
         public static string Version { get; private set; }
 
         private static VirtualFileSystem _virtualFileSystem;
+        private static HostFileSystem _hostFileSystem;
         private static ContentManager _contentManager;
         private static AccountManager _accountManager;
         private static LibHacHorizonManager _libHacHorizonManager;
@@ -335,6 +337,7 @@ namespace Ryujinx.Headless.SDL2
             AppDataManager.Initialize(option.BaseDataDir);
 
             _virtualFileSystem = VirtualFileSystem.CreateInstance();
+            _hostFileSystem = HostFileSystem.CreateDefault();
             _libHacHorizonManager = new LibHacHorizonManager();
 
             _libHacHorizonManager.InitializeFsServer(_virtualFileSystem);
@@ -342,7 +345,7 @@ namespace Ryujinx.Headless.SDL2
             _libHacHorizonManager.InitializeBcatServer();
             _libHacHorizonManager.InitializeSystemClients();
 
-            _contentManager = new ContentManager(_virtualFileSystem);
+            _contentManager = new ContentManager(_virtualFileSystem, _hostFileSystem);
             _accountManager = new AccountManager(_libHacHorizonManager.RyujinxClient, option.UserProfile);
             _userChannelPersistence = new UserChannelPersistence();
 
@@ -571,6 +574,9 @@ namespace Ryujinx.Headless.SDL2
                 !options.DisablePTC,
                 options.EnableInternetAccess,
                 !options.DisableFsIntegrityChecks ? IntegrityCheckLevel.ErrorOnInvalid : IntegrityCheckLevel.None,
+                options.EnableHostFsBuffering,
+                options.EnableHostFsBufferingPrefetch,
+                options.HostFsBufferingMaxCacheSize,
                 options.FsGlobalAccessLogMode,
                 options.SystemTimeOffset,
                 options.SystemTimeZone,

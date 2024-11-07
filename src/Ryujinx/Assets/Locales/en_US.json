@@ -795,5 +795,12 @@
   "MultiplayerMode": "Mode:",
   "MultiplayerModeTooltip": "Change LDN multiplayer mode.\n\nLdnMitm will modify local wireless/local play functionality in games to function as if it were LAN, allowing for local, same-network connections with other Ryujinx instances and hacked Nintendo Switch consoles that have the ldn_mitm module installed.\n\nMultiplayer requires all players to be on the same game version (i.e. Super Smash Bros. Ultimate v13.0.1 can't connect to v13.0.0).\n\nLeave DISABLED if unsure.",
   "MultiplayerModeDisabled": "Disabled",
-  "MultiplayerModeLdnMitm": "ldn_mitm"
+  "MultiplayerModeLdnMitm": "ldn_mitm",
+  "SettingsTabSystemIO": "Host File System I/O",
+  "SettingsTabSystemEnableHostFsBuffering": "Buffer game-files in memory",
+  "SettingsTabSystemEnableHostFsBufferingTooltip": "Buffers data read from game-files in memory allowing for faster repeated access.\n\nImproves performance when using HDDs or network-drives by allocating moderate amounts memory.\n\nLeave OFF if unsure.",
+  "SettingsTabSystemEnableHostFsBufferingPrefetch": "Prefetch game-files before booting",
+  "SettingsTabSystemEnableHostFsBufferingPrefetchTooltip": "Reads all game-files and buffers them in memory before booting the game.\n\nImproves performance when using HDDs or network-drives by allocating large amounts of memory.\n\nLeave OFF if unsure.",
+  "SettingsTabSystemHostFsBufferingMaxCacheSize": "Buffer-Cache Size Limit",
+  "SettingsTabSystemHostFsBufferingMaxCacheSizeTooltip": "Maximum size of the buffer memory area.\n\nPlease ensure that you always have enough memory available or the application may crash."
 }

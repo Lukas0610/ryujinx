@@ -111,6 +111,15 @@ namespace Ryujinx.Headless.SDL2
         [Option("disable-fs-integrity-checks", Required = false, HelpText = "Disables integrity checks on Game content files.")]
         public bool DisableFsIntegrityChecks { get; set; }
 
+        [Option("enable-host-fs-buffering", Required = false, HelpText = "Enables managed buffering of game file contents.")]
+        public bool EnableHostFsBuffering { get; set; }
+
+        [Option("enable-host-fs-buffering-prefetch", Required = false, HelpText = "Attempts to fully buffer game file contents before booting.")]
+        public bool EnableHostFsBufferingPrefetch { get; set; }
+
+        [Option("host-fs-buffering-max-cache-size", Required = false, Default = 0, HelpText = "Limit the size of the shared host file I/O cache. Set to '0' for no limit.")]
+        public long HostFsBufferingMaxCacheSize { get; set; }
+
         [Option("fs-global-access-log-mode", Required = false, Default = 0, HelpText = "Enables FS access log output to the console.")]
         public int FsGlobalAccessLogMode { get; set; }
 

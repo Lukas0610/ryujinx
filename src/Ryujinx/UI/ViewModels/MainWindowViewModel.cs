@@ -19,6 +19,7 @@ using Ryujinx.Ava.UI.Renderer;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
@@ -57,18 +58,20 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private string _loadHeading;
         private string _cacheLoadStatus;
+        private string _cacheLoadDetailedStatus;
         private string _searchText;
         private Timer _searchTimer;
         private string _dockedStatusText;
         private string _fifoStatusText;
+        private string _hostIoCacheStatusText;
         private string _gameStatusText;
         private string _volumeStatusText;
         private string _gpuStatusText;
         private bool _isAmiiboRequested;
         private bool _isGameRunning;
         private bool _isFullScreen;
-        private int _progressMaximum;
-        private int _progressValue;
+        private long _progressMaximum;
+        private long _progressValue;
         private long _lastFullscreenToggle = Environment.TickCount64;
         private bool _showLoadProgress;
         private bool _showMenuAndStatusBar = true;
@@ -138,6 +141,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             IStorageProvider storageProvider,
             ApplicationLibrary applicationLibrary,
             VirtualFileSystem virtualFileSystem,
+            HostFileSystem hostFileSystem,
             AccountManager accountManager,
             InputManager inputManager,
             UserChannelPersistence userChannelPersistence,
@@ -152,6 +156,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             StorageProvider = storageProvider;
             ApplicationLibrary = applicationLibrary;
             VirtualFileSystem = virtualFileSystem;
+            HostFileSystem = hostFileSystem;
             AccountManager = accountManager;
             InputManager = inputManager;
             UserChannelPersistence = userChannelPersistence;
@@ -255,6 +260,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool ShowFirmwareStatus => !ShowLoadProgress;
 
+        public bool IsGameLoading { get; set; }
+
         public bool IsGameRunning
         {
             get => _isGameRunning;
@@ -295,7 +302,13 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(ShowFirmwareStatus));
+                OnPropertyChanged(nameof(ShowHostIoStatusText));
             }
+        }
+
+        public bool ShowHostIoStatusText
+        {
+            get => !_showLoadProgress && AppHost?.Device?.Configuration.EnableHostFsBuffering == true;
         }
 
         public string GameStatusText
@@ -395,7 +408,30 @@ namespace Ryujinx.Ava.UI.ViewModels
                 _cacheLoadStatus = value;
 
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(HasCacheLoadStatus));
             }
+        }
+
+        public bool HasCacheLoadStatus
+        {
+            get => !string.IsNullOrWhiteSpace(CacheLoadStatus);
+        }
+
+        public string CacheLoadDetailedStatus
+        {
+            get => _cacheLoadDetailedStatus;
+            set
+            {
+                _cacheLoadDetailedStatus = value;
+
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasCacheLoadDetailedStatus));
+            }
+        }
+
+        public bool HasCacheLoadDetailedStatus
+        {
+            get => !string.IsNullOrWhiteSpace(CacheLoadDetailedStatus);
         }
 
         public Brush ProgressBarBackgroundColor
@@ -442,7 +478,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public int ProgressMaximum
+        public long ProgressMaximum
         {
             get => _progressMaximum;
             set
@@ -453,7 +489,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public int ProgressValue
+        public long ProgressValue
         {
             get => _progressValue;
             set
@@ -536,6 +572,16 @@ namespace Ryujinx.Ava.UI.ViewModels
             set
             {
                 _backendText = value;
+
+                OnPropertyChanged();
+            }
+        }
+        public string HostIoCacheStatusText
+        {
+            get => _hostIoCacheStatusText;
+            set
+            {
+                _hostIoCacheStatusText = value;
 
                 OnPropertyChanged();
             }
@@ -948,6 +994,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         public IStorageProvider StorageProvider { get; private set; }
         public ApplicationLibrary ApplicationLibrary { get; private set; }
         public VirtualFileSystem VirtualFileSystem { get; private set; }
+        public HostFileSystem HostFileSystem { get; private set; }
         public AccountManager AccountManager { get; private set; }
         public InputManager InputManager { get; private set; }
         public UserChannelPersistence UserChannelPersistence { get; private set; }
@@ -1136,6 +1183,20 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
+        private void DeviceHostFileSystem_RequestProgress(HostFileSystemRequestProgressEventArgs e)
+        {
+            Dispatcher.UIThread.Post((() =>
+            {
+                ProgressMaximum = e.Total;
+                ProgressValue = e.Current;
+
+                CacheLoadStatus = Path.GetFileName(e.Path);
+                CacheLoadDetailedStatus = $"{ReadableStringUtils.FormatSize(e.Current)} / {ReadableStringUtils.FormatSize(e.Total)} @ {ReadableStringUtils.FormatSize(e.Speed)}/s";
+
+                IsLoadingIndeterminate = false;
+            }));
+        }
+
         private void ProgressHandler<T>(T state, int current, int total) where T : Enum
         {
             Dispatcher.UIThread.Post((() =>
@@ -1147,6 +1208,8 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     case LoadState ptcState:
                         CacheLoadStatus = $"{current} / {total}";
+                        CacheLoadDetailedStatus = "";
+
                         switch (ptcState)
                         {
                             case LoadState.Unloaded:
@@ -1163,6 +1226,8 @@ namespace Ryujinx.Ava.UI.ViewModels
                         break;
                     case ShaderCacheLoadingState shaderCacheState:
                         CacheLoadStatus = $"{current} / {total}";
+                        CacheLoadDetailedStatus = "";
+
                         switch (shaderCacheState)
                         {
                             case ShaderCacheLoadingState.Start:
@@ -1216,9 +1281,17 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             _rendererWaitEvent.WaitOne();
 
-            AppHost?.Start();
+            IsGameLoading = true;
 
-            AppHost?.DisposeContext();
+            AppHost.Device.HostFileSystem.RequestProgress += DeviceHostFileSystem_RequestProgress;
+
+            if (AppHost?.LoadTitle() == true)
+            {
+                IsGameLoading = false;
+
+                AppHost?.Start();
+                AppHost?.DisposeContext();
+            }
         }
 
         private async Task HandleRelaunch()
@@ -1271,6 +1344,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                     GameStatusText = args.GameStatus;
                     VolumeStatusText = args.VolumeStatus;
                     FifoStatusText = args.FifoStatus;
+                    HostIoCacheStatusText = args.HostIoCacheStatus;
 
                     ShowStatusSeparator = true;
                 });
@@ -1433,6 +1507,10 @@ namespace Ryujinx.Ava.UI.ViewModels
                 await Task.Delay(100);
 
                 AppHost?.ShowExitPrompt();
+            }
+            else if (IsGameLoading)
+            {
+                AppHost?.StopLoading();
             }
         }
 
@@ -1668,6 +1746,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return;
             }
 
+            IsGameLoading = false;
             IsGameRunning = false;
 
             Dispatcher.UIThread.InvokeAsync(async () =>

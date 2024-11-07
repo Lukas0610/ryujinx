@@ -12,6 +12,7 @@ using Ryujinx.Ava.Input;
 using Ryujinx.Ava.UI.Applet;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.FileSystem;
@@ -47,6 +48,7 @@ namespace Ryujinx.Ava.UI.Windows
         internal readonly AvaHostUIHandler UiHandler;
 
         public VirtualFileSystem VirtualFileSystem { get; private set; }
+        public HostFileSystem HostFileSystem { get; private set; }
         public ContentManager ContentManager { get; private set; }
         public AccountManager AccountManager { get; private set; }
 
@@ -165,13 +167,13 @@ namespace Ryujinx.Ava.UI.Windows
             });
         }
 
-        public void Application_Opened(object sender, ApplicationOpenedEventArgs args)
+        public async void Application_Opened(object sender, ApplicationOpenedEventArgs args)
         {
             if (args.Application != null)
             {
                 ViewModel.SelectedIcon = args.Application.Icon;
 
-                ViewModel.LoadApplication(args.Application).Wait();
+                await ViewModel.LoadApplication(args.Application);
             }
 
             args.Handled = true;
@@ -213,8 +215,9 @@ namespace Ryujinx.Ava.UI.Windows
         {
             _userChannelPersistence = new UserChannelPersistence();
             VirtualFileSystem = VirtualFileSystem.CreateInstance();
+            HostFileSystem = HostFileSystem.CreateDefault();
             LibHacHorizonManager = new LibHacHorizonManager();
-            ContentManager = new ContentManager(VirtualFileSystem);
+            ContentManager = new ContentManager(VirtualFileSystem, HostFileSystem);
 
             LibHacHorizonManager.InitializeFsServer(VirtualFileSystem);
             LibHacHorizonManager.InitializeArpServer();
@@ -225,7 +228,7 @@ namespace Ryujinx.Ava.UI.Windows
                 ? IntegrityCheckLevel.ErrorOnInvalid
                 : IntegrityCheckLevel.None;
 
-            ApplicationLibrary = new ApplicationLibrary(VirtualFileSystem, checkLevel)
+            ApplicationLibrary = new ApplicationLibrary(VirtualFileSystem, HostFileSystem, checkLevel)
             {
                 DesiredLanguage = ConfigurationState.Instance.System.Language,
             };
@@ -241,7 +244,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             VirtualFileSystem.ReloadKeySet();
 
-            ApplicationHelper.Initialize(VirtualFileSystem, AccountManager, LibHacHorizonManager.RyujinxClient);
+            ApplicationHelper.Initialize(VirtualFileSystem, HostFileSystem, AccountManager, LibHacHorizonManager.RyujinxClient);
         }
 
         [SupportedOSPlatform("linux")]
@@ -464,6 +467,7 @@ namespace Ryujinx.Ava.UI.Windows
                 StorageProvider,
                 ApplicationLibrary,
                 VirtualFileSystem,
+                HostFileSystem,
                 AccountManager,
                 InputManager,
                 _userChannelPersistence,

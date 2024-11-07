@@ -15,6 +15,7 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
+using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
@@ -36,10 +37,12 @@ namespace Ryujinx.Ava.Common
         private static HorizonClient _horizonClient;
         private static AccountManager _accountManager;
         private static VirtualFileSystem _virtualFileSystem;
+        private static HostFileSystem _hostFileSystem;
 
-        public static void Initialize(VirtualFileSystem virtualFileSystem, AccountManager accountManager, HorizonClient horizonClient)
+        public static void Initialize(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, AccountManager accountManager, HorizonClient horizonClient)
         {
             _virtualFileSystem = virtualFileSystem;
+            _hostFileSystem = hostFileSystem;
             _horizonClient = horizonClient;
             _accountManager = accountManager;
         }
@@ -231,7 +234,7 @@ namespace Ryujinx.Ava.Common
                     ? IntegrityCheckLevel.ErrorOnInvalid
                     : IntegrityCheckLevel.None;
 
-                (Nca updatePatchNca, _) = mainNca.GetUpdateData(_virtualFileSystem, checkLevel, programIndex, out _);
+                (Nca updatePatchNca, _) = mainNca.GetUpdateData(_virtualFileSystem, _hostFileSystem, checkLevel, programIndex, out _);
                 if (updatePatchNca != null)
                 {
                     patchNca = updatePatchNca;
