@@ -1,4 +1,5 @@
 using System;
+using System.Net.NetworkInformation;
 
 namespace Ryujinx.Headless.SDL2
 {
@@ -9,17 +10,16 @@ namespace Ryujinx.Headless.SDL2
         public string AspectRatio;
         public string GameStatus;
         public string FifoStatus;
-        public string GpuName;
+        public string GpuStatus;
         public string HostIoCacheStatus;
 
-        public StatusUpdatedEventArgs(bool vSyncEnabled, string dockedMode, string aspectRatio, string gameStatus, string fifoStatus, string gpuName, string hostIoCacheStatus)
+        public StatusUpdatedEventArgs(bool vSyncEnabled, string dockedMode, string aspectRatio, string gameStatus, string gpuStatus, string hostIoCacheStatus)
         {
             VSyncEnabled = vSyncEnabled;
             DockedMode = dockedMode;
             AspectRatio = aspectRatio;
             GameStatus = gameStatus;
-            FifoStatus = fifoStatus;
-            GpuName = gpuName;
+            GpuStatus = gpuStatus;
             HostIoCacheStatus = hostIoCacheStatus;
         }
     }

@@ -8,18 +8,18 @@ namespace Ryujinx.Ava.UI.Models
         public string VolumeStatus { get; }
         public string AspectRatio { get; }
         public string DockedMode { get; }
-        public string FifoStatus { get; }
         public string GameStatus { get; }
+        public string GpuStatus { get; }
         public string HostIoCacheStatus { get; }
 
-        public StatusUpdatedEventArgs(bool vSyncEnabled, string volumeStatus, string dockedMode, string aspectRatio, string gameStatus, string fifoStatus, string hostIoCacheStatus)
+        public StatusUpdatedEventArgs(bool vSyncEnabled, string volumeStatus, string dockedMode, string aspectRatio, string gameStatus, string gpuStatus, string hostIoCacheStatus)
         {
             VSyncEnabled = vSyncEnabled;
             VolumeStatus = volumeStatus;
             DockedMode = dockedMode;
             AspectRatio = aspectRatio;
             GameStatus = gameStatus;
-            FifoStatus = fifoStatus;
+            GpuStatus = gpuStatus;
             HostIoCacheStatus = hostIoCacheStatus;
         }
     }

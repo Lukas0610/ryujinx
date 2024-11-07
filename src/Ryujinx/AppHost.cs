@@ -125,6 +125,9 @@ namespace Ryujinx.Ava
         private readonly CancellationTokenSource _gpuCancellationTokenSource;
         private WindowsMultimediaTimerResolution _windowsMultimediaTimerResolution;
 
+        private string _gpuDriverName;
+        private string _gpuBackendName;
+
         private bool _dialogShown;
         private readonly bool _isFirmwareTitle;
 
@@ -1120,14 +1123,17 @@ namespace Ryujinx.Ava
 
         public void InitStatus()
         {
+            _gpuDriverName = _renderer.GetHardwareInfo().GpuDriver;
+            _gpuBackendName = ConfigurationState.Instance.Graphics.GraphicsBackend.Value switch
+            {
+                GraphicsBackend.Vulkan => "Vulkan",
+                GraphicsBackend.OpenGl => "OpenGL",
+                _ => throw new NotImplementedException()
+            };
+
             StatusInitEvent?.Invoke(this, new StatusInitEventArgs(
-                ConfigurationState.Instance.Graphics.GraphicsBackend.Value switch
-                {
-                    GraphicsBackend.Vulkan => "Vulkan",
-                    GraphicsBackend.OpenGl => "OpenGL",
-                    _ => throw new NotImplementedException()
-                },
-                $"GPU: {_renderer.GetHardwareInfo().GpuDriver}"));
+                $"GPU: {_gpuDriverName}",
+                $"Backend: {_gpuBackendName}"));
         }
 
         public void UpdateStatus()
@@ -1148,7 +1154,7 @@ namespace Ryujinx.Ava
                 dockedMode,
                 ConfigurationState.Instance.Graphics.AspectRatio.Value.ToText(),
                 LocaleManager.Instance[LocaleKeys.Game] + $": {Device.Statistics.GetGameFrameRate():00.00} FPS ({Device.Statistics.GetGameFrameTime():00.00} ms)",
-                $"FIFO: {Device.Statistics.GetFifoPercent():00.00} %",
+                $"GPU ({_gpuDriverName}/{_gpuBackendName}): {Device.Statistics.GetFifoPercent():00.00}%",
                 $"I/O: {ReadableStringUtils.FormatSize(_hostFsIoSpeed, 2, null, true)}/s ({hostFsCacheHitRatioPercentage:00.00}% cached)"));
         }
 

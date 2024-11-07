@@ -4,13 +4,13 @@ namespace Ryujinx.Ava.UI.Models
 {
     internal class StatusInitEventArgs : EventArgs
     {
+        public string GpuDriver { get; }
         public string GpuBackend { get; }
-        public string GpuName { get; }
 
-        public StatusInitEventArgs(string gpuBackend, string gpuName)
+        public StatusInitEventArgs(string gpuDriver, string gpuBackend)
         {
+            GpuDriver = gpuDriver;
             GpuBackend = gpuBackend;
-            GpuName = gpuName;
         }
     }
 }

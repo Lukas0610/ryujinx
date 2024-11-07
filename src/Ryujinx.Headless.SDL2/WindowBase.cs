@@ -243,11 +243,6 @@ namespace Ryujinx.Headless.SDL2
 
         public abstract SDL_WindowFlags GetWindowFlags();
 
-        private string GetGpuDriverName()
-        {
-            return Renderer.GetHardwareInfo().GpuDriver;
-        }
-
         private void SetAntiAliasing()
         {
             Renderer?.Window.SetAntiAliasing((Graphics.GAL.AntiAliasing)AntiAliasing);
@@ -271,7 +266,7 @@ namespace Ryujinx.Headless.SDL2
 
             SetScalingFilter();
 
-            _gpuDriverName = GetGpuDriverName();
+            _gpuDriverName = Renderer.GetHardwareInfo().GpuDriver;
 
             Device.Gpu.Renderer.RunLoop(() =>
             {
@@ -323,8 +318,7 @@ namespace Ryujinx.Headless.SDL2
                             dockedMode,
                             Device.Configuration.AspectRatio.ToText(),
                             $"Game: {Device.Statistics.GetGameFrameRate():00.00} FPS ({Device.Statistics.GetGameFrameTime():00.00} ms)",
-                            $"FIFO: {Device.Statistics.GetFifoPercent():0.00} %",
-                            $"GPU: {_gpuDriverName}",
+                            $"GPU: {Device.Statistics.GetFifoPercent():0.00} % ({_gpuDriverName})",
                             $"I/O Cache: {hostIoBufferHitRatio:00.00}%"));
 
                         _ticks = Math.Min(_ticks - _ticksPerFrame, _ticksPerFrame);

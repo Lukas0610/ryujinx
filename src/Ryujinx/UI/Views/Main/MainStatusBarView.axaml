@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -228,6 +228,7 @@
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
             <TextBlock
+                MinWidth="170"
                 Margin="5,0,5,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
@@ -243,41 +244,12 @@
                 BorderThickness="1"
                 IsVisible="{Binding !ShowLoadProgress}" />
             <TextBlock
+                MinWidth="190"
                 Margin="5,0,5,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 IsVisible="{Binding !ShowLoadProgress}"
-                Text="{Binding FifoStatusText}"
-                TextAlignment="Start" />
-            <Border
-                Width="2"
-                Height="12"
-                Margin="0"
-                BorderBrush="Gray"
-                Background="Gray"
-                BorderThickness="1"
-                IsVisible="{Binding !ShowLoadProgress}" />
-            <TextBlock
-                Margin="5,0,5,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                IsVisible="{Binding !ShowLoadProgress}"
-                Text="{Binding BackendText}"
-                TextAlignment="Start" />
-            <Border
-                Width="2"
-                Height="12"
-                Margin="0"
-                BorderBrush="Gray"
-                Background="Gray"
-                BorderThickness="1"
-                IsVisible="{Binding !ShowLoadProgress}" />
-            <TextBlock
-                Margin="5,0,5,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Center"
-                IsVisible="{Binding !ShowLoadProgress}"
-                Text="{Binding GpuNameText}"
+                Text="{Binding GpuStatusText}"
                 TextAlignment="Start" />
             <Border
                 Width="2"
@@ -288,6 +260,7 @@
                 BorderThickness="1"
                 IsVisible="{Binding ShowHostIoStatusText}" />
             <TextBlock
+                MinWidth="120"
                 Margin="5,0,5,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"

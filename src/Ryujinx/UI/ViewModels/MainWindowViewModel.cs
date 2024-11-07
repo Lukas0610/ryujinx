@@ -62,11 +62,11 @@ namespace Ryujinx.Ava.UI.ViewModels
         private string _searchText;
         private Timer _searchTimer;
         private string _dockedStatusText;
-        private string _fifoStatusText;
+        private string _gpuStatusText;
+        private string _gpuNameText;
         private string _hostIoCacheStatusText;
         private string _gameStatusText;
         private string _volumeStatusText;
-        private string _gpuStatusText;
         private bool _isAmiiboRequested;
         private bool _isGameRunning;
         private bool _isFullScreen;
@@ -98,7 +98,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         private string _screenshotKey = "F8";
         private float _volume;
         private float _volumeBeforeMute;
-        private string _backendText;
+        private string _gpuDriverText;
+        private string _gpuBackendText;
 
         private bool _canUpdate = true;
         private Cursor _cursor;
@@ -544,18 +545,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public string FifoStatusText
-        {
-            get => _fifoStatusText;
-            set
-            {
-                _fifoStatusText = value;
-
-                OnPropertyChanged();
-            }
-        }
-
-        public string GpuNameText
+        public string GpuStatusText
         {
             get => _gpuStatusText;
             set
@@ -566,12 +556,23 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public string BackendText
+        public string GpuDriverText
         {
-            get => _backendText;
+            get => _gpuDriverText;
             set
             {
-                _backendText = value;
+                _gpuDriverText = value;
+
+                OnPropertyChanged();
+            }
+        }
+
+        public string GpuBackendText
+        {
+            get => _gpuBackendText;
+            set
+            {
+                _gpuBackendText = value;
 
                 OnPropertyChanged();
             }
@@ -1316,8 +1317,8 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    GpuNameText = args.GpuName;
-                    BackendText = args.GpuBackend;
+                    GpuDriverText = args.GpuDriver;
+                    GpuBackendText = args.GpuBackend;
                 });
             }
         }
@@ -1343,7 +1344,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                     AspectRatioStatusText = args.AspectRatio;
                     GameStatusText = args.GameStatus;
                     VolumeStatusText = args.VolumeStatus;
-                    FifoStatusText = args.FifoStatus;
+                    GpuStatusText = args.GpuStatus;
                     HostIoCacheStatusText = args.HostIoCacheStatus;
 
                     ShowStatusSeparator = true;
