@@ -128,6 +128,8 @@ namespace Ryujinx.Ava
         private bool _dialogShown;
         private readonly bool _isFirmwareTitle;
 
+        private readonly string _crashMarkerFilePath;
+
         private readonly object _lockObject = new();
 
         public event EventHandler AppExit;
@@ -144,6 +146,7 @@ namespace Ryujinx.Ava
         public int Height { get; private set; }
         public string ApplicationPath { get; private set; }
         public ulong ApplicationId { get; private set; }
+        public string ApplicationIdString { get; private set; }
         public bool ScreenshotRequested { get; set; }
 
         public AppHost(
@@ -151,6 +154,7 @@ namespace Ryujinx.Ava
             InputManager inputManager,
             string applicationPath,
             ulong applicationId,
+            string applicationIdString,
             VirtualFileSystem virtualFileSystem,
             ContentManager contentManager,
             AccountManager accountManager,
@@ -175,6 +179,7 @@ namespace Ryujinx.Ava
             TouchScreenManager = _inputManager.CreateTouchScreenManager();
             ApplicationPath = applicationPath;
             ApplicationId = applicationId;
+            ApplicationIdString = applicationIdString;
             VirtualFileSystem = virtualFileSystem;
             ContentManager = contentManager;
 
@@ -189,6 +194,8 @@ namespace Ryujinx.Ava
 
                 _isFirmwareTitle = true;
             }
+
+            _crashMarkerFilePath = Path.Combine(AppDataManager.GamesDirPath, ApplicationIdString, "crash-marker");
 
             ConfigurationState.Instance.HideCursor.Event += HideCursorState_Changed;
 
@@ -422,6 +429,8 @@ namespace Ryujinx.Ava
 
         public void Start()
         {
+            CreateCrashMarker();
+            
             _hostFsStatsChrono.Start();
             _hostFsStatsTimer.Change(0, 1000);
 
@@ -455,6 +464,7 @@ namespace Ryujinx.Ava
             MainLoop();
 
             Exit();
+            ClearCrashMarker();
         }
 
         private void UpdateIgnoreMissingServicesState(object sender, ReactiveEventArgs<bool> args)
@@ -1340,6 +1350,29 @@ namespace Ryujinx.Ava
             }
 
             return state;
+        }
+
+        private void CreateCrashMarker()
+        {
+            try
+            {
+                File.WriteAllText(_crashMarkerFilePath, "");
+            }
+            catch (Exception) { }
+        }
+
+        private void ClearCrashMarker()
+        {
+            try
+            {
+                File.Delete(_crashMarkerFilePath);
+            }
+            catch (Exception) { }
+        }
+
+        public bool HasCrashMarker()
+        {
+            return File.Exists(_crashMarkerFilePath);
         }
     }
 }

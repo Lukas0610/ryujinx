@@ -15,6 +15,7 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
@@ -24,6 +25,7 @@ using Ryujinx.UI.Common.Configuration;
 using Ryujinx.UI.Common.Helper;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -422,6 +424,97 @@ namespace Ryujinx.Ava.Common
             }
 
             return Result.Success;
+        }
+
+        public static bool PurgePtcCache(string applicationId)
+        {
+            DirectoryInfo mainDir = new(Path.Combine(AppDataManager.GamesDirPath, applicationId, "cache", "cpu", "0"));
+            DirectoryInfo backupDir = new(Path.Combine(AppDataManager.GamesDirPath, applicationId, "cache", "cpu", "1"));
+
+            List<FileInfo> cacheFiles = new();
+
+            if (mainDir.Exists)
+            {
+                cacheFiles.AddRange(mainDir.EnumerateFiles("*.cache"));
+                cacheFiles.AddRange(mainDir.EnumerateFiles("*.info"));
+            }
+
+            if (backupDir.Exists)
+            {
+                cacheFiles.AddRange(backupDir.EnumerateFiles("*.cache"));
+                cacheFiles.AddRange(backupDir.EnumerateFiles("*.info"));
+            }
+
+            bool successful = true;
+
+            if (cacheFiles.Count > 0)
+            {
+                foreach (FileInfo file in cacheFiles)
+                {
+                    Logger.Info?.Print(LogClass.Application, $"Clearing PTC cache file \"{file.FullName}\"");
+
+                    try
+                    {
+                        file.Delete();
+                    }
+                    catch (Exception)
+                    {
+                        successful = false;
+                    }
+                }
+            }
+
+            return successful;
+        }
+
+        public static bool PurgeShaderCache(string applicationId)
+        {
+            DirectoryInfo shaderCacheDir = new(Path.Combine(AppDataManager.GamesDirPath, applicationId, "cache", "shader"));
+
+            List<DirectoryInfo> oldCacheDirectories = new();
+            List<FileInfo> newCacheFiles = new();
+
+            if (shaderCacheDir.Exists)
+            {
+                oldCacheDirectories.AddRange(shaderCacheDir.EnumerateDirectories("*"));
+                newCacheFiles.AddRange(shaderCacheDir.GetFiles("*.toc"));
+                newCacheFiles.AddRange(shaderCacheDir.GetFiles("*.data"));
+            }
+
+            bool successful = true;
+
+            if (oldCacheDirectories.Count > 0 || newCacheFiles.Count > 0)
+            {
+                foreach (DirectoryInfo directory in oldCacheDirectories)
+                {
+                    Logger.Info?.Print(LogClass.Application, $"Clearing shader cache directory \"{directory.FullName}\"");
+
+                    try
+                    {
+                        directory.Delete(true);
+                    }
+                    catch (Exception)
+                    {
+                        successful = false;
+                    }
+                }
+
+                foreach (FileInfo file in newCacheFiles)
+                {
+                    Logger.Info?.Print(LogClass.Application, $"Clearing shader cache file \"{file.FullName}\"");
+
+                    try
+                    {
+                        file.Delete();
+                    }
+                    catch (Exception)
+                    {
+                        successful = false;
+                    }
+                }
+            }
+
+            return successful;
         }
     }
 }

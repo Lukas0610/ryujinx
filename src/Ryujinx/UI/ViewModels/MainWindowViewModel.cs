@@ -1661,6 +1661,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 InputManager,
                 application.Path,
                 application.Id,
+                application.IdString,
                 VirtualFileSystem,
                 ContentManager,
                 AccountManager,
@@ -1674,6 +1675,24 @@ namespace Ryujinx.Ava.UI.ViewModels
                 AppHost = null;
 
                 return;
+            }
+
+            if (AppHost != null && AppHost.HasCrashMarker())
+            {
+                UserResult result = await ContentDialogHelper.CreateConfirmationDialog(
+                    LocaleManager.Instance[LocaleKeys.DialogClearGameCachesAfterCrash],
+                    LocaleManager.Instance[LocaleKeys.DialogClearGameCachesAfterCrashMessage],
+                    LocaleManager.Instance[LocaleKeys.InputDialogYes],
+                    LocaleManager.Instance[LocaleKeys.InputDialogNo],
+                    "");
+
+                if (result == UserResult.Yes)
+                {
+                    Logger.Warning?.Print(LogClass.Application, $"Purging game-caches after crash");
+
+                    ApplicationHelper.PurgePtcCache(AppHost.ApplicationIdString);
+                    ApplicationHelper.PurgeShaderCache(AppHost.ApplicationIdString);
+                }
             }
 
             CanUpdate = false;

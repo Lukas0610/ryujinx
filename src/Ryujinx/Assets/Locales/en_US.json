@@ -809,5 +809,7 @@
   "MemoryConfiguration4GiBSystemDev": "4GiB [System-Dev]",
   "MemoryConfiguration6GiB": "6GiB",
   "MemoryConfiguration6GiBAppletDev": "6GiB [Applet-Dev]",
-  "MemoryConfiguration8GiB": "8GiB"
+  "MemoryConfiguration8GiB": "8GiB",
+  "DialogClearGameCachesAfterCrash": "Clear Game-Caches?",
+  "DialogClearGameCachesAfterCrashMessage": "A crash/unsafe shutdown has been detected. Do you want to clear all game-caches (PTC, Shaders, etc.)?\n\nPlease note that the game-performance will be degraded for the next few launches if you decide to clear the caches."
 }

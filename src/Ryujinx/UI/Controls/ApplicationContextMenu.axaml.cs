@@ -169,35 +169,7 @@ namespace Ryujinx.Ava.UI.Controls
 
                 if (result == UserResult.Yes)
                 {
-                    DirectoryInfo mainDir = new(Path.Combine(AppDataManager.GamesDirPath, viewModel.SelectedApplication.IdString, "cache", "cpu", "0"));
-                    DirectoryInfo backupDir = new(Path.Combine(AppDataManager.GamesDirPath, viewModel.SelectedApplication.IdString, "cache", "cpu", "1"));
-
-                    List<FileInfo> cacheFiles = new();
-
-                    if (mainDir.Exists)
-                    {
-                        cacheFiles.AddRange(mainDir.EnumerateFiles("*.cache"));
-                    }
-
-                    if (backupDir.Exists)
-                    {
-                        cacheFiles.AddRange(backupDir.EnumerateFiles("*.cache"));
-                    }
-
-                    if (cacheFiles.Count > 0)
-                    {
-                        foreach (FileInfo file in cacheFiles)
-                        {
-                            try
-                            {
-                                file.Delete();
-                            }
-                            catch (Exception ex)
-                            {
-                                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogPPTCDeletionErrorMessage, file.Name, ex));
-                            }
-                        }
-                    }
+                    ApplicationHelper.PurgePtcCache(viewModel.SelectedApplication.IdString);
                 }
             }
         }
@@ -217,44 +189,7 @@ namespace Ryujinx.Ava.UI.Controls
 
                 if (result == UserResult.Yes)
                 {
-                    DirectoryInfo shaderCacheDir = new(Path.Combine(AppDataManager.GamesDirPath, viewModel.SelectedApplication.IdString, "cache", "shader"));
-
-                    List<DirectoryInfo> oldCacheDirectories = new();
-                    List<FileInfo> newCacheFiles = new();
-
-                    if (shaderCacheDir.Exists)
-                    {
-                        oldCacheDirectories.AddRange(shaderCacheDir.EnumerateDirectories("*"));
-                        newCacheFiles.AddRange(shaderCacheDir.GetFiles("*.toc"));
-                        newCacheFiles.AddRange(shaderCacheDir.GetFiles("*.data"));
-                    }
-
-                    if ((oldCacheDirectories.Count > 0 || newCacheFiles.Count > 0))
-                    {
-                        foreach (DirectoryInfo directory in oldCacheDirectories)
-                        {
-                            try
-                            {
-                                directory.Delete(true);
-                            }
-                            catch (Exception ex)
-                            {
-                                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogPPTCDeletionErrorMessage, directory.Name, ex));
-                            }
-                        }
-
-                        foreach (FileInfo file in newCacheFiles)
-                        {
-                            try
-                            {
-                                file.Delete();
-                            }
-                            catch (Exception ex)
-                            {
-                                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.ShaderCachePurgeError, file.Name, ex));
-                            }
-                        }
-                    }
+                    ApplicationHelper.PurgeShaderCache(viewModel.SelectedApplication.IdString);
                 }
             }
         }
