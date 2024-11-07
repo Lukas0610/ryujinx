@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Hacks",
   "SettingsTabSystemHacksNote": " (Pode causar instabilidade)",
-  "SettingsTabSystemExpandDramSize": "Expandir memória para 6GiB",
   "SettingsTabSystemIgnoreMissingServices": "Ignorar serviços não implementados",
   "SettingsTabGraphics": "Gráficos",
   "SettingsTabGraphicsAPI": "API gráfica",

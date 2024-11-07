@@ -267,11 +267,6 @@
                     HorizontalAlignment="Stretch"
                     Orientation="Vertical">
                     <CheckBox
-                        IsChecked="{Binding ExpandDramSize}"
-                        ToolTip.Tip="{locale:Locale DRamTooltip}">
-                        <TextBlock Text="{locale:Locale SettingsTabSystemExpandDramSize}" />
-                    </CheckBox>
-                    <CheckBox
                         IsChecked="{Binding IgnoreMissingServices}"
                         ToolTip.Tip="{locale:Locale IgnoreMissingServicesTooltip}">
                         <TextBlock Text="{locale:Locale SettingsTabSystemIgnoreMissingServices}" />

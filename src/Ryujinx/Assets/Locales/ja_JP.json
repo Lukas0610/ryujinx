@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "ハック",
   "SettingsTabSystemHacksNote": " (挙動が不安定になる可能性があります)",
-  "SettingsTabSystemExpandDramSize": "DRAMサイズを6GiBに拡大する",
   "SettingsTabSystemIgnoreMissingServices": "未実装サービスを無視する",
   "SettingsTabGraphics": "グラフィックス",
   "SettingsTabGraphicsAPI": "グラフィックスAPI",

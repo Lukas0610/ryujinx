@@ -6,6 +6,7 @@ using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Vulkan;
+using Ryujinx.HLE;
 using Ryujinx.UI.Common.Configuration.System;
 using Ryujinx.UI.Common.Configuration.UI;
 using Ryujinx.UI.Common.Helper;
@@ -367,9 +368,9 @@ namespace Ryujinx.UI.Common.Configuration
             public ReactiveObject<MemoryManagerMode> MemoryManagerMode { get; private set; }
 
             /// <summary>
-            /// Defines the amount of RAM available on the emulated system, and how it is distributed
+            /// The selected memory configuration/size
             /// </summary>
-            public ReactiveObject<bool> ExpandRam { get; private set; }
+            public ReactiveObject<MemoryConfiguration> MemoryConfiguration { get; private set; }
 
             /// <summary>
             /// Enable or disable ignoring missing services
@@ -407,8 +408,8 @@ namespace Ryujinx.UI.Common.Configuration
                 AudioBackend.Event += static (sender, e) => LogValueChange(e, nameof(AudioBackend));
                 MemoryManagerMode = new ReactiveObject<MemoryManagerMode>();
                 MemoryManagerMode.Event += static (sender, e) => LogValueChange(e, nameof(MemoryManagerMode));
-                ExpandRam = new ReactiveObject<bool>();
-                ExpandRam.Event += static (sender, e) => LogValueChange(e, nameof(ExpandRam));
+                MemoryConfiguration = new ReactiveObject<MemoryConfiguration>();
+                MemoryConfiguration.Event += static (sender, e) => LogValueChange(e, nameof(MemoryConfiguration));
                 IgnoreMissingServices = new ReactiveObject<bool>();
                 IgnoreMissingServices.Event += static (sender, e) => LogValueChange(e, nameof(IgnoreMissingServices));
                 AudioVolume = new ReactiveObject<float>();
@@ -730,7 +731,7 @@ namespace Ryujinx.UI.Common.Configuration
                 AudioBackend = System.AudioBackend,
                 AudioVolume = System.AudioVolume,
                 MemoryManagerMode = System.MemoryManagerMode,
-                ExpandRam = System.ExpandRam,
+                MemoryConfiguration = System.MemoryConfiguration,
                 IgnoreMissingServices = System.IgnoreMissingServices,
                 UseHypervisor = System.UseHypervisor,
                 GuiColumns = new GuiColumns
@@ -845,7 +846,7 @@ namespace Ryujinx.UI.Common.Configuration
             System.AudioBackend.Value = AudioBackend.SDL2;
             System.AudioVolume.Value = 1;
             System.MemoryManagerMode.Value = MemoryManagerMode.HostMappedUnsafe;
-            System.ExpandRam.Value = false;
+            System.MemoryConfiguration.Value = MemoryConfiguration.MemoryConfiguration4GiB;
             System.IgnoreMissingServices.Value = false;
             System.UseHypervisor.Value = true;
             Multiplayer.LanInterfaceId.Value = "0";
@@ -1515,6 +1516,20 @@ namespace Ryujinx.UI.Common.Configuration
                 configurationFileUpdated = true;
             }
 
+            if (configurationFileFormat.Version < 53)
+            {
+                Ryujinx.Common.Logging.Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {configurationFileFormat.Version}, migrating to version 53.");
+
+#pragma warning disable CS0618 // Type or member is obsolete
+                if (configurationFileFormat.ExpandRam)
+                    configurationFileFormat.MemoryConfiguration = MemoryConfiguration.MemoryConfiguration8GiB;
+                else
+                    configurationFileFormat.MemoryConfiguration = MemoryConfiguration.MemoryConfiguration4GiB;
+#pragma warning restore CS0618 // Type or member is obsolete
+
+                configurationFileUpdated = true;
+            }
+
             Logger.EnableFileLog.Value = configurationFileFormat.EnableFileLog;
             Graphics.ResScale.Value = configurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value = configurationFileFormat.ResScaleCustom;
@@ -1563,7 +1578,7 @@ namespace Ryujinx.UI.Common.Configuration
             System.AudioBackend.Value = configurationFileFormat.AudioBackend;
             System.AudioVolume.Value = configurationFileFormat.AudioVolume;
             System.MemoryManagerMode.Value = configurationFileFormat.MemoryManagerMode;
-            System.ExpandRam.Value = configurationFileFormat.ExpandRam;
+            System.MemoryConfiguration.Value = configurationFileFormat.MemoryConfiguration;
             System.IgnoreMissingServices.Value = configurationFileFormat.IgnoreMissingServices;
             System.UseHypervisor.Value = configurationFileFormat.UseHypervisor;
             UI.GuiColumns.FavColumn.Value = configurationFileFormat.GuiColumns.FavColumn;

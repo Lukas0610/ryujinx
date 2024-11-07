@@ -148,7 +148,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Hacks",
   "SettingsTabSystemHacksNote": "May cause instability",
-  "SettingsTabSystemExpandDramSize": "Expand DRAM to 8GiB",
   "SettingsTabSystemIgnoreMissingServices": "Ignore Missing Services",
   "SettingsTabGraphics": "Graphics",
   "SettingsTabGraphicsAPI": "Graphics API",
@@ -802,5 +801,13 @@
   "SettingsTabSystemEnableHostFsBufferingPrefetch": "Prefetch game-files before booting",
   "SettingsTabSystemEnableHostFsBufferingPrefetchTooltip": "Reads all game-files and buffers them in memory before booting the game.\n\nImproves performance when using HDDs or network-drives by allocating large amounts of memory.\n\nLeave OFF if unsure.",
   "SettingsTabSystemHostFsBufferingMaxCacheSize": "Buffer-Cache Size Limit",
-  "SettingsTabSystemHostFsBufferingMaxCacheSizeTooltip": "Maximum size of the buffer memory area.\n\nPlease ensure that you always have enough memory available or the application may crash."
+  "SettingsTabSystemHostFsBufferingMaxCacheSizeTooltip": "Maximum size of the buffer memory area.\n\nPlease ensure that you always have enough memory available or the application may crash.",
+  "SettingsTabSystemMemoryConfiguration": "Memory Configuration/Size",
+  "MemoryConfigurationTooltip": "Change the size of the emulated DRAM",
+  "MemoryConfiguration4GiB": "4GiB (Default)",
+  "MemoryConfiguration4GiBAppletDev": "4GiB [Applet-Dev]",
+  "MemoryConfiguration4GiBSystemDev": "4GiB [System-Dev]",
+  "MemoryConfiguration6GiB": "6GiB",
+  "MemoryConfiguration6GiBAppletDev": "6GiB [Applet-Dev]",
+  "MemoryConfiguration8GiB": "8GiB"
 }

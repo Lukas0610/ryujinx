@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Хитрощі",
   "SettingsTabSystemHacksNote": " (може викликати нестабільність)",
-  "SettingsTabSystemExpandDramSize": "Використовувати альтернативне розташування пам'яті (розробники)",
   "SettingsTabSystemIgnoreMissingServices": "Ігнорувати відсутні служби",
   "SettingsTabGraphics": "Графіка",
   "SettingsTabGraphicsAPI": "Графічний API",

@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Μικροδιορθώσεις",
   "SettingsTabSystemHacksNote": " (Μπορεί να προκαλέσουν αστάθεια)",
-  "SettingsTabSystemExpandDramSize": "Επέκταση μεγέθους DRAM στα 6GiB",
   "SettingsTabSystemIgnoreMissingServices": "Αγνόηση υπηρεσιών που λείπουν",
   "SettingsTabGraphics": "Γραφικά",
   "SettingsTabGraphicsAPI": "API Γραφικά",

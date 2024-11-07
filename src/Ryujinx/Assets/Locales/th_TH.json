@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "แฮ็ก",
   "SettingsTabSystemHacksNote": "อาจทำให้เกิดข้อผิดพลาดได้",
-  "SettingsTabSystemExpandDramSize": "ใช้รูปแบบหน่วยความจำสำรอง (โหมดนักพัฒนา)",
   "SettingsTabSystemIgnoreMissingServices": "ไม่สนใจบริการที่ขาดหายไป",
   "SettingsTabGraphics": "กราฟิก",
   "SettingsTabGraphicsAPI": "กราฟฟิก API",

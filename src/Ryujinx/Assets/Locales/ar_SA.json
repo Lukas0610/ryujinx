@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "هاكات",
   "SettingsTabSystemHacksNote": "قد يتسبب في عدم الاستقرار",
-  "SettingsTabSystemExpandDramSize": "استخدام تخطيط الذاكرة البديل (المطورين)",
   "SettingsTabSystemIgnoreMissingServices": "تجاهل الخدمات المفقودة",
   "SettingsTabGraphics": "الرسومات",
   "SettingsTabGraphicsAPI": "API الرسومات ",

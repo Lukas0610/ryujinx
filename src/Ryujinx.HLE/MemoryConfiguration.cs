@@ -1,8 +1,12 @@
+using Ryujinx.Common.Configuration;
+using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Kernel.Common;
 using System;
+using System.Text.Json.Serialization;
 
 namespace Ryujinx.HLE
 {
+    [JsonConverter(typeof(TypedStringEnumConverter<MemoryConfiguration>))]
     public enum MemoryConfiguration
     {
         MemoryConfiguration4GiB = 0,

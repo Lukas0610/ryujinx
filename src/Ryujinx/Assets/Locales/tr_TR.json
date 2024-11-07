@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Hack'ler",
   "SettingsTabSystemHacksNote": " (dengesizlik oluşturabilir)",
-  "SettingsTabSystemExpandDramSize": "Alternatif bellek düzeni kullan (Geliştirici)",
   "SettingsTabSystemIgnoreMissingServices": "Eksik Servisleri Görmezden Gel",
   "SettingsTabGraphics": "Grafikler",
   "SettingsTabGraphicsAPI": "Grafikler API",

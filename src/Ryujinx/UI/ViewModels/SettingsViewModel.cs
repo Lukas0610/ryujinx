@@ -15,6 +15,7 @@ using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Graphics.Vulkan;
+using Ryujinx.HLE;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Time.TimeZone;
 using Ryujinx.UI.Common.Configuration;
@@ -144,7 +145,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool EnableInternetAccess { get; set; }
         public bool EnableFsIntegrityChecks { get; set; }
         public bool IgnoreMissingServices { get; set; }
-        public bool ExpandDramSize { get; set; }
         public bool EnableShaderCache { get; set; }
         public bool EnableTextureRecompression { get; set; }
         public bool EnableMacroHLE { get; set; }
@@ -191,6 +191,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         }
         public int OpenglDebugLevel { get; set; }
         public int MemoryMode { get; set; }
+        public int MemoryConfiguration { get; set; }
         public int BaseStyleIndex { get; set; }
         public int GraphicsBackendIndex
         {
@@ -460,7 +461,6 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             EnableVsync = config.Graphics.EnableVsync;
             EnableFsIntegrityChecks = config.System.EnableFsIntegrityChecks;
-            ExpandDramSize = config.System.ExpandRam;
             EnableHostFsBuffering = config.System.EnableHostFsBuffering;
             EnableHostFsBufferingPrefetch = config.System.EnableHostFsBufferingPrefetch;
             HostFsBufferingMaxCacheSize = config.System.HostFsBufferingMaxCacheSize;
@@ -469,6 +469,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             // CPU
             EnablePptc = config.System.EnablePtc;
             MemoryMode = (int)config.System.MemoryManagerMode.Value;
+            MemoryConfiguration = (int)config.System.MemoryConfiguration.Value;
             UseHypervisor = config.System.UseHypervisor;
 
             // Graphics
@@ -557,7 +558,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.System.SystemTimeOffset.Value = Convert.ToInt64((CurrentDate.ToUnixTimeSeconds() + CurrentTime.TotalSeconds) - DateTimeOffset.Now.ToUnixTimeSeconds());
             config.Graphics.EnableVsync.Value = EnableVsync;
             config.System.EnableFsIntegrityChecks.Value = EnableFsIntegrityChecks;
-            config.System.ExpandRam.Value = ExpandDramSize;
             config.System.EnableHostFsBuffering.Value = EnableHostFsBuffering;
             config.System.EnableHostFsBufferingPrefetch.Value = EnableHostFsBufferingPrefetch;
             config.System.HostFsBufferingMaxCacheSize.Value = HostFsBufferingMaxCacheSize;
@@ -566,6 +566,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             // CPU
             config.System.EnablePtc.Value = EnablePptc;
             config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
+            config.System.MemoryConfiguration.Value = (MemoryConfiguration)MemoryConfiguration;
             config.System.UseHypervisor.Value = UseHypervisor;
 
             // Graphics

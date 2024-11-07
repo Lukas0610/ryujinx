@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "האצות",
   "SettingsTabSystemHacksNote": "עלול לגרום לאי יציבות",
-  "SettingsTabSystemExpandDramSize": "השתמש בפריסת זיכרון חלופית (נועד למפתחים)",
   "SettingsTabSystemIgnoreMissingServices": "התעלם משירותים חסרים",
   "SettingsTabGraphics": "גרפיקה",
   "SettingsTabGraphicsAPI": "ממשק גראפי",

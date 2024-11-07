@@ -876,8 +876,6 @@ namespace Ryujinx.Ava
             Logger.Info?.PrintMsg(LogClass.Gpu, $"Backend Threading ({threadingMode}): {isGALThreaded}");
 
             // Initialize Configuration.
-            var memoryConfiguration = ConfigurationState.Instance.System.ExpandRam.Value ? MemoryConfiguration.MemoryConfiguration8GiB : MemoryConfiguration.MemoryConfiguration4GiB;
-
             HLEConfiguration configuration = new(VirtualFileSystem,
                                                  _viewModel.LibHacHorizonManager,
                                                  ContentManager,
@@ -885,7 +883,7 @@ namespace Ryujinx.Ava
                                                  _userChannelPersistence,
                                                  renderer,
                                                  InitializeAudio(),
-                                                 memoryConfiguration,
+                                                 ConfigurationState.Instance.System.MemoryConfiguration.Value,
                                                  _viewModel.UiHandler,
                                                  (SystemLanguage)ConfigurationState.Instance.System.Language.Value,
                                                  (RegionCode)ConfigurationState.Instance.System.Region.Value,

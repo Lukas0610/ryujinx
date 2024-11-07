@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsCPUView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -38,7 +38,8 @@
                 <StackPanel
                     Margin="10,0,0,0"
                     HorizontalAlignment="Stretch"
-                    Orientation="Vertical">
+                    Orientation="Vertical"
+                    Spacing="10">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
                                    Text="{locale:Locale SettingsTabSystemMemoryManagerMode}"
@@ -61,6 +62,47 @@
                                 ToolTip.Tip="{locale:Locale MemoryManagerUnsafeTooltip}">
                                 <TextBlock
                                     Text="{locale:Locale SettingsTabSystemMemoryManagerModeHostUnchecked}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{locale:Locale SettingsTabSystemMemoryConfiguration}"
+                                   ToolTip.Tip="{locale:Locale MemoryConfigurationTooltip}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding MemoryConfiguration}"
+                                  ToolTip.Tip="{locale:Locale MemoryConfigurationTooltip}"
+                                  HorizontalContentAlignment="Left"
+                                  Width="350">
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration4GiB}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration4GiB}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration4GiBAppletDev}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration4GiBAppletDev}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration4GiBSystemDev}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration4GiBSystemDev}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration6GiB}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration6GiB}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration6GiBAppletDev}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration6GiBAppletDev}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem
+                                ToolTip.Tip="{locale:Locale MemoryConfiguration8GiB}">
+                                <TextBlock
+                                    Text="{locale:Locale MemoryConfiguration8GiB}" />
                             </ComboBoxItem>
                         </ComboBox>
                     </StackPanel>

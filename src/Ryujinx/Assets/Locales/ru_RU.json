@@ -144,7 +144,6 @@
   "SettingsTabSystemAudioBackendSDL2": "SDL2",
   "SettingsTabSystemHacks": "Хаки",
   "SettingsTabSystemHacksNote": "Возможна нестабильная работа",
-  "SettingsTabSystemExpandDramSize": "Использовать альтернативный макет памяти (для разработчиков)",
   "SettingsTabSystemIgnoreMissingServices": "Игнорировать отсутствующие службы",
   "SettingsTabGraphics": "Графика",
   "SettingsTabGraphicsAPI": "Графические API",
