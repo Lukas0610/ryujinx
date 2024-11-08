@@ -157,6 +157,8 @@ namespace ARMeilleure.Translation
                 _ptc.Close();
                 _ptc.Profiler.Stop();
 
+                _ptc.Profiler.PerformSave();
+
                 _ptc.Dispose();
                 _ptc.Profiler.Dispose();
             }

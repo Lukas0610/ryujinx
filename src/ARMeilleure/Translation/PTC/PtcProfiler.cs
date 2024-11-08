@@ -59,7 +59,7 @@ namespace ARMeilleure.Translation.PTC
             _ptc = ptc;
 
             _timer = new Timer(SaveInterval * 1000d);
-            _timer.Elapsed += PreSave;
+            _timer.Elapsed += PerformPeriodicSave;
 
             _outerHeaderMagic = BinaryPrimitives.ReadUInt64LittleEndian(EncodingCache.UTF8NoBOM.GetBytes(OuterHeaderMagicString).AsSpan());
 
@@ -126,6 +126,25 @@ namespace ARMeilleure.Translation.PTC
         {
             ProfiledFuncs.Clear();
             ProfiledFuncs.TrimExcess();
+        }
+
+        public void PerformSave()
+        {
+            _waitEvent.Reset();
+
+            string fileNameActual = $"{_ptc.CachePathActual}.info";
+            string fileNameBackup = $"{_ptc.CachePathBackup}.info";
+
+            FileInfo fileInfoActual = new(fileNameActual);
+
+            if (fileInfoActual.Exists && fileInfoActual.Length != 0L)
+            {
+                File.Copy(fileNameActual, fileNameBackup, true);
+            }
+
+            Save(fileNameActual);
+
+            _waitEvent.Set();
         }
 
         public void PreLoad()
@@ -264,23 +283,9 @@ namespace ARMeilleure.Translation.PTC
             compressedStream.SetLength(0L);
         }
 
-        private void PreSave(object source, ElapsedEventArgs e)
+        private void PerformPeriodicSave(object source, ElapsedEventArgs e)
         {
-            _waitEvent.Reset();
-
-            string fileNameActual = $"{_ptc.CachePathActual}.info";
-            string fileNameBackup = $"{_ptc.CachePathBackup}.info";
-
-            FileInfo fileInfoActual = new(fileNameActual);
-
-            if (fileInfoActual.Exists && fileInfoActual.Length != 0L)
-            {
-                File.Copy(fileNameActual, fileNameBackup, true);
-            }
-
-            Save(fileNameActual);
-
-            _waitEvent.Set();
+            PerformSave();
         }
 
         private void Save(string fileName)
@@ -430,7 +435,7 @@ namespace ARMeilleure.Translation.PTC
             {
                 _disposed = true;
 
-                _timer.Elapsed -= PreSave;
+                _timer.Elapsed -= PerformPeriodicSave;
                 _timer.Dispose();
 
                 Wait();
