@@ -100,6 +100,11 @@ namespace Ryujinx.HLE
         internal readonly bool EnablePtc;
 
         /// <summary>
+        /// Whether to use streaming PTC (SPTC) instead of the traditional PTC
+        /// </summary>
+        internal readonly bool UseStreamingPtc;
+
+        /// <summary>
         /// Control if the guest application should be told that there is a Internet connection available.
         /// </summary>
         public bool EnableInternetAccess { internal get; set; }
@@ -224,6 +229,7 @@ namespace Ryujinx.HLE
                                 bool enableVsync,
                                 bool enableDockedMode,
                                 bool enablePtc,
+                                bool useStreamingPtc,
                                 bool enableInternetAccess,
                                 IntegrityCheckLevel fsIntegrityCheckLevel,
                                 bool enableHostFsBuffering,
@@ -259,6 +265,7 @@ namespace Ryujinx.HLE
             EnableVsync = enableVsync;
             EnableDockedMode = enableDockedMode;
             EnablePtc = enablePtc;
+            UseStreamingPtc = useStreamingPtc;
             EnableInternetAccess = enableInternetAccess;
             FsIntegrityCheckLevel = fsIntegrityCheckLevel;
             EnableHostFsBuffering = enableHostFsBuffering;

@@ -416,9 +416,9 @@ namespace ARMeilleure.Instructions
                     address = context.BitwiseAnd(address, mask);
                 }
 
-                Operand ptBase = !context.HasPtc
-                    ? Const(context.Memory.PageTablePointer.ToInt64())
-                    : Const(context.Memory.PageTablePointer.ToInt64(), Ptc.PageTableSymbol);
+                Operand ptBase = context.HasPtc
+                    ? Const(context.Memory.PageTablePointer.ToInt64(), Translator.PageTableSymbol)
+                    : Const(context.Memory.PageTablePointer.ToInt64());
 
                 Operand ptOffset = context.ShiftRightUI(address, Const(PageBits));
 
@@ -432,9 +432,9 @@ namespace ARMeilleure.Instructions
             Operand addrRotated = size != 0 ? context.RotateRight(address, Const(size)) : address;
             Operand addrShifted = context.ShiftRightUI(addrRotated, Const(PageBits - size));
 
-            Operand pte = !context.HasPtc
-                ? Const(context.Memory.PageTablePointer.ToInt64())
-                : Const(context.Memory.PageTablePointer.ToInt64(), Ptc.PageTableSymbol);
+            Operand pte = context.HasPtc
+                ? Const(context.Memory.PageTablePointer.ToInt64(), Translator.PageTableSymbol)
+                : Const(context.Memory.PageTablePointer.ToInt64());
 
             Operand pteOffset = context.BitwiseAnd(addrShifted, Const(addrShifted.Type, ptLevelMask));
 
@@ -516,9 +516,9 @@ namespace ARMeilleure.Instructions
                 address = context.BitwiseAnd(address, mask);
             }
 
-            Operand baseAddr = !context.HasPtc
-                ? Const(context.Memory.PageTablePointer.ToInt64())
-                : Const(context.Memory.PageTablePointer.ToInt64(), Ptc.PageTableSymbol);
+            Operand baseAddr = context.HasPtc
+                ? Const(context.Memory.PageTablePointer.ToInt64(), Translator.PageTableSymbol)
+                : Const(context.Memory.PageTablePointer.ToInt64());
 
             return context.Add(baseAddr, address);
         }

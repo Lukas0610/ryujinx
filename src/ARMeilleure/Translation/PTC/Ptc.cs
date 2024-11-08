@@ -21,10 +21,8 @@ using static ARMeilleure.Translation.PTC.PtcFormatter;
 
 namespace ARMeilleure.Translation.PTC
 {
-    using Arm64HardwareCapabilities = CodeGen.Arm64.HardwareCapabilities;
-    using X86HardwareCapabilities = CodeGen.X86.HardwareCapabilities;
 
-    class Ptc : IPtcLoadState
+    class Ptc : IPtc
     {
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
@@ -38,15 +36,12 @@ namespace ARMeilleure.Translation.PTC
         private const string BuildIdHashTextDefault = "0000000000000000";
         private const string DisplayVersionDefault = "0";
 
-        public static readonly Symbol PageTableSymbol = new(SymbolType.Special, 1);
-        public static readonly Symbol CountTableSymbol = new(SymbolType.Special, 2);
-        public static readonly Symbol DispatchStubSymbol = new(SymbolType.Special, 3);
-        public static readonly Symbol FunctionTableSymbol = new(SymbolType.Special, 4);
-
         private const byte FillingByte = 0x00;
         private const CompressionLevel SaveCompressionLevel = CompressionLevel.Fastest;
 
-        public PtcProfiler Profiler { get; }
+        public PtcProfiler _profiler;
+
+        public IPtcProfiler Profiler => _profiler;
 
         // Carriers.
         private MemoryStream _infosStream;
@@ -62,6 +57,8 @@ namespace ARMeilleure.Translation.PTC
         private readonly object _lock;
 
         private bool _disposed;
+
+        public bool Available { get; private set; } = true;
 
         public string TitleIdText { get; private set; }
         public string BuildIdHashText { get; private set; }
@@ -81,7 +78,7 @@ namespace ARMeilleure.Translation.PTC
 
         public Ptc()
         {
-            Profiler = new PtcProfiler(this);
+            _profiler = new PtcProfiler(this);
 
             InitializeCarriers();
 
@@ -108,10 +105,10 @@ namespace ARMeilleure.Translation.PTC
         {
             Wait();
 
-            Profiler.Wait();
-            Profiler.ClearEntries();
+            _profiler.Wait();
+            _profiler.ClearEntries();
 
-            Logger.Info?.Print(LogClass.Ptc, $"Initializing Profiled Persistent Translation Cache (enabled: {enabled}).");
+            Logger.Info?.Print(LogClass.Ptc, $"Initializing Profiled Translation Cache (enabled: {enabled}).");
 
             if (!enabled || string.IsNullOrEmpty(titleIdText) || titleIdText == TitleIdTextDefault)
             {
@@ -149,7 +146,7 @@ namespace ARMeilleure.Translation.PTC
             CachePathBackup = Path.Combine(workPathBackup, BuildIdHashText);
 
             PreLoad();
-            Profiler.PreLoad();
+            _profiler.PreLoad();
 
             Enable();
         }
@@ -239,14 +236,14 @@ namespace ARMeilleure.Translation.PTC
                     return false;
                 }
 
-                if (outerHeader.Endianness != GetEndianness())
+                if (outerHeader.Endianness != PtcUtils.GetEndianness())
                 {
                     InvalidateCompressedStream(compressedStream);
 
                     return false;
                 }
 
-                if (outerHeader.FeatureInfo != GetFeatureInfo())
+                if (outerHeader.FeatureInfo != PtcUtils.GetFeatureInfo())
                 {
                     InvalidateCompressedStream(compressedStream);
 
@@ -260,7 +257,7 @@ namespace ARMeilleure.Translation.PTC
                     return false;
                 }
 
-                if (outerHeader.OSPlatform != GetOSPlatform())
+                if (outerHeader.OSPlatform != PtcUtils.GetOSPlatform())
                 {
                     InvalidateCompressedStream(compressedStream);
 
@@ -445,10 +442,10 @@ namespace ARMeilleure.Translation.PTC
                 Magic = _outerHeaderMagic,
 
                 CacheFileVersion = InternalVersion,
-                Endianness = GetEndianness(),
-                FeatureInfo = GetFeatureInfo(),
+                Endianness = PtcUtils.GetEndianness(),
+                FeatureInfo = PtcUtils.GetFeatureInfo(),
                 MemoryManagerMode = GetMemoryManagerMode(),
-                OSPlatform = GetOSPlatform(),
+                OSPlatform = PtcUtils.GetOSPlatform(),
                 Architecture = (uint)RuntimeInformation.ProcessArchitecture,
 
                 UncompressedStreamSize =
@@ -564,9 +561,9 @@ namespace ARMeilleure.Translation.PTC
                         continue;
                     }
 
-                    bool isEntryChanged = infoEntry.Hash != ComputeHash(translator.Memory, infoEntry.Address, infoEntry.GuestSize);
+                    bool isEntryChanged = infoEntry.Hash != PtcUtils.ComputeHash(translator.Memory, infoEntry.Address, infoEntry.GuestSize);
 
-                    if (isEntryChanged || (!infoEntry.HighCq && Profiler.ProfiledFuncs.TryGetValue(infoEntry.Address, out var value) && value.HighCq))
+                    if (isEntryChanged || (!infoEntry.HighCq && _profiler.ProfiledFuncs.TryGetValue(infoEntry.Address, out var value) && value.HighCq))
                     {
                         infoEntry.Stubbed = true;
                         infoEntry.CodeLength = 0;
@@ -592,12 +589,12 @@ namespace ARMeilleure.Translation.PTC
                     {
                         RelocEntry[] relocEntries = GetRelocEntries(relocsReader, infoEntry.RelocEntriesCount);
 
-                        PatchCode(translator, code, relocEntries, out callCounter);
+                        PtcUtils.PatchCode(translator, code, relocEntries, out callCounter);
                     }
 
                     UnwindInfo unwindInfo = ReadUnwindInfo(unwindInfosReader);
 
-                    TranslatedFunction func = FastTranslate(code, callCounter, infoEntry.GuestSize, unwindInfo, infoEntry.HighCq);
+                    TranslatedFunction func = PtcUtils.FastTranslate(code, callCounter, infoEntry.GuestSize, unwindInfo, infoEntry.HighCq);
 
                     translator.RegisterFunction(infoEntry.Address, func);
 
@@ -664,67 +661,6 @@ namespace ARMeilleure.Translation.PTC
             return relocEntries;
         }
 
-        private static void PatchCode(Translator translator, Span<byte> code, RelocEntry[] relocEntries, out Counter<uint> callCounter)
-        {
-            callCounter = null;
-
-            foreach (RelocEntry relocEntry in relocEntries)
-            {
-                IntPtr? imm = null;
-                Symbol symbol = relocEntry.Symbol;
-
-                if (symbol.Type == SymbolType.FunctionTable)
-                {
-                    ulong guestAddress = symbol.Value;
-
-                    if (translator.FunctionTable.IsValid(guestAddress))
-                    {
-                        unsafe
-                        {
-                            imm = (IntPtr)Unsafe.AsPointer(ref translator.FunctionTable.GetValue(guestAddress));
-                        }
-                    }
-                }
-                else if (symbol.Type == SymbolType.DelegateTable)
-                {
-                    int index = (int)symbol.Value;
-
-                    if (Delegates.TryGetDelegateFuncPtrByIndex(index, out IntPtr funcPtr))
-                    {
-                        imm = funcPtr;
-                    }
-                }
-                else if (symbol == PageTableSymbol)
-                {
-                    imm = translator.Memory.PageTablePointer;
-                }
-                else if (symbol == CountTableSymbol)
-                {
-                    callCounter ??= new Counter<uint>(translator.CountTable);
-
-                    unsafe
-                    {
-                        imm = (IntPtr)Unsafe.AsPointer(ref callCounter.Value);
-                    }
-                }
-                else if (symbol == DispatchStubSymbol)
-                {
-                    imm = translator.Stubs.DispatchStub;
-                }
-                else if (symbol == FunctionTableSymbol)
-                {
-                    imm = translator.FunctionTable.Base;
-                }
-
-                if (imm == null)
-                {
-                    throw new Exception($"Unexpected reloc entry {relocEntry}.");
-                }
-
-                BinaryPrimitives.WriteUInt64LittleEndian(code.Slice(relocEntry.Position, 8), (ulong)imm.Value);
-            }
-        }
-
         private static UnwindInfo ReadUnwindInfo(BinaryReader unwindInfosReader)
         {
             int pushEntriesLength = unwindInfosReader.ReadInt32();
@@ -744,19 +680,6 @@ namespace ARMeilleure.Translation.PTC
             int prologueSize = unwindInfosReader.ReadInt32();
 
             return new UnwindInfo(pushEntries, prologueSize);
-        }
-
-        private static TranslatedFunction FastTranslate(
-            byte[] code,
-            Counter<uint> callCounter,
-            ulong guestSize,
-            UnwindInfo unwindInfo,
-            bool highCq)
-        {
-            var cFunc = new CompiledFunction(code, unwindInfo, RelocInfo.Empty);
-            var gFunc = cFunc.MapWithPointer<GuestFunction>(out IntPtr gFuncPointer);
-
-            return new TranslatedFunction(gFunc, gFuncPointer, callCounter, guestSize, highCq);
         }
 
         private void UpdateInfo(InfoEntry infoEntry)
@@ -789,9 +712,9 @@ namespace ARMeilleure.Translation.PTC
             }
         }
 
-        public void MakeAndSaveTranslations(Translator translator)
+        public void MakeTranslations(Translator translator)
         {
-            var profiledFuncsToTranslate = Profiler.GetProfiledFuncsToTranslate(translator.Functions);
+            var profiledFuncsToTranslate = _profiler.GetProfiledFuncsToTranslate(translator.Functions);
 
             _translateCount = 0;
             _translateTotalCount = profiledFuncsToTranslate.Count;
@@ -834,7 +757,7 @@ namespace ARMeilleure.Translation.PTC
                 {
                     ulong address = item.address;
 
-                    Debug.Assert(Profiler.IsAddressInStaticCodeRange(address));
+                    Debug.Assert(_profiler.IsAddressInStaticCodeRange(address));
 
                     TranslatedFunction func = translator.Translate(address, item.funcProfile.Mode, item.funcProfile.HighCq);
 
@@ -917,11 +840,6 @@ namespace ARMeilleure.Translation.PTC
             while (!endEvent.WaitOne(RefreshRate));
         }
 
-        public static Hash128 ComputeHash(IMemoryManager memory, ulong address, ulong guestSize)
-        {
-            return XXHash128.ComputeHash(memory.GetSpan(address, checked((int)(guestSize))));
-        }
-
         public void WriteCompiledFunction(ulong address, ulong guestSize, Hash128 hash, bool highCq, CompiledFunction compiledFunc)
         {
             lock (_lock)
@@ -977,54 +895,9 @@ namespace ARMeilleure.Translation.PTC
             _codesList.Add(code.ToArray());
         }
 
-        public static bool GetEndianness()
-        {
-            return BitConverter.IsLittleEndian;
-        }
-
-        private static FeatureInfo GetFeatureInfo()
-        {
-            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
-            {
-                return new FeatureInfo(
-                    (ulong)Arm64HardwareCapabilities.LinuxFeatureInfoHwCap,
-                    (ulong)Arm64HardwareCapabilities.LinuxFeatureInfoHwCap2,
-                    (ulong)Arm64HardwareCapabilities.MacOsFeatureInfo,
-                    0,
-                    0);
-            }
-            else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
-            {
-                return new FeatureInfo(
-                    (ulong)X86HardwareCapabilities.FeatureInfo1Ecx,
-                    (ulong)X86HardwareCapabilities.FeatureInfo1Edx,
-                    (ulong)X86HardwareCapabilities.FeatureInfo7Ebx,
-                    (ulong)X86HardwareCapabilities.FeatureInfo7Ecx,
-                    (ulong)X86HardwareCapabilities.Xcr0InfoEax);
-            }
-            else
-            {
-                return new FeatureInfo(0, 0, 0, 0, 0);
-            }
-        }
-
         private byte GetMemoryManagerMode()
         {
             return (byte)_memoryMode;
-        }
-
-        private static uint GetOSPlatform()
-        {
-            uint osPlatform = 0u;
-
-#pragma warning disable IDE0055 // Disable formatting
-            osPlatform |= (OperatingSystem.IsFreeBSD() ? 1u : 0u) << 0;
-            osPlatform |= (OperatingSystem.IsLinux()   ? 1u : 0u) << 1;
-            osPlatform |= (OperatingSystem.IsMacOS()   ? 1u : 0u) << 2;
-            osPlatform |= (OperatingSystem.IsWindows() ? 1u : 0u) << 3;
-#pragma warning restore IDE0055
-
-            return osPlatform;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 86*/)]
@@ -1035,7 +908,7 @@ namespace ARMeilleure.Translation.PTC
             public uint CacheFileVersion;
 
             public bool Endianness;
-            public FeatureInfo FeatureInfo;
+            public PtcFeatureInfo FeatureInfo;
             public byte MemoryManagerMode;
             public uint OSPlatform;
             public uint Architecture;
@@ -1058,9 +931,6 @@ namespace ARMeilleure.Translation.PTC
                 return XXHash128.ComputeHash(MemoryMarshal.AsBytes(spanHeader)[..(Unsafe.SizeOf<OuterHeader>() - Unsafe.SizeOf<Hash128>())]) == HeaderHash;
             }
         }
-
-        [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 40*/)]
-        private record struct FeatureInfo(ulong FeatureInfo0, ulong FeatureInfo1, ulong FeatureInfo2, ulong FeatureInfo3, ulong FeatureInfo4);
 
         [StructLayout(LayoutKind.Sequential, Pack = 1/*, Size = 128*/)]
         private struct InnerHeader
@@ -1113,18 +983,16 @@ namespace ARMeilleure.Translation.PTC
 
         public void Continue()
         {
-            if (State == PtcState.Enabled)
-            {
-                State = PtcState.Continuing;
-            }
+            State = PtcState.Enabled;
         }
 
-        public void Close()
+        public void Stop()
         {
-            if (State == PtcState.Enabled ||
-                State == PtcState.Continuing)
+            Available = false;
+
+            if (State == PtcState.Enabled)
             {
-                State = PtcState.Closing;
+                State = PtcState.Stopped;
             }
         }
 
@@ -1143,6 +1011,8 @@ namespace ARMeilleure.Translation.PTC
             if (!_disposed)
             {
                 _disposed = true;
+
+                Available = false;
 
                 Wait();
                 _waitEvent.Dispose();

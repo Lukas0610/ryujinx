@@ -33,6 +33,11 @@
                         <TextBlock Text="{locale:Locale SettingsTabSystemEnablePptc}"
                                    ToolTip.Tip="{locale:Locale PptcToggleTooltip}" />
                     </CheckBox>
+                    <CheckBox IsChecked="{Binding UseStreamingPtc}"
+                              IsEnabled="{Binding EnablePptc}">
+                        <TextBlock Text="{locale:Locale SettingsTabSystemUseStreamingPtc}"
+                                   ToolTip.Tip="{locale:Locale SettingsTabSystemUseStreamingPtcTooltip}" />
+                    </CheckBox>
                 </StackPanel>
                 <Separator Height="1" />
                 <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCpuMemory}" />

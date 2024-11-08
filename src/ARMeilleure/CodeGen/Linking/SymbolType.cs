@@ -21,7 +21,7 @@ namespace ARMeilleure.CodeGen.Linking
         FunctionTable,
 
         /// <summary>
-        /// Refers to a special symbol which is handled by <see cref="Translation.PTC.Ptc.PatchCode"/>.
+        /// Refers to a special symbol which is handled by the PTC.
         /// </summary>
         Special,
     }

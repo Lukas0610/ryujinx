@@ -3,8 +3,7 @@ namespace ARMeilleure.Translation.PTC
     enum PtcState
     {
         Enabled,
-        Continuing,
-        Closing,
+        Stopped,
         Disabled,
     }
 }

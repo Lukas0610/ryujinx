@@ -323,6 +323,11 @@ namespace Ryujinx.UI.Common.Configuration
             public ReactiveObject<bool> EnablePtc { get; private set; }
 
             /// <summary>
+            /// Whether to use streaming PTC (SPTC) instead of the traditional PTC
+            /// </summary>
+            public ReactiveObject<bool> UseStreamingPtc { get; private set; }
+
+            /// <summary>
             /// Enables or disables guest Internet access
             /// </summary>
             public ReactiveObject<bool> EnableInternetAccess { get; private set; }
@@ -417,6 +422,8 @@ namespace Ryujinx.UI.Common.Configuration
                 EnableDockedMode.Event += static (sender, e) => LogValueChange(e, nameof(EnableDockedMode));
                 EnablePtc = new ReactiveObject<bool>();
                 EnablePtc.Event += static (sender, e) => LogValueChange(e, nameof(EnablePtc));
+                UseStreamingPtc = new ReactiveObject<bool>();
+                UseStreamingPtc.Event += static (sender, e) => LogValueChange(e, nameof(UseStreamingPtc));
                 EnableInternetAccess = new ReactiveObject<bool>();
                 EnableInternetAccess.Event += static (sender, e) => LogValueChange(e, nameof(EnableInternetAccess));
                 EnableFsIntegrityChecks = new ReactiveObject<bool>();
@@ -757,6 +764,7 @@ namespace Ryujinx.UI.Common.Configuration
                 EnableMacroHLE = Graphics.EnableMacroHLE,
                 EnableColorSpacePassthrough = Graphics.EnableColorSpacePassthrough,
                 EnablePtc = System.EnablePtc,
+                UseStreamingPtc = System.UseStreamingPtc,
                 EnableInternetAccess = System.EnableInternetAccess,
                 EnableFsIntegrityChecks = System.EnableFsIntegrityChecks,
                 EnableHostFsBuffering = System.EnableHostFsBuffering,
@@ -877,6 +885,7 @@ namespace Ryujinx.UI.Common.Configuration
             Graphics.ScalingFilter.Value = ScalingFilter.Bilinear;
             Graphics.ScalingFilterLevel.Value = 80;
             System.EnablePtc.Value = true;
+            System.UseStreamingPtc.Value = false;
             System.EnableInternetAccess.Value = false;
             System.EnableFsIntegrityChecks.Value = true;
             System.EnableHostFsBuffering.Value = true;
@@ -1635,6 +1644,7 @@ namespace Ryujinx.UI.Common.Configuration
             Graphics.EnableMacroHLE.Value = configurationFileFormat.EnableMacroHLE;
             Graphics.EnableColorSpacePassthrough.Value = configurationFileFormat.EnableColorSpacePassthrough;
             System.EnablePtc.Value = configurationFileFormat.EnablePtc;
+            System.UseStreamingPtc.Value = configurationFileFormat.UseStreamingPtc;
             System.EnableInternetAccess.Value = configurationFileFormat.EnableInternetAccess;
             System.EnableFsIntegrityChecks.Value = configurationFileFormat.EnableFsIntegrityChecks;
             System.EnableHostFsBuffering.Value = configurationFileFormat.EnableHostFsBuffering;

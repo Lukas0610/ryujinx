@@ -903,6 +903,7 @@ namespace Ryujinx.Ava
                                                  ConfigurationState.Instance.Graphics.EnableVsync,
                                                  ConfigurationState.Instance.System.EnableDockedMode,
                                                  ConfigurationState.Instance.System.EnablePtc,
+                                                 ConfigurationState.Instance.System.UseStreamingPtc,
                                                  ConfigurationState.Instance.System.EnableInternetAccess,
                                                  ConfigurationState.Instance.System.EnableFsIntegrityChecks ? IntegrityCheckLevel.ErrorOnInvalid : IntegrityCheckLevel.None,
                                                  ConfigurationState.Instance.System.EnableHostFsBuffering,

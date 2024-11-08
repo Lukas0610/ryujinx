@@ -105,6 +105,9 @@ namespace Ryujinx.Headless.SDL2
         [Option("disable-ptc", Required = false, HelpText = "Disables profiled persistent translation cache.")]
         public bool DisablePTC { get; set; }
 
+        [Option("streaming-ptc", Required = false, HelpText = "Enable the streaming profiled translation cache.")]
+        public bool UseStreamingPTC { get; set; }
+
         [Option("enable-internet-connection", Required = false, Default = false, HelpText = "Enables guest Internet connection.")]
         public bool EnableInternetAccess { get; set; }
 

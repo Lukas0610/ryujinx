@@ -199,9 +199,9 @@ namespace ARMeilleure.Instructions
             // onto the dispatch stub.
             if (guestAddress.Kind == OperandKind.Constant && context.FunctionTable.IsValid(guestAddress.Value))
             {
-                Operand hostAddressAddr = !context.HasPtc ?
-                    Const(ref context.FunctionTable.GetValue(guestAddress.Value)) :
-                    Const(ref context.FunctionTable.GetValue(guestAddress.Value), new Symbol(SymbolType.FunctionTable, guestAddress.Value));
+                Operand hostAddressAddr = context.HasPtc
+                    ? Const(ref context.FunctionTable.GetValue(guestAddress.Value), new Symbol(SymbolType.FunctionTable, guestAddress.Value))
+                    : Const(ref context.FunctionTable.GetValue(guestAddress.Value));
 
                 hostAddress = context.Load(OperandType.I64, hostAddressAddr);
             }
@@ -218,9 +218,9 @@ namespace ARMeilleure.Instructions
                     Const(3)
                     );
 
-                Operand tableBase = !context.HasPtc ?
-                    Const(table.Base) :
-                    Const(table.Base, Ptc.FunctionTableSymbol);
+                Operand tableBase = context.HasPtc
+                    ? Const(table.Base, Translator.FunctionTableSymbol)
+                    : Const(table.Base);
 
                 Operand page = context.Load(OperandType.I64, context.Add(tableBase, index));
 
@@ -237,9 +237,9 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                hostAddress = !context.HasPtc ?
-                    Const((long)context.Stubs.DispatchStub) :
-                    Const((long)context.Stubs.DispatchStub, Ptc.DispatchStubSymbol);
+                hostAddress = context.HasPtc
+                    ? Const((long)context.Stubs.DispatchStub, Translator.DispatchStubSymbol)
+                    : Const((long)context.Stubs.DispatchStub);
             }
 
             if (isJump)

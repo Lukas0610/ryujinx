@@ -54,6 +54,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private bool _enableHostFsBuffering;
         private long _hostFsBufferingMaxCacheSize;
         private int _memoryMode;
+        private bool _enablePptc;
 
         public event Action CloseWindow;
         public event Action SaveSettingsEvent;
@@ -144,7 +145,17 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool EnableKeyboard { get; set; }
         public bool EnableMouse { get; set; }
         public bool EnableVsync { get; set; }
-        public bool EnablePptc { get; set; }
+        public bool EnablePptc
+        {
+            get => _enablePptc;
+            set
+            {
+                _enablePptc = value;
+
+                OnPropertyChanged();
+            }
+        }
+        public bool UseStreamingPtc { get; set; }
         public bool EnableInternetAccess { get; set; }
         public bool EnableFsIntegrityChecks { get; set; }
         public bool IgnoreMissingServices { get; set; }
@@ -492,6 +503,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             // CPU
             EnablePptc = config.System.EnablePtc;
+            UseStreamingPtc = config.System.UseStreamingPtc;
             MemoryMode = (int)config.System.MemoryManagerMode.Value;
             MemoryConfiguration = (int)config.System.MemoryConfiguration.Value;
             UseHypervisor = config.System.UseHypervisor;
@@ -594,6 +606,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             // CPU
             config.System.EnablePtc.Value = EnablePptc;
+            config.System.UseStreamingPtc.Value = UseStreamingPtc;
             config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
             config.System.MemoryConfiguration.Value = (MemoryConfiguration)MemoryConfiguration;
             config.System.UseHypervisor.Value = UseHypervisor;

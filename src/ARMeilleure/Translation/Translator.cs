@@ -1,4 +1,5 @@
 using ARMeilleure.CodeGen;
+using ARMeilleure.CodeGen.Linking;
 using ARMeilleure.Common;
 using ARMeilleure.Decoders;
 using ARMeilleure.Diagnostics;
@@ -24,12 +25,17 @@ namespace ARMeilleure.Translation
     public class Translator
     {
 
+        internal static readonly Symbol PageTableSymbol = new(SymbolType.Special, 1);
+        internal static readonly Symbol CountTableSymbol = new(SymbolType.Special, 2);
+        internal static readonly Symbol DispatchStubSymbol = new(SymbolType.Special, 3);
+        internal static readonly Symbol FunctionTableSymbol = new(SymbolType.Special, 4);
+
         private readonly TranslatorConfiguration _configuration;
 
         private readonly IJitMemoryAllocator _allocator;
         private readonly ConcurrentQueue<KeyValuePair<ulong, TranslatedFunction>> _oldFuncs;
 
-        private readonly Ptc _ptc;
+        private readonly IPtc _ptc;
 
         internal TranslatorCache<TranslatedFunction> Functions { get; }
         internal IAddressTable<ulong> FunctionTable { get; }
@@ -49,7 +55,14 @@ namespace ARMeilleure.Translation
 
             _oldFuncs = new ConcurrentQueue<KeyValuePair<ulong, TranslatedFunction>>();
 
-            _ptc = new Ptc();
+            if (configuration.UseStreamingPtc)
+            {
+                _ptc = new Sptc();
+            }
+            else
+            {
+                _ptc = new Ptc();
+            }
 
             Queue = new TranslatorQueue();
 
@@ -85,8 +98,9 @@ namespace ARMeilleure.Translation
                 if (_ptc.State == PtcState.Enabled)
                 {
                     Debug.Assert(Functions.Count == 0);
+
                     _ptc.LoadTranslations(this);
-                    _ptc.MakeAndSaveTranslations(this);
+                    _ptc.MakeTranslations(this);
                 }
 
                 _ptc.Profiler.Start();
@@ -136,6 +150,9 @@ namespace ARMeilleure.Translation
 
             if (Interlocked.Decrement(ref _threadCount) == 0)
             {
+                _ptc.Stop();
+                _ptc.Profiler.Stop();
+
                 Queue.Dispose();
 
                 Thread[] backgroundTranslationThreads = Interlocked.Exchange(ref _backgroundTranslationThreads, null);
@@ -153,9 +170,6 @@ namespace ARMeilleure.Translation
                 Stubs.Dispose();
                 FunctionTable.Dispose();
                 CountTable.Dispose();
-
-                _ptc.Close();
-                _ptc.Profiler.Stop();
 
                 _ptc.Profiler.PerformSave();
 
@@ -272,9 +286,9 @@ namespace ARMeilleure.Translation
 
             CompiledFunction compiledFunc = Compiler.Compile(cfg, argTypes, retType, options, RuntimeInformation.ProcessArchitecture);
 
-            if (context.HasPtc && !singleStep)
+            if (context.HasPtc && _ptc.Available && !singleStep)
             {
-                Hash128 hash = Ptc.ComputeHash(Memory, address, funcSize);
+                Hash128 hash = PtcUtils.ComputeHash(Memory, address, funcSize);
 
                 _ptc.WriteCompiledFunction(address, funcSize, hash, highCq, compiledFunc);
             }
@@ -450,9 +464,9 @@ namespace ARMeilleure.Translation
 
             Operand lblEnd = Label();
 
-            Operand address = !context.HasPtc ?
-                Const(ref counter.Value) :
-                Const(ref counter.Value, Ptc.CountTableSymbol);
+            Operand address = context.HasPtc 
+                ? Const(ref counter.Value, CountTableSymbol)
+                : Const(ref counter.Value);
 
             Operand curCount = context.Load(OperandType.I32, address);
             Operand count = context.Add(curCount, Const(1));
@@ -520,7 +534,7 @@ namespace ARMeilleure.Translation
             Queue.Enqueue(guestAddress, mode);
         }
 
-        private void EnqueueForDeletion(ulong guestAddress, TranslatedFunction func)
+        internal void EnqueueForDeletion(ulong guestAddress, TranslatedFunction func)
         {
             _oldFuncs.Enqueue(new(guestAddress, func));
         }

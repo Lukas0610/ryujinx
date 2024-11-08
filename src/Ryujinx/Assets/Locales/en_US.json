@@ -827,5 +827,7 @@
   "SettingsTabCPUPtcBackgroundThreadCount": "Number of PTC Background Threads",
   "SettingsTabCPUPtcBackgroundThreadCountTooltip": "Number of PTC background threads to be started concurrently.",
   "SettingsTabSystemUseSparseAddressTable": "Use sparse address-tables",
-  "SettingsTabSystemUseSparseAddressTableTooltip": "Use sparsley mapped memory for function address-tables.\n\nMay improve performance for CPU-heavy games by allocating moderate amounts of memory.\n\nIf your game expirences repetitive crashes, try to disable this.\n\nLeave OFF if unsure."
+  "SettingsTabSystemUseSparseAddressTableTooltip": "Use sparsley mapped memory for function address-tables.\n\nMay improve performance for CPU-heavy games by allocating moderate amounts of memory.\n\nIf your game expirences repetitive crashes, try to disable this.\n\nLeave OFF if unsure.",
+  "SettingsTabSystemUseStreamingPtc": "Use Streaming PTC",
+  "SettingsTabSystemUseStreamingPtcTooltip": "Enable the streaming profiled translation cache.\n\nThis (experimental) PTC-implementation will write (stream) the JIT-compiled functions into the cache-file while running.\n\nThe streaming cache file format also allows for better fault-tolerance without using backup-files like the traditional PTC file format"
 }

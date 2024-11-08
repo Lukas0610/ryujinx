@@ -19,7 +19,7 @@ using Timer = System.Timers.Timer;
 
 namespace ARMeilleure.Translation.PTC
 {
-    class PtcProfiler
+    class PtcProfiler : IPtcProfiler
     {
         private const string OuterHeaderMagicString = "Pohd\0\0\0\0";
 
@@ -405,11 +405,9 @@ namespace ARMeilleure.Translation.PTC
 
         public void Start()
         {
-            if (_ptc.State == PtcState.Enabled ||
-                _ptc.State == PtcState.Continuing)
+            if (_ptc.State == PtcState.Enabled)
             {
                 Enabled = true;
-
                 _timer.Enabled = true;
             }
         }

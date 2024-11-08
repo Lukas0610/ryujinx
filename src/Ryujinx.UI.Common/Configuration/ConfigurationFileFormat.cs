@@ -210,6 +210,11 @@ namespace Ryujinx.UI.Common.Configuration
         public bool EnablePtc { get; set; }
 
         /// <summary>
+        /// Whether to use streaming PTC (SPTC) instead of the traditional PTC
+        /// </summary>
+        public bool UseStreamingPtc { get; set; }
+
+        /// <summary>
         /// Enables or disables guest Internet access
         /// </summary>
         public bool EnableInternetAccess { get; set; }
