@@ -1,3 +1,4 @@
+using DiscordRPC;
 using LibHac;
 using LibHac.Common;
 using LibHac.Common.Keys;
@@ -464,6 +465,7 @@ namespace Ryujinx.UI.App.Common
                         }
                     });
 
+                    data.GameConfig = LoadGameConfigurationFile(data.Name, data.IdString);
                     data.Favorite = appMetadata.Favorite;
                     data.TimePlayed = appMetadata.TimePlayed;
                     data.LastPlayed = appMetadata.LastPlayed;
@@ -621,6 +623,35 @@ namespace Ryujinx.UI.App.Common
         protected void OnApplicationCountUpdated(ApplicationCountUpdatedEventArgs e)
         {
             ApplicationCountUpdated?.Invoke(null, e);
+        }
+
+        public static GameConfigurationState LoadGameConfigurationFile(string titleName, string titleIdString)
+        {
+            string gameFolder = Path.Combine(AppDataManager.GamesDirPath, titleIdString);
+            string gameConfigFile = Path.Combine(gameFolder, "Config.json");
+
+            GameConfigurationState gameConfig;
+
+            if (File.Exists(gameConfigFile) && GameConfigurationFileFormat.TryLoad(gameConfigFile, out GameConfigurationFileFormat gameConfigFormat))
+            {
+                gameConfig = new GameConfigurationState(titleName, titleIdString, gameConfigFile);
+
+                gameConfig.Load(gameConfigFormat);
+            }
+            else
+            {
+                Directory.CreateDirectory(gameFolder);
+
+                gameConfig = new(titleName, titleIdString, gameConfigFile);
+
+                // Apply defaults, then load global game configuration
+                gameConfig.LoadDefault();
+                gameConfig.Load(ConfigurationState.Instance.Game.ToFileFormat());
+
+                gameConfig.ToFileFormat().SaveConfig(gameConfigFile);
+            }
+
+            return gameConfig;
         }
 
         public static ApplicationMetadata LoadAndSaveMetaData(string titleId, Action<ApplicationMetadata> modifyFunction = null)

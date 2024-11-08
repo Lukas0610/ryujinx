@@ -14,16 +14,20 @@ namespace Ryujinx.Ava.UI.Renderer
         public event Action<object, Size> BoundsChanged;
 
         public RendererHost()
+            : this(ConfigurationState.Instance.Game)
+        { }
+
+        public RendererHost(GameConfigurationState gameConfig)
         {
             InitializeComponent();
 
-            if (ConfigurationState.Instance.Graphics.GraphicsBackend.Value == GraphicsBackend.OpenGl)
+            if (gameConfig.Graphics.GraphicsBackend.Value == GraphicsBackend.OpenGl)
             {
-                EmbeddedWindow = new EmbeddedWindowOpenGL();
+                EmbeddedWindow = new EmbeddedWindowOpenGL(gameConfig);
             }
             else
             {
-                EmbeddedWindow = new EmbeddedWindowVulkan();
+                EmbeddedWindow = new EmbeddedWindowVulkan(gameConfig);
             }
 
             Initialize();

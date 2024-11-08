@@ -829,5 +829,8 @@
   "SettingsTabSystemUseSparseAddressTable": "Use sparse address-tables",
   "SettingsTabSystemUseSparseAddressTableTooltip": "Use sparsley mapped memory for function address-tables.\n\nMay improve performance for CPU-heavy games by allocating moderate amounts of memory.\n\nIf your game expirences repetitive crashes, try to disable this.\n\nLeave OFF if unsure.",
   "SettingsTabSystemUseStreamingPtc": "Use Streaming PTC",
-  "SettingsTabSystemUseStreamingPtcTooltip": "Enable the streaming profiled translation cache.\n\nThis (experimental) PTC-implementation will write (stream) the JIT-compiled functions into the cache-file while running.\n\nThe streaming cache file format also allows for better fault-tolerance without using backup-files like the traditional PTC file format"
+  "SettingsTabSystemUseStreamingPtcTooltip": "Enable the streaming profiled translation cache.\n\nThis (experimental) PTC-implementation will write (stream) the JIT-compiled functions into the cache-file while running.\n\nThe streaming cache file format also allows for better fault-tolerance without using backup-files like the traditional PTC file format",
+  "GameListContextMenuOpenApplicationSettings": "Open Application-Settings",
+  "SettingsUseCustomGameConfig": "Use custom game-config",
+  "MenuBarOptionsOpenApplicationSettings": "Open Application-Settings"
 }

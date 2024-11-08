@@ -112,6 +112,7 @@ namespace Ryujinx.Ava.UI.Controls
                 await new CheatWindow(
                     viewModel.VirtualFileSystem,
                     viewModel.HostFileSystem,
+                    viewModel.SelectedApplication.GameConfig,
                     viewModel.SelectedApplication.IdString,
                     viewModel.SelectedApplication.Name,
                     viewModel.SelectedApplication.Path).ShowDialog(viewModel.TopLevel as Window);
@@ -241,6 +242,7 @@ namespace Ryujinx.Ava.UI.Controls
                 await ApplicationHelper.ExtractSection(
                     viewModel.StorageProvider,
                     NcaSectionType.Code,
+                    viewModel.SelectedApplication.GameConfig,
                     viewModel.SelectedApplication.Path,
                     viewModel.SelectedApplication.Name);
             }
@@ -255,6 +257,7 @@ namespace Ryujinx.Ava.UI.Controls
                 await ApplicationHelper.ExtractSection(
                     viewModel.StorageProvider,
                     NcaSectionType.Data,
+                    viewModel.SelectedApplication.GameConfig,
                     viewModel.SelectedApplication.Path,
                     viewModel.SelectedApplication.Name);
             }
@@ -269,6 +272,7 @@ namespace Ryujinx.Ava.UI.Controls
                 await ApplicationHelper.ExtractSection(
                     viewModel.StorageProvider,
                     NcaSectionType.Logo,
+                    viewModel.SelectedApplication.GameConfig,
                     viewModel.SelectedApplication.Path,
                     viewModel.SelectedApplication.Name);
             }
@@ -292,6 +296,16 @@ namespace Ryujinx.Ava.UI.Controls
             if (viewModel?.SelectedApplication != null)
             {
                 await viewModel.LoadApplication(viewModel.SelectedApplication);
+            }
+        }
+
+        public async void OpenApplicationSettings_Click(object sender, RoutedEventArgs args)
+        {
+            var viewModel = (sender as MenuItem)?.DataContext as MainWindowViewModel;
+
+            if (viewModel?.SelectedApplication != null)
+            {
+                await viewModel.OpenApplicationSettings(viewModel.SelectedApplication.GameConfig, false);
             }
         }
 

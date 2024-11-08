@@ -38,7 +38,6 @@ using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -91,6 +90,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private bool _showAll;
         private string _lastScannedAmiiboId;
         private bool _statusBarVisible;
+        private bool _gameConfigIsGlobal;
         private ReadOnlyObservableCollection<ApplicationData> _appsObservableList;
 
         private string _showUiKey = "F4";
@@ -116,10 +116,14 @@ namespace Ryujinx.Ava.UI.ViewModels
         public ApplicationData ListSelectedApplication;
         public ApplicationData GridSelectedApplication;
 
+        internal MainWindow MainWindow { get; set; }
+
         internal AppHost AppHost { get; set; }
 
-        public MainWindowViewModel()
+        public MainWindowViewModel(MainWindow mainWindow)
         {
+            MainWindow = mainWindow;
+
             Applications = new ObservableCollection<ApplicationData>();
 
             Applications.ToObservableChangeSet()
@@ -131,9 +135,11 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             if (Program.PreviewerDetached)
             {
-                LoadConfigurableHotKeys();
+                GameConfigurationState gameConfig = ConfigurationState.Instance.Game;
 
-                Volume = ConfigurationState.Instance.System.AudioVolume;
+                LoadConfigurableHotKeys(gameConfig);
+
+                Volume = gameConfig.System.AudioVolume;
             }
         }
 
@@ -771,10 +777,10 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool StartGamesInFullscreen
         {
-            get => ConfigurationState.Instance.UI.StartFullscreen;
+            get => ConfigurationState.Instance.StartFullscreen;
             set
             {
-                ConfigurationState.Instance.UI.StartFullscreen.Value = value;
+                ConfigurationState.Instance.StartFullscreen.Value = value;
 
                 ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
 
@@ -987,6 +993,16 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 _pauseKey = value.ToString();
 
+                OnPropertyChanged();
+            }
+        }
+
+        public bool GameConfigIsGlobal
+        {
+            get => _gameConfigIsGlobal;
+            set
+            {
+                _gameConfigIsGlobal = value;
                 OnPropertyChanged();
             }
         }
@@ -1375,19 +1391,19 @@ namespace Ryujinx.Ava.UI.ViewModels
             emulationContext.Gpu.ShaderCacheStateChanged += ProgressHandler;
         }
 
-        public void LoadConfigurableHotKeys()
+        public void LoadConfigurableHotKeys(GameConfigurationState gameConfig)
         {
-            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUI, out var showUiKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)gameConfig.Hid.Hotkeys.Value.ShowUI, out var showUiKey))
             {
                 ShowUiKey = new KeyGesture(showUiKey);
             }
 
-            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot, out var screenshotKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)gameConfig.Hid.Hotkeys.Value.Screenshot, out var screenshotKey))
             {
                 ScreenshotKey = new KeyGesture(screenshotKey);
             }
 
-            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Pause, out var pauseKey))
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)gameConfig.Hid.Hotkeys.Value.Pause, out var pauseKey))
             {
                 PauseKey = new KeyGesture(pauseKey);
             }
@@ -1425,7 +1441,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void SetAspectRatio(AspectRatio aspectRatio)
         {
-            ConfigurationState.Instance.Graphics.AspectRatio.Value = aspectRatio;
+            GameConfigurationState.Current.Graphics.AspectRatio.Value = aspectRatio;
         }
 
         public async Task InstallFirmwareFromFile()
@@ -1493,7 +1509,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             if (IsGameRunning)
             {
-                ConfigurationState.Instance.System.EnableDockedMode.Value = !ConfigurationState.Instance.System.EnableDockedMode.Value;
+                GameConfigurationState.Current.System.EnableDockedMode.Value = !GameConfigurationState.Current.System.EnableDockedMode.Value;
             }
         }
 
@@ -1631,6 +1647,17 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
+        public async Task OpenApplicationSettings(GameConfigurationState gameConfig, bool ingame)
+        {
+            ConfigurationState config = ConfigurationState.Instance;
+
+            MainWindow.SettingsWindow = new SettingsWindow(config, gameConfig, ingame, VirtualFileSystem, ContentManager);
+
+            await MainWindow.SettingsWindow.ShowDialog(MainWindow);
+
+            MainWindow.SettingsWindow = null;
+        }
+
         public async Task LoadApplication(ApplicationData application, bool startFullscreen = false)
         {
             if (AppHost != null)
@@ -1645,19 +1672,41 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return;
             }
 
+            // @remark: don't forget the per-game settings-view
+            GameConfigurationState gameConfig = ConfigurationState.Instance.Game;
+
+            if (SelectedApplication.GameConfig != null)
+            {
+                GameConfigurationState appGameConfig = SelectedApplication.GameConfig;
+
+                if (!appGameConfig.IsGlobalState && appGameConfig.UseGameConfig)
+                {
+                    gameConfig = appGameConfig;
+                }
+            }
+
+            GameConfigIsGlobal = gameConfig.IsGlobalState;
+
+            LoadConfigurableHotKeys(gameConfig);
+
+            Volume = gameConfig.System.AudioVolume;
+
 #if RELEASE
-            await PerformanceCheck();
+            await PerformanceCheck(gameConfig);
 #endif
 
             Logger.RestartTime();
 
-            SelectedIcon ??= ApplicationLibrary.GetApplicationIcon(application.Path, ConfigurationState.Instance.System.Language, application.Id);
+            GameConfigurationState.Current = gameConfig;
+
+            SelectedIcon ??= ApplicationLibrary.GetApplicationIcon(application.Path, gameConfig.System.Language, application.Id);
 
             PrepareLoadScreen();
 
-            RendererHostControl = new RendererHost();
+            RendererHostControl = new RendererHost(gameConfig);
 
             AppHost = new AppHost(
+                gameConfig,
                 RendererHostControl,
                 InputManager,
                 application.Path,
@@ -1794,6 +1843,8 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 Title = $"Ryujinx {Program.Version}";
             });
+
+            GameConfigurationState.Current = null;
         }
 
         public void ToggleFullscreen()
@@ -1832,7 +1883,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
         }
 
-        public static async Task PerformanceCheck()
+        public static async Task PerformanceCheck(GameConfigurationState gameConfig)
         {
             if (ConfigurationState.Instance.Logger.EnableTrace.Value)
             {
@@ -1854,7 +1905,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(ConfigurationState.Instance.Graphics.ShadersDumpPath.Value))
+            if (!string.IsNullOrWhiteSpace(gameConfig.Graphics.ShadersDumpPath.Value))
             {
                 string mainMessage = LocaleManager.Instance[LocaleKeys.DialogPerformanceCheckShaderDumpEnabledMessage];
                 string secondaryMessage = LocaleManager.Instance[LocaleKeys.DialogPerformanceCheckShaderDumpEnabledConfirmMessage];
@@ -1868,8 +1919,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 if (result == UserResult.Yes)
                 {
-                    ConfigurationState.Instance.Graphics.ShadersDumpPath.Value = "";
-
+                    gameConfig.Graphics.ShadersDumpPath.Value = "";
                     SaveConfig();
                 }
             }

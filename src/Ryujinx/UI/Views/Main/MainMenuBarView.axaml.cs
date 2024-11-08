@@ -103,6 +103,16 @@ namespace Ryujinx.Ava.UI.Views.Main
             DataContext = ViewModel;
         }
 
+        private async void OpenApplicationSettings_Click(object sender, RoutedEventArgs e)
+        {
+            GameConfigurationState gameConfig = Window.ViewModel.AppHost?.GameConfig;
+
+            if (gameConfig != null && !gameConfig.IsGlobalState)
+            {
+                await Window.ViewModel.OpenApplicationSettings(gameConfig, true);
+            }
+        }
+
         private async void StopEmulation_Click(object sender, RoutedEventArgs e)
         {
             await Window.ViewModel.AppHost?.ShowExitPrompt();
@@ -120,13 +130,14 @@ namespace Ryujinx.Ava.UI.Views.Main
 
         public async void OpenSettings(object sender, RoutedEventArgs e)
         {
-            Window.SettingsWindow = new(Window.VirtualFileSystem, Window.ContentManager);
+            ConfigurationState config = ConfigurationState.Instance;
+            GameConfigurationState gameConfig = config.Game;
+
+            Window.SettingsWindow = new(config, gameConfig, false, Window.VirtualFileSystem, Window.ContentManager);
 
             await Window.SettingsWindow.ShowDialog(Window);
 
             Window.SettingsWindow = null;
-
-            ViewModel.LoadConfigurableHotKeys();
         }
 
         public async void OpenMiiApplet(object sender, RoutedEventArgs e)
@@ -182,6 +193,7 @@ namespace Ryujinx.Ava.UI.Views.Main
             await new CheatWindow(
                 Window.VirtualFileSystem,
                 Window.HostFileSystem,
+                Window.ViewModel.SelectedApplication.GameConfig,
                 ViewModel.AppHost.Device.Processes.ActiveApplication.ProgramIdText,
                 name,
                 Window.ViewModel.SelectedApplication.Path).ShowDialog(Window);

@@ -4,7 +4,10 @@ using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.UI.Common.Configuration;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Ryujinx.Ava.UI.Windows
 {
@@ -12,11 +15,11 @@ namespace Ryujinx.Ava.UI.Windows
     {
         internal SettingsViewModel ViewModel { get; set; }
 
-        public SettingsWindow(VirtualFileSystem virtualFileSystem, ContentManager contentManager)
+        public SettingsWindow(ConfigurationState config, GameConfigurationState gameConfig, bool ingame, VirtualFileSystem virtualFileSystem, ContentManager contentManager)
         {
             Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance[LocaleKeys.Settings]}";
 
-            ViewModel = new SettingsViewModel(virtualFileSystem, contentManager);
+            ViewModel = new SettingsViewModel(config, gameConfig, ingame, virtualFileSystem, contentManager);
             DataContext = ViewModel;
 
             ViewModel.CloseWindow += Close;
@@ -28,7 +31,9 @@ namespace Ryujinx.Ava.UI.Windows
 
         public SettingsWindow()
         {
-            ViewModel = new SettingsViewModel();
+            ConfigurationState config = ConfigurationState.Instance;
+
+            ViewModel = new SettingsViewModel(config, config.Game, false);
             DataContext = ViewModel;
 
             InitializeComponent();
@@ -47,9 +52,21 @@ namespace Ryujinx.Ava.UI.Windows
 
         private void Load()
         {
+            InputPage.Initialize(ViewModel.GameConfig);
+
             Pages.Children.Clear();
             NavPanel.SelectionChanged += NavPanelOnSelectionChanged;
-            NavPanel.SelectedItem = NavPanel.MenuItems.ElementAt(0);
+
+            IEnumerable<NavigationViewItem> menuItems = NavPanel.MenuItems.Cast<NavigationViewItem>();
+
+            if (ViewModel.IsGameConfig)
+            {
+                NavPanel.SelectedItem = menuItems.First(x => x.Tag?.ToString() == "SystemPage");
+            }
+            else
+            {
+                NavPanel.SelectedItem = menuItems.First(x => x.Tag?.ToString() == "UiPage");
+            }
         }
 
         private void NavPanelOnSelectionChanged(object sender, NavigationViewSelectionChangedEventArgs e)
@@ -90,6 +107,10 @@ namespace Ryujinx.Ava.UI.Windows
                     default:
                         throw new NotImplementedException();
                 }
+            }
+            else
+            {
+                NavPanel.Content = null;
             }
         }
 

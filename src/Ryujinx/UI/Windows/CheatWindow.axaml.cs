@@ -34,10 +34,10 @@ namespace Ryujinx.Ava.UI.Windows
             Title = $"Ryujinx {Program.Version} - " + LocaleManager.Instance[LocaleKeys.CheatWindowTitle];
         }
 
-        public CheatWindow(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, string titleId, string titleName, string titlePath)
+        public CheatWindow(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem, GameConfigurationState gameConfig, string titleId, string titleName, string titlePath)
         {
             LoadedCheats = new AvaloniaList<CheatNode>();
-            IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
+            IntegrityCheckLevel checkLevel = gameConfig.System.EnableFsIntegrityChecks
                 ? IntegrityCheckLevel.ErrorOnInvalid
                 : IntegrityCheckLevel.None;
 

@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Ryujinx.UI.Common.Configuration;
 
 namespace Ryujinx.Ava.UI.Views.Settings
 {
@@ -7,6 +8,11 @@ namespace Ryujinx.Ava.UI.Views.Settings
         public SettingsInputView()
         {
             InitializeComponent();
+        }
+
+        public void Initialize(GameConfigurationState gameConfig)
+        {
+            InputView.Initialize(gameConfig);
         }
 
         public void Dispose()

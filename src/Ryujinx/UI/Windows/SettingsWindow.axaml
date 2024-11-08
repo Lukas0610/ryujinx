@@ -48,6 +48,7 @@
             IsSettingsVisible="False"
             Name="NavPanel"
             IsBackEnabled="False"
+            IsEnabled="{Binding IsConfigEnabled}"
             PaneDisplayMode="Left"
             Margin="2,10,10,0"
             VerticalAlignment="Stretch"
@@ -55,23 +56,27 @@
             OpenPaneLength="200">
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem
-                    IsSelected="True"
+                    IsEnabled="{Binding IsGlobalConfigEnabled}"
                     Content="{locale:Locale SettingsTabGeneral}"
                     Tag="UiPage"
                     IconSource="New" />
                 <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGameConfigEnabled}"
                     Content="{locale:Locale SettingsTabInput}"
                     Tag="InputPage"
                     IconSource="Games" />
                 <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGameConfigEnabled}"
                     Content="{locale:Locale SettingsTabHotkeys}"
                     Tag="HotkeysPage"
                     IconSource="Keyboard" />
                 <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGameConfigEnabled}"
                     Content="{locale:Locale SettingsTabSystem}"
                     Tag="SystemPage"
                     IconSource="Settings" />
                 <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGameConfigEnabled}"
                     Content="{locale:Locale SettingsTabCpu}"
                     Tag="CpuPage">
                     <ui:NavigationViewItem.IconSource>
@@ -81,21 +86,25 @@
                     </ui:NavigationViewItem.IconSource>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGameConfigEnabled}"
                     Content="{locale:Locale SettingsTabGraphics}"
                     Tag="GraphicsPage"
                     IconSource="Image" />
                 <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGameConfigEnabled}"
                     Content="{locale:Locale SettingsTabAudio}"
                     IconSource="Audio"
                     Tag="AudioPage" />
                 <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGameConfigEnabled}"
                     Content="{locale:Locale SettingsTabNetwork}"
                     Tag="NetworkPage"
                     IconSource="Globe" />
                 <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGlobalConfigEnabled}"
                     Content="{locale:Locale SettingsTabLogging}"
                     Tag="LoggingPage"
-                    IconSource="Document" />
+                    IconSource="Document"/>
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.Styles>
                 <Style Selector="Grid#PlaceholderGrid">
@@ -106,25 +115,37 @@
                 </Style>
             </ui:NavigationView.Styles>
         </ui:NavigationView>
-        <ReversibleStackPanel
+        <StackPanel
             Grid.Row="2"
             Margin="10"
             Spacing="10"
-            Orientation="Horizontal"
             HorizontalAlignment="Right"
-            ReverseOrder="{Binding IsMacOS}">
-            <Button
-                HotKey="Enter"
-                Classes="accent"
-                Content="{locale:Locale SettingsButtonOk}"
-                Command="{Binding OkButton}" />
-            <Button
-                HotKey="Escape"
-                Content="{locale:Locale SettingsButtonCancel}"
-                Command="{Binding CancelButton}" />
-            <Button
-                Content="{locale:Locale SettingsButtonApply}"
-                Command="{Binding ApplyButton}" />
-        </ReversibleStackPanel>
+            Orientation="Horizontal">
+
+            <CheckBox IsVisible="{Binding IsGameConfig}"
+                      IsEnabled="{Binding CanChangeUseCustomGameConfig}"
+                      IsChecked="{Binding UseCustomGameConfig}">
+                <TextBlock Text="{locale:Locale SettingsUseCustomGameConfig}" />
+            </CheckBox>
+
+            <ReversibleStackPanel
+                Spacing="10"
+                Orientation="Horizontal"
+                HorizontalAlignment="Right"
+                ReverseOrder="{Binding IsMacOS}">
+                <Button
+                    HotKey="Enter"
+                    Classes="accent"
+                    Content="{locale:Locale SettingsButtonOk}"
+                    Command="{Binding OkButton}" />
+                <Button
+                    HotKey="Escape"
+                    Content="{locale:Locale SettingsButtonCancel}"
+                    Command="{Binding CancelButton}" />
+                <Button
+                    Content="{locale:Locale SettingsButtonApply}"
+                    Command="{Binding ApplyButton}" />
+            </ReversibleStackPanel>
+        </StackPanel>
     </Grid>
 </window:StyleableWindow>

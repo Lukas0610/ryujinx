@@ -23,6 +23,7 @@ using Ryujinx.UI.Common.Configuration.System;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
@@ -37,10 +38,14 @@ namespace Ryujinx.Ava.UI.ViewModels
         private readonly ContentManager _contentManager;
         private TimeZoneContentManager _timeZoneContentManager;
 
+        private readonly ConfigurationState _config;
+        private readonly GameConfigurationState _gameConfig;
+
         private readonly List<string> _validTzRegions;
 
         private readonly Dictionary<string, string> _networkInterfaces;
 
+        private bool _useCustomGameConfig;
         private float _customResolutionScale;
         private int _resolutionScale;
         private int _graphicsBackendMultithreadingIndex;
@@ -61,6 +66,50 @@ namespace Ryujinx.Ava.UI.ViewModels
         private int _networkInterfaceIndex;
         private int _multiplayerModeIndex;
 
+        public ConfigurationState Config => _config;
+
+        public GameConfigurationState GameConfig => _gameConfig;
+
+        public bool IsIngame { get; }
+
+        public bool IsGlobalConfig { get; }
+
+        public bool IsGameConfig { get; }
+
+        public bool UseCustomGameConfig
+        {
+            get => _useCustomGameConfig;
+            set
+            {
+                _useCustomGameConfig = value;
+
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsConfigEnabled));
+                OnPropertyChanged(nameof(IsGlobalConfigEnabled));
+                OnPropertyChanged(nameof(IsGameConfigEnabled));
+            }
+        }
+
+        public bool CanChangeUseCustomGameConfig
+        {
+            get => !IsGlobalConfig && !IsIngame;
+        }
+
+        public bool IsConfigEnabled
+        {
+            get => IsGlobalConfigEnabled || IsGameConfigEnabled;
+        }
+
+        public bool IsGlobalConfigEnabled
+        {
+            get => IsGlobalConfig;
+        }
+
+        public bool IsGameConfigEnabled
+        {
+            get => IsGlobalConfig || _useCustomGameConfig;
+        }
+
         public int ResolutionScale
         {
             get => _resolutionScale;
@@ -80,7 +129,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 _graphicsBackendMultithreadingIndex = value;
 
-                if (_graphicsBackendMultithreadingIndex != (int)ConfigurationState.Instance.Graphics.BackendThreading.Value)
+                if (_graphicsBackendMultithreadingIndex != (int)_gameConfig.Graphics.BackendThreading.Value)
                 {
                     Dispatcher.UIThread.InvokeAsync(() =>
                          ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogSettingsBackendThreadingWarningMessage],
@@ -253,7 +302,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 _volume = value;
 
-                ConfigurationState.Instance.System.AudioVolume.Value = _volume / 100;
+                _gameConfig.System.AudioVolume.Value = _volume / 100;
 
                 OnPropertyChanged();
             }
@@ -315,7 +364,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             set
             {
                 _networkInterfaceIndex = value != -1 ? value : 0;
-                ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[_networkInterfaceIndex]];
+                _gameConfig.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[_networkInterfaceIndex]];
             }
         }
 
@@ -325,35 +374,99 @@ namespace Ryujinx.Ava.UI.ViewModels
             set
             {
                 _multiplayerModeIndex = value;
-                ConfigurationState.Instance.Multiplayer.Mode.Value = (MultiplayerMode)_multiplayerModeIndex;
+                _gameConfig.Multiplayer.Mode.Value = (MultiplayerMode)_multiplayerModeIndex;
             }
         }
 
-        public SettingsViewModel(VirtualFileSystem virtualFileSystem, ContentManager contentManager) : this()
+        public SettingsViewModel(ConfigurationState config, GameConfigurationState gameConfig, bool ingame, VirtualFileSystem virtualFileSystem, ContentManager contentManager)
+            : this(config, gameConfig, ingame)
         {
             _virtualFileSystem = virtualFileSystem;
             _contentManager = contentManager;
+
             if (Program.PreviewerDetached)
             {
                 Task.Run(LoadTimeZones);
             }
         }
 
-        public SettingsViewModel()
+        public SettingsViewModel(ConfigurationState config, GameConfigurationState gameConfig, bool ingame)
         {
+            _config = config;
+            _gameConfig = gameConfig;
+
+            IsIngame = ingame;
+            IsGlobalConfig = gameConfig.IsGlobalState;
+            IsGameConfig = !gameConfig.IsGlobalState;
+
             GameDirectories = new AvaloniaList<string>();
             TimeZones = new AvaloniaList<TimeZone>();
             AvailableGpus = new ObservableCollection<ComboBoxItem>();
             _validTzRegions = new List<string>();
             _networkInterfaces = new Dictionary<string, string>();
 
-            Task.Run(CheckSoundBackends);
-            Task.Run(PopulateNetworkInterfaces);
+            Initialize();
 
             if (Program.PreviewerDetached)
             {
-                Task.Run(LoadAvailableGpus);
-                LoadCurrentConfiguration();
+                LoadConfiguration();
+            }
+        }
+
+        private void Initialize()
+        {
+            Task.Run(CheckSoundBackends);
+            Task.Run(LoadAvailableGpus);
+            Task.Run(PopulateNetworkInterfaces);
+
+            async Task LoadAvailableGpus()
+            {
+                AvailableGpus.Clear();
+
+                var devices = VulkanRenderer.GetPhysicalDevices();
+
+                if (devices.Length == 0)
+                {
+                    IsVulkanAvailable = false;
+                    GraphicsBackendIndex = 1;
+                }
+                else
+                {
+                    foreach (var device in devices)
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            _gpuIds.Add(device.Id);
+
+                            AvailableGpus.Add(new ComboBoxItem { Content = $"{device.Name} {(device.IsDiscrete ? "(dGPU)" : "")}" });
+                        });
+                    }
+                }
+
+                // GPU configuration needs to be loaded during the async method or it will always return 0.
+                PreferredGpuIndex = _gpuIds.Contains(_gameConfig.Graphics.PreferredGpu) ?
+                                    _gpuIds.IndexOf(_gameConfig.Graphics.PreferredGpu) : 0;
+
+                Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(PreferredGpuIndex)));
+            }
+
+            async Task PopulateNetworkInterfaces()
+            {
+                _networkInterfaces.Clear();
+                _networkInterfaces.Add(LocaleManager.Instance[LocaleKeys.NetworkInterfaceDefault], "0");
+
+                foreach (NetworkInterface networkInterface in NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        _networkInterfaces.Add(networkInterface.Name, networkInterface.Id);
+                    });
+                }
+
+                // Network interface index  needs to be loaded during the async method or it will always return 0.
+                NetworkInterfaceIndex = _networkInterfaces.Values.ToList().IndexOf(_gameConfig.Multiplayer.LanInterfaceId.Value);
+
+                Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(NetworkInterfaceIndex)));
             }
         }
 
@@ -369,37 +482,6 @@ namespace Ryujinx.Ava.UI.ViewModels
                 OnPropertyChanged(nameof(IsSoundIoEnabled));
                 OnPropertyChanged(nameof(IsSDL2Enabled));
             });
-        }
-
-        private async Task LoadAvailableGpus()
-        {
-            AvailableGpus.Clear();
-
-            var devices = VulkanRenderer.GetPhysicalDevices();
-
-            if (devices.Length == 0)
-            {
-                IsVulkanAvailable = false;
-                GraphicsBackendIndex = 1;
-            }
-            else
-            {
-                foreach (var device in devices)
-                {
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                    {
-                        _gpuIds.Add(device.Id);
-
-                        AvailableGpus.Add(new ComboBoxItem { Content = $"{device.Name} {(device.IsDiscrete ? "(dGPU)" : "")}" });
-                    });
-                }
-            }
-
-            // GPU configuration needs to be loaded during the async method or it will always return 0.
-            PreferredGpuIndex = _gpuIds.Contains(ConfigurationState.Instance.Graphics.PreferredGpu) ?
-                                _gpuIds.IndexOf(ConfigurationState.Instance.Graphics.PreferredGpu) : 0;
-
-            Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(PreferredGpuIndex)));
         }
 
         public async Task LoadTimeZones()
@@ -426,25 +508,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(TimeZone)));
         }
 
-        private async Task PopulateNetworkInterfaces()
-        {
-            _networkInterfaces.Clear();
-            _networkInterfaces.Add(LocaleManager.Instance[LocaleKeys.NetworkInterfaceDefault], "0");
-
-            foreach (NetworkInterface networkInterface in NetworkInterface.GetAllNetworkInterfaces())
-            {
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    _networkInterfaces.Add(networkInterface.Name, networkInterface.Id);
-                });
-            }
-
-            // Network interface index  needs to be loaded during the async method or it will always return 0.
-            NetworkInterfaceIndex = _networkInterfaces.Values.ToList().IndexOf(ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value);
-
-            Dispatcher.UIThread.Post(() => OnPropertyChanged(nameof(NetworkInterfaceIndex)));
-        }
-
         public void ValidateAndSetTimeZone(string location)
         {
             if (_validTzRegions.Contains(location))
@@ -453,225 +516,249 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public void LoadCurrentConfiguration()
+        public void LoadConfiguration()
         {
-            ConfigurationState config = ConfigurationState.Instance;
+            if (_config != null)
+            {
+                // User Interface
+                EnableDiscordIntegration = _config.EnableDiscordIntegration;
+                CheckUpdatesOnStart = _config.CheckUpdatesOnStart;
+                ShowConfirmExit = _config.ShowConfirmExit;
+                RememberWindowState = _config.RememberWindowState;
+
+                GameDirectories.Clear();
+                GameDirectories.AddRange(_config.UI.GameDirs.Value);
+
+                BaseStyleIndex = _config.UI.BaseStyle.Value switch
+                {
+                    "Auto" => 0,
+                    "Light" => 1,
+                    "Dark" => 2,
+                    _ => 0
+                };
+
+                // Logging
+                EnableFileLog = _config.Logger.EnableFileLog;
+                EnableStub = _config.Logger.EnableStub;
+                EnableInfo = _config.Logger.EnableInfo;
+                EnableWarn = _config.Logger.EnableWarn;
+                EnableError = _config.Logger.EnableError;
+                EnableTrace = _config.Logger.EnableTrace;
+                EnableGuest = _config.Logger.EnableGuest;
+                EnableDebug = _config.Logger.EnableDebug;
+                EnableFsAccessLog = _config.Logger.EnableFsAccessLog;
+                OpenglDebugLevel = (int)_config.Logger.GraphicsDebugLevel.Value;
+            }
+
+            if (!_gameConfig.IsGlobalState)
+            {
+                UseCustomGameConfig = _gameConfig.UseGameConfig.Value;
+            }
 
             // User Interface
-            EnableDiscordIntegration = config.EnableDiscordIntegration;
-            CheckUpdatesOnStart = config.CheckUpdatesOnStart;
-            ShowConfirmExit = config.ShowConfirmExit;
-            RememberWindowState = config.RememberWindowState;
-            HideCursor = (int)config.HideCursor.Value;
-
-            GameDirectories.Clear();
-            GameDirectories.AddRange(config.UI.GameDirs.Value);
-
-            BaseStyleIndex = config.UI.BaseStyle.Value switch
-            {
-                "Auto" => 0,
-                "Light" => 1,
-                "Dark" => 2,
-                _ => 0
-            };
+            HideCursor = (int)_gameConfig.HideCursor.Value;
 
             // Input
-            EnableDockedMode = config.System.EnableDockedMode;
-            EnableKeyboard = config.Hid.EnableKeyboard;
-            EnableMouse = config.Hid.EnableMouse;
+            EnableDockedMode = _gameConfig.System.EnableDockedMode;
+            EnableKeyboard = _gameConfig.Hid.EnableKeyboard;
+            EnableMouse = _gameConfig.Hid.EnableMouse;
 
             // Keyboard Hotkeys
-            KeyboardHotkey = new HotkeyConfig(config.Hid.Hotkeys.Value);
+            KeyboardHotkey = new HotkeyConfig(_gameConfig.Hid.Hotkeys.Value);
 
             // System
-            Region = (int)config.System.Region.Value;
-            Language = (int)config.System.Language.Value;
-            TimeZone = config.System.TimeZone;
+            Region = (int)_gameConfig.System.Region.Value;
+            Language = (int)_gameConfig.System.Language.Value;
+            TimeZone = _gameConfig.System.TimeZone;
 
             DateTime currentHostDateTime = DateTime.Now;
-            TimeSpan systemDateTimeOffset = TimeSpan.FromSeconds(config.System.SystemTimeOffset);
+            TimeSpan systemDateTimeOffset = TimeSpan.FromSeconds(_gameConfig.System.SystemTimeOffset);
             DateTime currentDateTime = currentHostDateTime.Add(systemDateTimeOffset);
             CurrentDate = currentDateTime.Date;
             CurrentTime = currentDateTime.TimeOfDay;
 
-            EnableVsync = config.Graphics.EnableVsync;
-            EnableFsIntegrityChecks = config.System.EnableFsIntegrityChecks;
-            EnableHostFsBuffering = config.System.EnableHostFsBuffering;
-            EnableHostFsBufferingPrefetch = config.System.EnableHostFsBufferingPrefetch;
-            HostFsBufferingMaxCacheSize = config.System.HostFsBufferingMaxCacheSize;
-            IgnoreMissingServices = config.System.IgnoreMissingServices;
+            EnableVsync = _gameConfig.Graphics.EnableVsync;
+            EnableFsIntegrityChecks = _gameConfig.System.EnableFsIntegrityChecks;
+            EnableHostFsBuffering = _gameConfig.System.EnableHostFsBuffering;
+            EnableHostFsBufferingPrefetch = _gameConfig.System.EnableHostFsBufferingPrefetch;
+            HostFsBufferingMaxCacheSize = _gameConfig.System.HostFsBufferingMaxCacheSize;
+            IgnoreMissingServices = _gameConfig.System.IgnoreMissingServices;
 
             // CPU
-            EnablePptc = config.System.EnablePtc;
-            UseStreamingPtc = config.System.UseStreamingPtc;
-            MemoryMode = (int)config.System.MemoryManagerMode.Value;
-            MemoryConfiguration = (int)config.System.MemoryConfiguration.Value;
-            UseHypervisor = config.System.UseHypervisor;
-            UseSparseAddressTable = config.System.UseSparseAddressTable;
-            HleKernelThreadsCPUSet = config.System.HleKernelThreadsCPUSet;
-            HleKernelThreadsCPUSetStaticCore = config.System.HleKernelThreadsCPUSetStaticCore;
-            PtcBackgroundThreadsCPUSet = config.System.PtcBackgroundThreadsCPUSet;
-            PtcBackgroundThreadCount = config.System.PtcBackgroundThreadCount;
+            EnablePptc = _gameConfig.System.EnablePtc;
+            UseStreamingPtc = _gameConfig.System.UseStreamingPtc;
+            MemoryMode = (int)_gameConfig.System.MemoryManagerMode.Value;
+            MemoryConfiguration = (int)_gameConfig.System.MemoryConfiguration.Value;
+            UseHypervisor = _gameConfig.System.UseHypervisor;
+            UseSparseAddressTable = _gameConfig.System.UseSparseAddressTable;
+            HleKernelThreadsCPUSet = _gameConfig.System.HleKernelThreadsCPUSet;
+            HleKernelThreadsCPUSetStaticCore = _gameConfig.System.HleKernelThreadsCPUSetStaticCore;
+            PtcBackgroundThreadsCPUSet = _gameConfig.System.PtcBackgroundThreadsCPUSet;
+            PtcBackgroundThreadCount = _gameConfig.System.PtcBackgroundThreadCount;
 
             // Graphics
-            GraphicsBackendIndex = (int)config.Graphics.GraphicsBackend.Value;
+            GraphicsBackendIndex = (int)_gameConfig.Graphics.GraphicsBackend.Value;
             // Physical devices are queried asynchronously hence the prefered index config value is loaded in LoadAvailableGpus().
-            EnableShaderCache = config.Graphics.EnableShaderCache;
-            EnableTextureRecompression = config.Graphics.EnableTextureRecompression;
-            EnableMacroHLE = config.Graphics.EnableMacroHLE;
-            EnableColorSpacePassthrough = config.Graphics.EnableColorSpacePassthrough;
-            ResolutionScale = config.Graphics.ResScale == -1 ? 4 : config.Graphics.ResScale - 1;
-            CustomResolutionScale = config.Graphics.ResScaleCustom;
-            MaxAnisotropy = config.Graphics.MaxAnisotropy == -1 ? 0 : (int)(MathF.Log2(config.Graphics.MaxAnisotropy));
-            AspectRatio = (int)config.Graphics.AspectRatio.Value;
-            GraphicsBackendMultithreadingIndex = (int)config.Graphics.BackendThreading.Value;
-            ShaderDumpPath = config.Graphics.ShadersDumpPath;
-            AntiAliasingEffect = (int)config.Graphics.AntiAliasing.Value;
-            ScalingFilter = (int)config.Graphics.ScalingFilter.Value;
-            ScalingFilterLevel = config.Graphics.ScalingFilterLevel.Value;
+            EnableShaderCache = _gameConfig.Graphics.EnableShaderCache;
+            EnableTextureRecompression = _gameConfig.Graphics.EnableTextureRecompression;
+            EnableMacroHLE = _gameConfig.Graphics.EnableMacroHLE;
+            EnableColorSpacePassthrough = _gameConfig.Graphics.EnableColorSpacePassthrough;
+            ResolutionScale = _gameConfig.Graphics.ResScale == -1 ? 4 : _gameConfig.Graphics.ResScale - 1;
+            CustomResolutionScale = _gameConfig.Graphics.ResScaleCustom;
+            MaxAnisotropy = _gameConfig.Graphics.MaxAnisotropy == -1 ? 0 : (int)(MathF.Log2(_gameConfig.Graphics.MaxAnisotropy));
+            AspectRatio = (int)_gameConfig.Graphics.AspectRatio.Value;
+            GraphicsBackendMultithreadingIndex = (int)_gameConfig.Graphics.BackendThreading.Value;
+            ShaderDumpPath = _gameConfig.Graphics.ShadersDumpPath;
+            AntiAliasingEffect = (int)_gameConfig.Graphics.AntiAliasing.Value;
+            ScalingFilter = (int)_gameConfig.Graphics.ScalingFilter.Value;
+            ScalingFilterLevel = _gameConfig.Graphics.ScalingFilterLevel.Value;
 
             // Audio
-            AudioBackend = (int)config.System.AudioBackend.Value;
-            Volume = config.System.AudioVolume * 100;
+            AudioBackend = (int)_gameConfig.System.AudioBackend.Value;
+            Volume = _gameConfig.System.AudioVolume * 100;
 
             // Network
-            EnableInternetAccess = config.System.EnableInternetAccess;
+            EnableInternetAccess = _gameConfig.System.EnableInternetAccess;
             // LAN interface index is loaded asynchronously in PopulateNetworkInterfaces()
 
-            // Logging
-            EnableFileLog = config.Logger.EnableFileLog;
-            EnableStub = config.Logger.EnableStub;
-            EnableInfo = config.Logger.EnableInfo;
-            EnableWarn = config.Logger.EnableWarn;
-            EnableError = config.Logger.EnableError;
-            EnableTrace = config.Logger.EnableTrace;
-            EnableGuest = config.Logger.EnableGuest;
-            EnableDebug = config.Logger.EnableDebug;
-            EnableFsAccessLog = config.Logger.EnableFsAccessLog;
-            FsGlobalAccessLogMode = config.System.FsGlobalAccessLogMode;
-            OpenglDebugLevel = (int)config.Logger.GraphicsDebugLevel.Value;
-
-            MultiplayerModeIndex = (int)config.Multiplayer.Mode.Value;
+            MultiplayerModeIndex = (int)_gameConfig.Multiplayer.Mode.Value;
         }
 
-        public void SaveSettings()
+        public void SaveConfiguration()
         {
-            ConfigurationState config = ConfigurationState.Instance;
-
-            // User Interface
-            config.EnableDiscordIntegration.Value = EnableDiscordIntegration;
-            config.CheckUpdatesOnStart.Value = CheckUpdatesOnStart;
-            config.ShowConfirmExit.Value = ShowConfirmExit;
-            config.RememberWindowState.Value = RememberWindowState;
-            config.HideCursor.Value = (HideCursorMode)HideCursor;
-
-            if (_directoryChanged)
+            if (_config != null)
             {
-                List<string> gameDirs = new(GameDirectories);
-                config.UI.GameDirs.Value = gameDirs;
+                // User Interface
+                _config.EnableDiscordIntegration.Value = EnableDiscordIntegration;
+                _config.CheckUpdatesOnStart.Value = CheckUpdatesOnStart;
+                _config.ShowConfirmExit.Value = ShowConfirmExit;
+                _config.RememberWindowState.Value = RememberWindowState;
+
+                if (_directoryChanged)
+                {
+                    List<string> gameDirs = new(GameDirectories);
+                    _config.UI.GameDirs.Value = gameDirs;
+                }
+
+                _config.UI.BaseStyle.Value = BaseStyleIndex switch
+                {
+                    0 => "Auto",
+                    1 => "Light",
+                    2 => "Dark",
+                    _ => "Auto"
+                };
+
+                // Logging
+                _config.Logger.EnableFileLog.Value = EnableFileLog;
+                _config.Logger.EnableStub.Value = EnableStub;
+                _config.Logger.EnableInfo.Value = EnableInfo;
+                _config.Logger.EnableWarn.Value = EnableWarn;
+                _config.Logger.EnableError.Value = EnableError;
+                _config.Logger.EnableTrace.Value = EnableTrace;
+                _config.Logger.EnableGuest.Value = EnableGuest;
+                _config.Logger.EnableDebug.Value = EnableDebug;
+                _config.Logger.EnableFsAccessLog.Value = EnableFsAccessLog;
+                _config.Logger.GraphicsDebugLevel.Value = (GraphicsDebugLevel)OpenglDebugLevel;
             }
 
-            config.UI.BaseStyle.Value = BaseStyleIndex switch
+            if (!_gameConfig.IsGlobalState)
             {
-                0 => "Auto",
-                1 => "Light",
-                2 => "Dark",
-                _ => "Auto"
-            };
+                _gameConfig.UseGameConfig.Value = UseCustomGameConfig;
+            }
+
+            // User Interface
+            _gameConfig.HideCursor.Value = (HideCursorMode)HideCursor;
 
             // Input
-            config.System.EnableDockedMode.Value = EnableDockedMode;
-            config.Hid.EnableKeyboard.Value = EnableKeyboard;
-            config.Hid.EnableMouse.Value = EnableMouse;
+            _gameConfig.System.EnableDockedMode.Value = EnableDockedMode;
+            _gameConfig.Hid.EnableKeyboard.Value = EnableKeyboard;
+            _gameConfig.Hid.EnableMouse.Value = EnableMouse;
 
             // Keyboard Hotkeys
-            config.Hid.Hotkeys.Value = KeyboardHotkey.GetConfig();
+            _gameConfig.Hid.Hotkeys.Value = KeyboardHotkey.GetConfig();
 
             // System
-            config.System.Region.Value = (Region)Region;
-            config.System.Language.Value = (Language)Language;
+            _gameConfig.System.Region.Value = (Region)Region;
+            _gameConfig.System.Language.Value = (Language)Language;
 
             if (_validTzRegions.Contains(TimeZone))
             {
-                config.System.TimeZone.Value = TimeZone;
+                _gameConfig.System.TimeZone.Value = TimeZone;
             }
 
-            config.System.SystemTimeOffset.Value = Convert.ToInt64((CurrentDate.ToUnixTimeSeconds() + CurrentTime.TotalSeconds) - DateTimeOffset.Now.ToUnixTimeSeconds());
-            config.Graphics.EnableVsync.Value = EnableVsync;
-            config.System.EnableFsIntegrityChecks.Value = EnableFsIntegrityChecks;
-            config.System.EnableHostFsBuffering.Value = EnableHostFsBuffering;
-            config.System.EnableHostFsBufferingPrefetch.Value = EnableHostFsBufferingPrefetch;
-            config.System.HostFsBufferingMaxCacheSize.Value = HostFsBufferingMaxCacheSize;
-            config.System.IgnoreMissingServices.Value = IgnoreMissingServices;
+            _gameConfig.System.SystemTimeOffset.Value = Convert.ToInt64((CurrentDate.ToUnixTimeSeconds() + CurrentTime.TotalSeconds) - DateTimeOffset.Now.ToUnixTimeSeconds());
+            _gameConfig.Graphics.EnableVsync.Value = EnableVsync;
+            _gameConfig.System.EnableFsIntegrityChecks.Value = EnableFsIntegrityChecks;
+            _gameConfig.System.EnableHostFsBuffering.Value = EnableHostFsBuffering;
+            _gameConfig.System.EnableHostFsBufferingPrefetch.Value = EnableHostFsBufferingPrefetch;
+            _gameConfig.System.HostFsBufferingMaxCacheSize.Value = HostFsBufferingMaxCacheSize;
+            _gameConfig.System.IgnoreMissingServices.Value = IgnoreMissingServices;
 
             // CPU
-            config.System.EnablePtc.Value = EnablePptc;
-            config.System.UseStreamingPtc.Value = UseStreamingPtc;
-            config.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
-            config.System.MemoryConfiguration.Value = (MemoryConfiguration)MemoryConfiguration;
-            config.System.UseHypervisor.Value = UseHypervisor;
-            config.System.UseSparseAddressTable.Value = UseSparseAddressTable;
-            config.System.HleKernelThreadsCPUSet.Value = HleKernelThreadsCPUSet;
-            config.System.HleKernelThreadsCPUSetStaticCore.Value = HleKernelThreadsCPUSetStaticCore;
-            config.System.PtcBackgroundThreadsCPUSet.Value = PtcBackgroundThreadsCPUSet;
-            config.System.PtcBackgroundThreadCount.Value = PtcBackgroundThreadCount;
+            _gameConfig.System.EnablePtc.Value = EnablePptc;
+            _gameConfig.System.UseStreamingPtc.Value = UseStreamingPtc;
+            _gameConfig.System.MemoryManagerMode.Value = (MemoryManagerMode)MemoryMode;
+            _gameConfig.System.MemoryConfiguration.Value = (MemoryConfiguration)MemoryConfiguration;
+            _gameConfig.System.UseHypervisor.Value = UseHypervisor;
+            _gameConfig.System.UseSparseAddressTable.Value = UseSparseAddressTable;
+            _gameConfig.System.HleKernelThreadsCPUSet.Value = HleKernelThreadsCPUSet;
+            _gameConfig.System.HleKernelThreadsCPUSetStaticCore.Value = HleKernelThreadsCPUSetStaticCore;
+            _gameConfig.System.PtcBackgroundThreadsCPUSet.Value = PtcBackgroundThreadsCPUSet;
+            _gameConfig.System.PtcBackgroundThreadCount.Value = PtcBackgroundThreadCount;
 
             // Graphics
-            config.Graphics.GraphicsBackend.Value = (GraphicsBackend)GraphicsBackendIndex;
-            config.Graphics.PreferredGpu.Value = _gpuIds.ElementAtOrDefault(PreferredGpuIndex);
-            config.Graphics.EnableShaderCache.Value = EnableShaderCache;
-            config.Graphics.EnableTextureRecompression.Value = EnableTextureRecompression;
-            config.Graphics.EnableMacroHLE.Value = EnableMacroHLE;
-            config.Graphics.EnableColorSpacePassthrough.Value = EnableColorSpacePassthrough;
-            config.Graphics.ResScale.Value = ResolutionScale == 4 ? -1 : ResolutionScale + 1;
-            config.Graphics.ResScaleCustom.Value = CustomResolutionScale;
-            config.Graphics.MaxAnisotropy.Value = MaxAnisotropy == 0 ? -1 : MathF.Pow(2, MaxAnisotropy);
-            config.Graphics.AspectRatio.Value = (AspectRatio)AspectRatio;
-            config.Graphics.AntiAliasing.Value = (AntiAliasing)AntiAliasingEffect;
-            config.Graphics.ScalingFilter.Value = (ScalingFilter)ScalingFilter;
-            config.Graphics.ScalingFilterLevel.Value = ScalingFilterLevel;
+            _gameConfig.Graphics.GraphicsBackend.Value = (GraphicsBackend)GraphicsBackendIndex;
+            _gameConfig.Graphics.PreferredGpu.Value = _gpuIds.ElementAtOrDefault(PreferredGpuIndex);
+            _gameConfig.Graphics.EnableShaderCache.Value = EnableShaderCache;
+            _gameConfig.Graphics.EnableTextureRecompression.Value = EnableTextureRecompression;
+            _gameConfig.Graphics.EnableMacroHLE.Value = EnableMacroHLE;
+            _gameConfig.Graphics.EnableColorSpacePassthrough.Value = EnableColorSpacePassthrough;
+            _gameConfig.Graphics.ResScale.Value = ResolutionScale == 4 ? -1 : ResolutionScale + 1;
+            _gameConfig.Graphics.ResScaleCustom.Value = CustomResolutionScale;
+            _gameConfig.Graphics.MaxAnisotropy.Value = MaxAnisotropy == 0 ? -1 : MathF.Pow(2, MaxAnisotropy);
+            _gameConfig.Graphics.AspectRatio.Value = (AspectRatio)AspectRatio;
+            _gameConfig.Graphics.AntiAliasing.Value = (AntiAliasing)AntiAliasingEffect;
+            _gameConfig.Graphics.ScalingFilter.Value = (ScalingFilter)ScalingFilter;
+            _gameConfig.Graphics.ScalingFilterLevel.Value = ScalingFilterLevel;
 
-            if (ConfigurationState.Instance.Graphics.BackendThreading != (BackendThreading)GraphicsBackendMultithreadingIndex)
+            if (_gameConfig.Graphics.BackendThreading != (BackendThreading)GraphicsBackendMultithreadingIndex)
             {
                 DriverUtilities.ToggleOGLThreading(GraphicsBackendMultithreadingIndex == (int)BackendThreading.Off);
             }
 
-            config.Graphics.BackendThreading.Value = (BackendThreading)GraphicsBackendMultithreadingIndex;
-            config.Graphics.ShadersDumpPath.Value = ShaderDumpPath;
+            _gameConfig.Graphics.BackendThreading.Value = (BackendThreading)GraphicsBackendMultithreadingIndex;
+            _gameConfig.Graphics.ShadersDumpPath.Value = ShaderDumpPath;
 
             // Audio
             AudioBackend audioBackend = (AudioBackend)AudioBackend;
-            if (audioBackend != config.System.AudioBackend.Value)
+            if (audioBackend != _gameConfig.System.AudioBackend.Value)
             {
-                config.System.AudioBackend.Value = audioBackend;
+                _gameConfig.System.AudioBackend.Value = audioBackend;
 
                 Logger.Info?.Print(LogClass.Application, $"AudioBackend toggled to: {audioBackend}");
             }
 
-            config.System.AudioVolume.Value = Volume / 100;
+            _gameConfig.System.AudioVolume.Value = Volume / 100;
 
             // Network
-            config.System.EnableInternetAccess.Value = EnableInternetAccess;
+            _gameConfig.System.EnableInternetAccess.Value = EnableInternetAccess;
 
             // Logging
-            config.Logger.EnableFileLog.Value = EnableFileLog;
-            config.Logger.EnableStub.Value = EnableStub;
-            config.Logger.EnableInfo.Value = EnableInfo;
-            config.Logger.EnableWarn.Value = EnableWarn;
-            config.Logger.EnableError.Value = EnableError;
-            config.Logger.EnableTrace.Value = EnableTrace;
-            config.Logger.EnableGuest.Value = EnableGuest;
-            config.Logger.EnableDebug.Value = EnableDebug;
-            config.Logger.EnableFsAccessLog.Value = EnableFsAccessLog;
-            config.System.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
-            config.Logger.GraphicsDebugLevel.Value = (GraphicsDebugLevel)OpenglDebugLevel;
+            _gameConfig.System.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
 
-            config.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[NetworkInterfaceIndex]];
-            config.Multiplayer.Mode.Value = (MultiplayerMode)MultiplayerModeIndex;
+            _gameConfig.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[NetworkInterfaceIndex]];
+            _gameConfig.Multiplayer.Mode.Value = (MultiplayerMode)MultiplayerModeIndex;
 
-            config.ToFileFormat().SaveConfig(Program.ConfigurationPath);
+            if (_config != null)
+            {
+                _config.ToFileFormat().SaveConfig(Program.ConfigurationPath);
+            }
+            else
+            {
+                _gameConfig.ToFileFormat().SaveConfig(Program.ConfigurationPath);
+            }
 
-            MainWindow.UpdateGraphicsConfig();
+            MainWindow.UpdateGraphicsConfig(_gameConfig);
 
             SaveSettingsEvent?.Invoke();
 
@@ -685,12 +772,12 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void ApplyButton()
         {
-            SaveSettings();
+            SaveConfiguration();
         }
 
         public void OkButton()
         {
-            SaveSettings();
+            SaveConfiguration();
             CloseWindow?.Invoke();
         }
 

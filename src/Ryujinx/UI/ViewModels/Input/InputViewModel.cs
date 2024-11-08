@@ -228,6 +228,8 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
             }
         }
 
+        public GameConfigurationState GameConfig { get; private set; }
+
         public InputConfig Config { get; set; }
 
         public InputViewModel(UserControl owner) : this()
@@ -246,10 +248,6 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                 _mainWindow.ViewModel.AppHost?.NpadManager.BlockInputUpdates();
 
                 _isLoaded = false;
-
-                LoadDevices();
-
-                PlayerId = PlayerIndex.Player1;
             }
         }
 
@@ -274,9 +272,18 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
             PlayerIndexes.Add(new(PlayerIndex.Handheld, LocaleManager.Instance[LocaleKeys.ControllerSettingsHandheld]));
         }
 
+        public void Initialize(GameConfigurationState gameConfig)
+        {
+            GameConfig = gameConfig;
+
+            LoadDevices();
+
+            PlayerId = PlayerIndex.Player1;
+        }
+
         private void LoadConfiguration(InputConfig inputConfig = null)
         {
-            Config = inputConfig ?? ConfigurationState.Instance.Hid.InputConfig.Value.Find(inputConfig => inputConfig.PlayerIndex == _playerId);
+            Config = inputConfig ?? GameConfig.Hid.InputConfig.Value.Find(inputConfig => inputConfig.PlayerIndex == _playerId);
 
             if (Config is StandardKeyboardInputConfig keyboardInputConfig)
             {
@@ -819,8 +826,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
 
             List<InputConfig> newConfig = new();
 
-            newConfig.AddRange(ConfigurationState.Instance.Hid.InputConfig.Value);
-
+            newConfig.AddRange(GameConfig.Hid.InputConfig.Value);
             newConfig.Remove(newConfig.Find(x => x == null));
 
             if (Device == 0)
@@ -859,13 +865,16 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                 }
             }
 
-            _mainWindow.ViewModel.AppHost?.NpadManager.ReloadConfiguration(newConfig, ConfigurationState.Instance.Hid.EnableKeyboard, ConfigurationState.Instance.Hid.EnableMouse);
+            _mainWindow.ViewModel.AppHost?.NpadManager.ReloadConfiguration(newConfig, GameConfig.Hid.EnableKeyboard, GameConfig.Hid.EnableMouse);
 
             // Atomically replace and signal input change.
             // NOTE: Do not modify InputConfig.Value directly as other code depends on the on-change event.
-            ConfigurationState.Instance.Hid.InputConfig.Value = newConfig;
+            GameConfig.Hid.InputConfig.Value = newConfig;
 
-            ConfigurationState.Instance.ToFileFormat().SaveConfig(Program.ConfigurationPath);
+            if (!GameConfig.IsGlobalState)
+            {
+                GameConfig.ToFileFormat().SaveConfig(GameConfig.ConfigurationFilePath);
+            }
         }
 
         public void NotifyChange(string property)

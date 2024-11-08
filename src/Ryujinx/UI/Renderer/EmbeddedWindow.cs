@@ -23,6 +23,8 @@ namespace Ryujinx.Ava.UI.Renderer
         private WindowProc _wndProcDelegate;
         private string _className;
 
+        protected GameConfigurationState GameConfig { get; set; }
+
         protected GLXWindow X11Window { get; set; }
 
         protected IntPtr WindowHandle { get; set; }
@@ -36,8 +38,10 @@ namespace Ryujinx.Ava.UI.Renderer
         public event EventHandler<IntPtr> WindowCreated;
         public event EventHandler<Size> BoundsChanged;
 
-        public EmbeddedWindow()
+        public EmbeddedWindow(GameConfigurationState gameConfig)
         {
+            GameConfig = gameConfig;
+
             this.GetObservable(BoundsProperty).Subscribe(StateChanged);
 
             Initialized += OnNativeEmbeddedWindowCreated;
@@ -118,7 +122,7 @@ namespace Ryujinx.Ava.UI.Renderer
         [SupportedOSPlatform("linux")]
         private IPlatformHandle CreateLinux(IPlatformHandle control)
         {
-            if (ConfigurationState.Instance.Graphics.GraphicsBackend.Value == GraphicsBackend.Vulkan)
+            if (GameConfig.Graphics.GraphicsBackend.Value == GraphicsBackend.Vulkan)
             {
                 X11Window = new GLXWindow(new NativeHandle(X11.DefaultDisplay), new NativeHandle(control.Handle));
                 X11Window.Hide();

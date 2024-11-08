@@ -132,7 +132,7 @@ namespace Ryujinx.Ava
             PrintSystemInfo();
 
             // Enable OGL multithreading on the driver, and some other flags.
-            DriverUtilities.InitDriverConfig(ConfigurationState.Instance.Graphics.BackendThreading == BackendThreading.Off);
+            DriverUtilities.InitDriverConfig(ConfigurationState.Instance.Game.Graphics.BackendThreading == BackendThreading.Off);
 
             // Check if keys exists.
             if (!File.Exists(Path.Combine(AppDataManager.KeysDirPath, "prod.keys")))
@@ -224,29 +224,29 @@ namespace Ryujinx.Ava
             {
                 if (CommandLineState.OverrideGraphicsBackend.ToLower() == "opengl")
                 {
-                    ConfigurationState.Instance.Graphics.GraphicsBackend.Value = GraphicsBackend.OpenGl;
+                    ConfigurationState.Instance.Game.Graphics.GraphicsBackend.Value = GraphicsBackend.OpenGl;
                 }
                 else if (CommandLineState.OverrideGraphicsBackend.ToLower() == "vulkan")
                 {
-                    ConfigurationState.Instance.Graphics.GraphicsBackend.Value = GraphicsBackend.Vulkan;
+                    ConfigurationState.Instance.Game.Graphics.GraphicsBackend.Value = GraphicsBackend.Vulkan;
                 }
             }
 
             // Check if docked mode was overriden.
             if (CommandLineState.OverrideDockedMode.HasValue)
             {
-                ConfigurationState.Instance.System.EnableDockedMode.Value = CommandLineState.OverrideDockedMode.Value;
+                ConfigurationState.Instance.Game.System.EnableDockedMode.Value = CommandLineState.OverrideDockedMode.Value;
             }
 
             // Check if HideCursor was overridden.
             if (CommandLineState.OverrideHideCursor is not null)
             {
-                ConfigurationState.Instance.HideCursor.Value = CommandLineState.OverrideHideCursor!.ToLower() switch
+                ConfigurationState.Instance.Game.HideCursor.Value = CommandLineState.OverrideHideCursor!.ToLower() switch
                 {
                     "never" => HideCursorMode.Never,
                     "onidle" => HideCursorMode.OnIdle,
                     "always" => HideCursorMode.Always,
-                    _ => ConfigurationState.Instance.HideCursor.Value,
+                    _ => ConfigurationState.Instance.Game.HideCursor.Value,
                 };
             }
 

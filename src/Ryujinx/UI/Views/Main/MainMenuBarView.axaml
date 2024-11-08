@@ -156,6 +156,11 @@
                 <MenuItem Command="{Binding SimulateWakeUpMessage}" Header="{locale:Locale MenuBarOptionsSimulateWakeUpMessage}" />
                 <Separator />
                 <MenuItem
+                    Click="OpenApplicationSettings_Click"
+                    Header="{locale:Locale MenuBarOptionsOpenApplicationSettings}"
+                    IsEnabled="{Binding !GameConfigIsGlobal}" />
+                <Separator />
+                <MenuItem
                     Name="ScanAmiiboMenuItem"
                     AttachedToVisualTree="ScanAmiiboMenuItem_AttachedToVisualTree"
                     Click="OpenAmiiboWindow"

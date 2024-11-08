@@ -9,6 +9,7 @@ using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Services.Hid;
+using Ryujinx.UI.Common.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -117,7 +118,10 @@ namespace Ryujinx.Ava.UI.Applet
             {
                 Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    _mainWindow.SettingsWindow = new SettingsWindow(_mainWindow.VirtualFileSystem, _mainWindow.ContentManager);
+                    ConfigurationState config = ConfigurationState.Instance;
+                    GameConfigurationState gameConfig = config.Game;
+
+                    _mainWindow.SettingsWindow = new SettingsWindow(config, gameConfig, false, _mainWindow.VirtualFileSystem, _mainWindow.ContentManager);
                     _mainWindow.SettingsWindow.NavPanel.Content = _mainWindow.SettingsWindow.InputPage;
                     _mainWindow.SettingsWindow.NavPanel.SelectedItem = _mainWindow.SettingsWindow.NavPanel.MenuItems.ElementAt(1);
 

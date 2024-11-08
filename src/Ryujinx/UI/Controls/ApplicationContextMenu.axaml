@@ -9,6 +9,9 @@
         Click="RunApplication_Click"
         Header="{locale:Locale GameListContextMenuRunApplication}" />
     <MenuItem
+        Click="OpenApplicationSettings_Click"
+        Header="{locale:Locale GameListContextMenuOpenApplicationSettings}" />
+    <MenuItem
         Click="ToggleFavorite_Click"
         Header="{locale:Locale GameListContextMenuToggleFavorite}"
         ToolTip.Tip="{locale:Locale GameListContextMenuToggleFavoriteToolTip}" />

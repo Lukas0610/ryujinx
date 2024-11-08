@@ -3,12 +3,14 @@ using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Models;
 using Ryujinx.Ava.UI.ViewModels.Input;
+using Ryujinx.UI.Common.Configuration;
 
 namespace Ryujinx.Ava.UI.Views.Input
 {
     public partial class InputView : UserControl
     {
         private bool _dialogOpen;
+
         private InputViewModel ViewModel { get; set; }
 
         public InputView()
@@ -16,6 +18,11 @@ namespace Ryujinx.Ava.UI.Views.Input
             DataContext = ViewModel = new InputViewModel(this);
 
             InitializeComponent();
+        }
+
+        public void Initialize(GameConfigurationState gameConfig)
+        {
+            ViewModel.Initialize(gameConfig);
         }
 
         public void SaveCurrentProfile()

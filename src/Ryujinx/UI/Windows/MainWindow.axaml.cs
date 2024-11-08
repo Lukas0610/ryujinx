@@ -67,7 +67,7 @@ namespace Ryujinx.Ava.UI.Windows
 
         public MainWindow()
         {
-            ViewModel = new MainWindowViewModel();
+            ViewModel = new MainWindowViewModel(this);
 
             MainWindowViewModel = ViewModel;
 
@@ -224,13 +224,13 @@ namespace Ryujinx.Ava.UI.Windows
             LibHacHorizonManager.InitializeBcatServer();
             LibHacHorizonManager.InitializeSystemClients();
 
-            IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
+            IntegrityCheckLevel checkLevel = ConfigurationState.Instance.Game.System.EnableFsIntegrityChecks
                 ? IntegrityCheckLevel.ErrorOnInvalid
                 : IntegrityCheckLevel.None;
 
             ApplicationLibrary = new ApplicationLibrary(VirtualFileSystem, HostFileSystem, checkLevel)
             {
-                DesiredLanguage = ConfigurationState.Instance.System.Language,
+                DesiredLanguage = ConfigurationState.Instance.Game.System.Language,
             };
 
             // Save data created before we supported extra data in directory save data will not work properly if
@@ -510,15 +510,15 @@ namespace Ryujinx.Ava.UI.Windows
             }
         }
 
-        public static void UpdateGraphicsConfig()
+        public static void UpdateGraphicsConfig(GameConfigurationState gameConfig)
         {
 #pragma warning disable IDE0055 // Disable formatting
-            GraphicsConfig.ResScale                   = ConfigurationState.Instance.Graphics.ResScale == -1 ? ConfigurationState.Instance.Graphics.ResScaleCustom : ConfigurationState.Instance.Graphics.ResScale;
-            GraphicsConfig.MaxAnisotropy              = ConfigurationState.Instance.Graphics.MaxAnisotropy;
-            GraphicsConfig.ShadersDumpPath            = ConfigurationState.Instance.Graphics.ShadersDumpPath;
-            GraphicsConfig.EnableShaderCache          = ConfigurationState.Instance.Graphics.EnableShaderCache;
-            GraphicsConfig.EnableTextureRecompression = ConfigurationState.Instance.Graphics.EnableTextureRecompression;
-            GraphicsConfig.EnableMacroHLE             = ConfigurationState.Instance.Graphics.EnableMacroHLE;
+            GraphicsConfig.ResScale                   = gameConfig.Graphics.ResScale == -1 ? gameConfig.Graphics.ResScaleCustom : gameConfig.Graphics.ResScale;
+            GraphicsConfig.MaxAnisotropy              = gameConfig.Graphics.MaxAnisotropy;
+            GraphicsConfig.ShadersDumpPath            = gameConfig.Graphics.ShadersDumpPath;
+            GraphicsConfig.EnableShaderCache          = gameConfig.Graphics.EnableShaderCache;
+            GraphicsConfig.EnableTextureRecompression = gameConfig.Graphics.EnableTextureRecompression;
+            GraphicsConfig.EnableMacroHLE             = gameConfig.Graphics.EnableMacroHLE;
 #pragma warning restore IDE0055
         }
 
@@ -567,6 +567,8 @@ namespace Ryujinx.Ava.UI.Windows
 
                         Close();
                     });
+
+                    GameConfigurationState.Current = null;
                 };
                 ViewModel.AppHost?.Stop();
 
@@ -644,7 +646,7 @@ namespace Ryujinx.Ava.UI.Windows
 
             Thread applicationLibraryThread = new(() =>
             {
-                ApplicationLibrary.DesiredLanguage = ConfigurationState.Instance.System.Language;
+                ApplicationLibrary.DesiredLanguage = ConfigurationState.Instance.Game.System.Language;
                 ApplicationLibrary.LoadApplications(ConfigurationState.Instance.UI.GameDirs);
 
                 _isLoading = false;

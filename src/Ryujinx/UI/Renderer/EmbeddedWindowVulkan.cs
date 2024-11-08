@@ -1,3 +1,4 @@
+using Ryujinx.UI.Common.Configuration;
 using Silk.NET.Vulkan;
 using SPB.Graphics.Vulkan;
 using SPB.Platform.Metal;
@@ -10,6 +11,10 @@ namespace Ryujinx.Ava.UI.Renderer
 {
     public class EmbeddedWindowVulkan : EmbeddedWindow
     {
+        public EmbeddedWindowVulkan(GameConfigurationState gameConfig)
+            : base(gameConfig)
+        { }
+
         public SurfaceKHR CreateSurface(Instance instance)
         {
             NativeWindowBase nativeWindowBase;

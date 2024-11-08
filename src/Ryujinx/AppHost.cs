@@ -111,8 +111,7 @@ namespace Ryujinx.Ava
             ForceChangeCursor
         };
 
-        private CursorStates _cursorState = !ConfigurationState.Instance.Hid.EnableMouse.Value ?
-            CursorStates.CursorIsVisible : CursorStates.CursorIsHidden;
+        private CursorStates _cursorState;
 
         private bool _isStopped;
         private bool _isActive;
@@ -139,6 +138,7 @@ namespace Ryujinx.Ava
         public event EventHandler<StatusInitEventArgs> StatusInitEvent;
         public event EventHandler<StatusUpdatedEventArgs> StatusUpdatedEvent;
 
+        public GameConfigurationState GameConfig { get; }
         public VirtualFileSystem VirtualFileSystem { get; }
         public ContentManager ContentManager { get; }
         public NpadManager NpadManager { get; }
@@ -153,6 +153,7 @@ namespace Ryujinx.Ava
         public bool ScreenshotRequested { get; set; }
 
         public AppHost(
+            GameConfigurationState gameConfig,
             RendererHost renderer,
             InputManager inputManager,
             string applicationPath,
@@ -178,6 +179,11 @@ namespace Ryujinx.Ava
 
             _keyboardInterface = (IKeyboard)_inputManager.KeyboardDriver.GetGamepad("0");
 
+            _cursorState = !gameConfig.Hid.EnableMouse.Value
+                ? CursorStates.CursorIsVisible
+                : CursorStates.CursorIsHidden;
+
+            GameConfig = gameConfig;
             NpadManager = _inputManager.CreateNpadManager();
             TouchScreenManager = _inputManager.CreateTouchScreenManager();
             ApplicationPath = applicationPath;
@@ -200,7 +206,7 @@ namespace Ryujinx.Ava
 
             _crashMarkerFilePath = Path.Combine(AppDataManager.GamesDirPath, ApplicationIdString, "crash-marker");
 
-            ConfigurationState.Instance.HideCursor.Event += HideCursorState_Changed;
+            gameConfig.HideCursor.Event += HideCursorState_Changed;
 
             _topLevel.PointerMoved += TopLevel_PointerEnteredOrMoved;
             _topLevel.PointerEntered += TopLevel_PointerEnteredOrMoved;
@@ -215,20 +221,20 @@ namespace Ryujinx.Ava
                 _defaultCursorWin = CreateArrowCursor();
             }
 
-            ConfigurationState.Instance.System.IgnoreMissingServices.Event += UpdateIgnoreMissingServicesState;
-            ConfigurationState.Instance.Graphics.AspectRatio.Event += UpdateAspectRatioState;
-            ConfigurationState.Instance.System.EnableDockedMode.Event += UpdateDockedModeState;
-            ConfigurationState.Instance.System.AudioVolume.Event += UpdateAudioVolumeState;
-            ConfigurationState.Instance.System.EnableDockedMode.Event += UpdateDockedModeState;
-            ConfigurationState.Instance.System.AudioVolume.Event += UpdateAudioVolumeState;
-            ConfigurationState.Instance.Graphics.AntiAliasing.Event += UpdateAntiAliasing;
-            ConfigurationState.Instance.Graphics.ScalingFilter.Event += UpdateScalingFilter;
-            ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event += UpdateScalingFilterLevel;
-            ConfigurationState.Instance.Graphics.EnableColorSpacePassthrough.Event += UpdateColorSpacePassthrough;
+            gameConfig.System.IgnoreMissingServices.Event += UpdateIgnoreMissingServicesState;
+            gameConfig.Graphics.AspectRatio.Event += UpdateAspectRatioState;
+            gameConfig.System.EnableDockedMode.Event += UpdateDockedModeState;
+            gameConfig.System.AudioVolume.Event += UpdateAudioVolumeState;
+            gameConfig.System.EnableDockedMode.Event += UpdateDockedModeState;
+            gameConfig.System.AudioVolume.Event += UpdateAudioVolumeState;
+            gameConfig.Graphics.AntiAliasing.Event += UpdateAntiAliasing;
+            gameConfig.Graphics.ScalingFilter.Event += UpdateScalingFilter;
+            gameConfig.Graphics.ScalingFilterLevel.Event += UpdateScalingFilterLevel;
+            gameConfig.Graphics.EnableColorSpacePassthrough.Event += UpdateColorSpacePassthrough;
 
-            ConfigurationState.Instance.System.EnableInternetAccess.Event += UpdateEnableInternetAccessState;
-            ConfigurationState.Instance.Multiplayer.LanInterfaceId.Event += UpdateLanInterfaceIdState;
-            ConfigurationState.Instance.Multiplayer.Mode.Event += UpdateMultiplayerModeState;
+            gameConfig.System.EnableInternetAccess.Event += UpdateEnableInternetAccessState;
+            gameConfig.Multiplayer.LanInterfaceId.Event += UpdateLanInterfaceIdState;
+            gameConfig.Multiplayer.Mode.Event += UpdateMultiplayerModeState;
 
             _gpuCancellationTokenSource = new CancellationTokenSource();
             _gpuDoneEvent = new ManualResetEvent(false);
@@ -247,7 +253,8 @@ namespace Ryujinx.Ava
             {
                 var point = e.GetCurrentPoint(window).Position;
 
-                if (ConfigurationState.Instance.HideCursor.Value == HideCursorMode.OnIdle && (_lastCursorPoint == null || _lastCursorPoint != point))
+                if (GameConfig.HideCursor.Value == HideCursorMode.OnIdle &&
+                    (_lastCursorPoint == null || _lastCursorPoint != point))
                 {
                     _lastCursorMoveTime = Stopwatch.GetTimestamp();
                 }
@@ -301,19 +308,19 @@ namespace Ryujinx.Ava
 
         private void UpdateScalingFilterLevel(object sender, ReactiveEventArgs<int> e)
         {
-            _renderer.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
-            _renderer.Window?.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
+            _renderer.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)GameConfig.Graphics.ScalingFilter.Value);
+            _renderer.Window?.SetScalingFilterLevel(GameConfig.Graphics.ScalingFilterLevel.Value);
         }
 
         private void UpdateScalingFilter(object sender, ReactiveEventArgs<ScalingFilter> e)
         {
-            _renderer.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
-            _renderer.Window?.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
+            _renderer.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)GameConfig.Graphics.ScalingFilter.Value);
+            _renderer.Window?.SetScalingFilterLevel(GameConfig.Graphics.ScalingFilterLevel.Value);
         }
 
         private void UpdateColorSpacePassthrough(object sender, ReactiveEventArgs<bool> e)
         {
-            _renderer.Window?.SetColorSpacePassthrough((bool)ConfigurationState.Instance.Graphics.EnableColorSpacePassthrough.Value);
+            _renderer.Window?.SetColorSpacePassthrough((bool)GameConfig.Graphics.EnableColorSpacePassthrough.Value);
         }
 
         private void ShowCursor()
@@ -444,7 +451,7 @@ namespace Ryujinx.Ava
 
             DisplaySleep.Prevent();
 
-            NpadManager.Initialize(Device, ConfigurationState.Instance.Hid.InputConfig, ConfigurationState.Instance.Hid.EnableKeyboard, ConfigurationState.Instance.Hid.EnableMouse);
+            NpadManager.Initialize(Device, GameConfig.Hid.InputConfig, GameConfig.Hid.EnableKeyboard, GameConfig.Hid.EnableMouse);
             TouchScreenManager.Initialize(Device);
 
             _viewModel.IsGameRunning = true;
@@ -462,7 +469,7 @@ namespace Ryujinx.Ava
 
             _renderingThread.Start();
 
-            _viewModel.Volume = ConfigurationState.Instance.System.AudioVolume.Value;
+            _viewModel.Volume = GameConfig.System.AudioVolume.Value;
 
             MainLoop();
 
@@ -527,6 +534,14 @@ namespace Ryujinx.Ava
             _renderer.Window.ChangeVSyncMode(Device.EnableDeviceVsync);
         }
 
+        public void SaveGameConfig()
+        {
+            if (GameConfig != null && !GameConfig.IsGlobalState)
+            {
+                GameConfig.ToFileFormat().SaveConfig(GameConfig.ConfigurationFilePath);
+            }
+        }
+
         public void StopLoading()
         {
             Device.HostFileSystem.AbortRequests();
@@ -580,14 +595,14 @@ namespace Ryujinx.Ava
                 MainWindowViewModel.UpdateGameMetadata(Device.Processes.ActiveApplication.ProgramIdText);
             }
 
-            ConfigurationState.Instance.System.IgnoreMissingServices.Event -= UpdateIgnoreMissingServicesState;
-            ConfigurationState.Instance.Graphics.AspectRatio.Event -= UpdateAspectRatioState;
-            ConfigurationState.Instance.System.EnableDockedMode.Event -= UpdateDockedModeState;
-            ConfigurationState.Instance.System.AudioVolume.Event -= UpdateAudioVolumeState;
-            ConfigurationState.Instance.Graphics.ScalingFilter.Event -= UpdateScalingFilter;
-            ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event -= UpdateScalingFilterLevel;
-            ConfigurationState.Instance.Graphics.AntiAliasing.Event -= UpdateAntiAliasing;
-            ConfigurationState.Instance.Graphics.EnableColorSpacePassthrough.Event -= UpdateColorSpacePassthrough;
+            GameConfig.System.IgnoreMissingServices.Event -= UpdateIgnoreMissingServicesState;
+            GameConfig.Graphics.AspectRatio.Event -= UpdateAspectRatioState;
+            GameConfig.System.EnableDockedMode.Event -= UpdateDockedModeState;
+            GameConfig.System.AudioVolume.Event -= UpdateAudioVolumeState;
+            GameConfig.Graphics.ScalingFilter.Event -= UpdateScalingFilter;
+            GameConfig.Graphics.ScalingFilterLevel.Event -= UpdateScalingFilterLevel;
+            GameConfig.Graphics.AntiAliasing.Event -= UpdateAntiAliasing;
+            GameConfig.Graphics.EnableColorSpacePassthrough.Event -= UpdateColorSpacePassthrough;
 
             _topLevel.PointerMoved -= TopLevel_PointerEnteredOrMoved;
             _topLevel.PointerEntered -= TopLevel_PointerEnteredOrMoved;
@@ -637,7 +652,7 @@ namespace Ryujinx.Ava
         public async Task<bool> LoadGuestApplication()
         {
             InitializeSwitchInstance();
-            MainWindow.UpdateGraphicsConfig();
+            MainWindow.UpdateGraphicsConfig(GameConfig);
 
             SystemVersion firmwareVersion = ContentManager.GetCurrentFirmwareVersion();
 
@@ -865,20 +880,20 @@ namespace Ryujinx.Ava
             // Initialize Renderer.
             IRenderer renderer;
 
-            if (ConfigurationState.Instance.Graphics.GraphicsBackend.Value == GraphicsBackend.Vulkan)
+            if (GameConfig.Graphics.GraphicsBackend.Value == GraphicsBackend.Vulkan)
             {
                 renderer = new VulkanRenderer(
                     Vk.GetApi(),
                     (RendererHost.EmbeddedWindow as EmbeddedWindowVulkan).CreateSurface,
                     VulkanHelper.GetRequiredInstanceExtensions,
-                    ConfigurationState.Instance.Graphics.PreferredGpu.Value);
+                    GameConfig.Graphics.PreferredGpu.Value);
             }
             else
             {
                 renderer = new OpenGLRenderer();
             }
 
-            BackendThreading threadingMode = ConfigurationState.Instance.Graphics.BackendThreading;
+            BackendThreading threadingMode = GameConfig.Graphics.BackendThreading;
 
             var isGALThreaded = threadingMode == BackendThreading.On || (threadingMode == BackendThreading.Auto && renderer.PreferThreading);
             if (isGALThreaded)
@@ -896,39 +911,39 @@ namespace Ryujinx.Ava
                                                  _userChannelPersistence,
                                                  renderer,
                                                  InitializeAudio(),
-                                                 ConfigurationState.Instance.System.MemoryConfiguration.Value,
+                                                 GameConfig.System.MemoryConfiguration.Value,
                                                  _viewModel.UiHandler,
-                                                 (SystemLanguage)ConfigurationState.Instance.System.Language.Value,
-                                                 (RegionCode)ConfigurationState.Instance.System.Region.Value,
-                                                 ConfigurationState.Instance.Graphics.EnableVsync,
-                                                 ConfigurationState.Instance.System.EnableDockedMode,
-                                                 ConfigurationState.Instance.System.EnablePtc,
-                                                 ConfigurationState.Instance.System.UseStreamingPtc,
-                                                 ConfigurationState.Instance.System.EnableInternetAccess,
-                                                 ConfigurationState.Instance.System.EnableFsIntegrityChecks ? IntegrityCheckLevel.ErrorOnInvalid : IntegrityCheckLevel.None,
-                                                 ConfigurationState.Instance.System.EnableHostFsBuffering,
-                                                 ConfigurationState.Instance.System.EnableHostFsBufferingPrefetch,
-                                                 ConfigurationState.Instance.System.HostFsBufferingMaxCacheSize,
-                                                 ConfigurationState.Instance.System.FsGlobalAccessLogMode,
-                                                 ConfigurationState.Instance.System.SystemTimeOffset,
-                                                 ConfigurationState.Instance.System.TimeZone,
-                                                 ConfigurationState.Instance.System.MemoryManagerMode,
-                                                 ConfigurationState.Instance.System.IgnoreMissingServices,
-                                                 ConfigurationState.Instance.Graphics.AspectRatio,
-                                                 ConfigurationState.Instance.System.AudioVolume,
-                                                 ConfigurationState.Instance.System.UseHypervisor,
-                                                 ConfigurationState.Instance.System.UseSparseAddressTable,
-                                                 ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value,
-                                                 ConfigurationState.Instance.Multiplayer.Mode,
-                                                 CPUSet.ParseOrDefault(ConfigurationState.Instance.System.HleKernelThreadsCPUSet),
-                                                 ConfigurationState.Instance.System.HleKernelThreadsCPUSetStaticCore,
-                                                 CPUSet.ParseOrDefault(ConfigurationState.Instance.System.PtcBackgroundThreadsCPUSet),
-                                                 ConfigurationState.Instance.System.PtcBackgroundThreadCount);
+                                                 (SystemLanguage)GameConfig.System.Language.Value,
+                                                 (RegionCode)GameConfig.System.Region.Value,
+                                                 GameConfig.Graphics.EnableVsync,
+                                                 GameConfig.System.EnableDockedMode,
+                                                 GameConfig.System.EnablePtc,
+                                                 GameConfig.System.UseStreamingPtc,
+                                                 GameConfig.System.EnableInternetAccess,
+                                                 GameConfig.System.EnableFsIntegrityChecks ? IntegrityCheckLevel.ErrorOnInvalid : IntegrityCheckLevel.None,
+                                                 GameConfig.System.EnableHostFsBuffering,
+                                                 GameConfig.System.EnableHostFsBufferingPrefetch,
+                                                 GameConfig.System.HostFsBufferingMaxCacheSize,
+                                                 GameConfig.System.FsGlobalAccessLogMode,
+                                                 GameConfig.System.SystemTimeOffset,
+                                                 GameConfig.System.TimeZone,
+                                                 GameConfig.System.MemoryManagerMode,
+                                                 GameConfig.System.IgnoreMissingServices,
+                                                 GameConfig.Graphics.AspectRatio,
+                                                 GameConfig.System.AudioVolume,
+                                                 GameConfig.System.UseHypervisor,
+                                                 GameConfig.System.UseSparseAddressTable,
+                                                 GameConfig.Multiplayer.LanInterfaceId.Value,
+                                                 GameConfig.Multiplayer.Mode,
+                                                 CPUSet.ParseOrDefault(GameConfig.System.HleKernelThreadsCPUSet),
+                                                 GameConfig.System.HleKernelThreadsCPUSetStaticCore,
+                                                 CPUSet.ParseOrDefault(GameConfig.System.PtcBackgroundThreadsCPUSet),
+                                                 GameConfig.System.PtcBackgroundThreadCount);
 
             Device = new Switch(configuration);
         }
 
-        private static IHardwareDeviceDriver InitializeAudio()
+        private IHardwareDeviceDriver InitializeAudio()
         {
             var availableBackends = new List<AudioBackend>
             {
@@ -938,7 +953,7 @@ namespace Ryujinx.Ava
                 AudioBackend.Dummy,
             };
 
-            AudioBackend preferredBackend = ConfigurationState.Instance.System.AudioBackend.Value;
+            AudioBackend preferredBackend = GameConfig.System.AudioBackend.Value;
 
             for (int i = 0; i < availableBackends.Count; i++)
             {
@@ -979,7 +994,7 @@ namespace Ryujinx.Ava
 
                 if (deviceDriver != null)
                 {
-                    ConfigurationState.Instance.System.AudioBackend.Value = currentBackend;
+                    GameConfig.System.AudioBackend.Value = currentBackend;
                     break;
                 }
             }
@@ -1031,10 +1046,10 @@ namespace Ryujinx.Ava
 
             Device.Gpu.Renderer.Initialize(_glLogLevel);
 
-            _renderer?.Window?.SetAntiAliasing((Graphics.GAL.AntiAliasing)ConfigurationState.Instance.Graphics.AntiAliasing.Value);
-            _renderer?.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)ConfigurationState.Instance.Graphics.ScalingFilter.Value);
-            _renderer?.Window?.SetScalingFilterLevel(ConfigurationState.Instance.Graphics.ScalingFilterLevel.Value);
-            _renderer?.Window?.SetColorSpacePassthrough(ConfigurationState.Instance.Graphics.EnableColorSpacePassthrough.Value);
+            _renderer?.Window?.SetAntiAliasing((Graphics.GAL.AntiAliasing)GameConfig.Graphics.AntiAliasing.Value);
+            _renderer?.Window?.SetScalingFilter((Graphics.GAL.ScalingFilter)GameConfig.Graphics.ScalingFilter.Value);
+            _renderer?.Window?.SetScalingFilterLevel(GameConfig.Graphics.ScalingFilterLevel.Value);
+            _renderer?.Window?.SetColorSpacePassthrough(GameConfig.Graphics.EnableColorSpacePassthrough.Value);
 
             Width = (int)RendererHost.Bounds.Width;
             Height = (int)RendererHost.Bounds.Height;
@@ -1126,7 +1141,7 @@ namespace Ryujinx.Ava
         public void InitStatus()
         {
             _gpuDriverName = _renderer.GetHardwareInfo().GpuDriver;
-            _gpuBackendName = ConfigurationState.Instance.Graphics.GraphicsBackend.Value switch
+            _gpuBackendName = GameConfig.Graphics.GraphicsBackend.Value switch
             {
                 GraphicsBackend.Vulkan => "Vulkan",
                 GraphicsBackend.OpenGl => "OpenGL",
@@ -1141,7 +1156,9 @@ namespace Ryujinx.Ava
         public void UpdateStatus()
         {
             // Run a status update only when a frame is to be drawn. This prevents from updating the ui and wasting a render when no frame is queued.
-            string dockedMode = ConfigurationState.Instance.System.EnableDockedMode ? LocaleManager.Instance[LocaleKeys.Docked] : LocaleManager.Instance[LocaleKeys.Handheld];
+            string dockedMode = GameConfig.System.EnableDockedMode
+                ? LocaleManager.Instance[LocaleKeys.Docked]
+                : LocaleManager.Instance[LocaleKeys.Handheld];
 
             if (GraphicsConfig.ResScale != 1)
             {
@@ -1154,7 +1171,7 @@ namespace Ryujinx.Ava
                 Device.EnableDeviceVsync,
                 LocaleManager.Instance[LocaleKeys.VolumeShort] + $": {(int)(Device.GetVolume() * 100)}%",
                 dockedMode,
-                ConfigurationState.Instance.Graphics.AspectRatio.Value.ToText(),
+                GameConfig.Graphics.AspectRatio.Value.ToText(),
                 LocaleManager.Instance[LocaleKeys.Game] + $": {Device.Statistics.GetGameFrameRate():00.00} FPS ({Device.Statistics.GetGameFrameTime():00.00} ms)",
                 $"GPU ({_gpuDriverName}/{_gpuBackendName}): {Device.Statistics.GetFifoPercent():00.00}%",
                 $"I/O: {ReadableStringUtils.FormatSize(_hostFsIoSpeed, 2, null, true)}/s ({hostFsCacheHitRatioPercentage:00.00}% cached)"));
@@ -1190,7 +1207,7 @@ namespace Ryujinx.Ava
                 return false;
             }
 
-            NpadManager.Update(ConfigurationState.Instance.Graphics.AspectRatio.Value.ToFloat());
+            NpadManager.Update(GameConfig.Graphics.AspectRatio.Value.ToFloat());
 
             if (_viewModel.IsActive)
             {
@@ -1198,15 +1215,14 @@ namespace Ryujinx.Ava
 
                 if (_isCursorInRenderer && !_viewModel.ShowLoadProgress)
                 {
-                    if (ConfigurationState.Instance.Hid.EnableMouse.Value)
+                    if (GameConfig.Hid.EnableMouse.Value)
                     {
-                        isCursorVisible = ConfigurationState.Instance.HideCursor.Value == HideCursorMode.Never;
+                        isCursorVisible = GameConfig.HideCursor.Value == HideCursorMode.Never;
                     }
                     else
                     {
-                        isCursorVisible = ConfigurationState.Instance.HideCursor.Value == HideCursorMode.Never ||
-                            (ConfigurationState.Instance.HideCursor.Value == HideCursorMode.OnIdle &&
-                            Stopwatch.GetTimestamp() - _lastCursorMoveTime < CursorHideIdleTime * Stopwatch.Frequency);
+                        isCursorVisible = GameConfig.HideCursor.Value == HideCursorMode.Never ||
+                            (GameConfig.HideCursor.Value == HideCursorMode.OnIdle && Stopwatch.GetTimestamp() - _lastCursorMoveTime < CursorHideIdleTime * Stopwatch.Frequency);
                     }
                 }
 
@@ -1305,9 +1321,11 @@ namespace Ryujinx.Ava
             // Touchscreen.
             bool hasTouch = false;
 
-            if (_viewModel.IsActive && !ConfigurationState.Instance.Hid.EnableMouse.Value)
+            if (_viewModel.IsActive && !GameConfig.Hid.EnableMouse.Value)
             {
-                hasTouch = TouchScreenManager.Update(true, (_inputManager.MouseDriver as AvaloniaMouseDriver).IsButtonPressed(MouseButton.Button1), ConfigurationState.Instance.Graphics.AspectRatio.Value.ToFloat());
+                hasTouch = TouchScreenManager.Update(true,
+                                                     (_inputManager.MouseDriver as AvaloniaMouseDriver).IsButtonPressed(MouseButton.Button1),
+                                                     GameConfig.Graphics.AspectRatio.Value.ToFloat());
             }
 
             if (!hasTouch)
@@ -1324,39 +1342,39 @@ namespace Ryujinx.Ava
         {
             KeyboardHotkeyState state = KeyboardHotkeyState.None;
 
-            if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ToggleVsync))
+            if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.ToggleVsync))
             {
                 state = KeyboardHotkeyState.ToggleVSync;
             }
-            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Screenshot))
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.Screenshot))
             {
                 state = KeyboardHotkeyState.Screenshot;
             }
-            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ShowUI))
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.ShowUI))
             {
                 state = KeyboardHotkeyState.ShowUI;
             }
-            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.Pause))
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.Pause))
             {
                 state = KeyboardHotkeyState.Pause;
             }
-            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ToggleMute))
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.ToggleMute))
             {
                 state = KeyboardHotkeyState.ToggleMute;
             }
-            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ResScaleUp))
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.ResScaleUp))
             {
                 state = KeyboardHotkeyState.ResScaleUp;
             }
-            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.ResScaleDown))
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.ResScaleDown))
             {
                 state = KeyboardHotkeyState.ResScaleDown;
             }
-            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.VolumeUp))
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.VolumeUp))
             {
                 state = KeyboardHotkeyState.VolumeUp;
             }
-            else if (_keyboardInterface.IsPressed((Key)ConfigurationState.Instance.Hid.Hotkeys.Value.VolumeDown))
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.VolumeDown))
             {
                 state = KeyboardHotkeyState.VolumeDown;
             }

@@ -11,6 +11,7 @@ using Ryujinx.Common.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
+using Ryujinx.UI.Common.Configuration;
 using Ryujinx.UI.Common.Helper;
 using System;
 using System.IO;
@@ -20,6 +21,7 @@ namespace Ryujinx.UI.App.Common
 {
     public class ApplicationData
     {
+        public GameConfigurationState GameConfig { get; set; }
         public bool Favorite { get; set; }
         public byte[] Icon { get; set; }
         public string Name { get; set; } = "Unknown";

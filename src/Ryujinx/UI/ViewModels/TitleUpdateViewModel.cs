@@ -37,6 +37,7 @@ namespace Ryujinx.Ava.UI.ViewModels
     {
         public TitleUpdateMetadata TitleUpdateWindowData;
         public readonly string TitleUpdateJsonPath;
+
         private VirtualFileSystem VirtualFileSystem { get; }
         private HostFileSystem HostFileSystem { get; }
         private ApplicationData ApplicationData { get; }
@@ -83,7 +84,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             VirtualFileSystem = virtualFileSystem;
             HostFileSystem = hostFileSystem;
-
             ApplicationData = applicationData;
 
             if (Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -164,7 +164,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 return;
             }
 
-            IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
+            IntegrityCheckLevel checkLevel = ApplicationData.GameConfig.System.EnableFsIntegrityChecks
                 ? IntegrityCheckLevel.ErrorOnInvalid
                 : IntegrityCheckLevel.None;
 

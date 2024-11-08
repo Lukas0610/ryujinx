@@ -146,7 +146,7 @@ namespace Ryujinx.Ava.Common
             }
         }
 
-        public static async Task ExtractSection(IStorageProvider storageProvider, NcaSectionType ncaSectionType, string titleFilePath, string titleName, int programIndex = 0)
+        public static async Task ExtractSection(IStorageProvider storageProvider, NcaSectionType ncaSectionType, GameConfigurationState gameConfig, string titleFilePath, string titleName, int programIndex = 0)
         {
             var result = await storageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
@@ -232,7 +232,7 @@ namespace Ryujinx.Ava.Common
                     return;
                 }
 
-                IntegrityCheckLevel checkLevel = ConfigurationState.Instance.System.EnableFsIntegrityChecks
+                IntegrityCheckLevel checkLevel = gameConfig.System.EnableFsIntegrityChecks
                     ? IntegrityCheckLevel.ErrorOnInvalid
                     : IntegrityCheckLevel.None;
 
