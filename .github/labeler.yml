@@ -32,8 +32,12 @@ kernel:
 
 infra:
 - changed-files:
-  - any-glob-to-any-file: ['.github/**', 'distribution/**', 'Directory.Packages.props']
+  - any-glob-to-any-file: ['.github/**', 'distribution/**']
 
 meta:
 - changed-files:
   - any-glob-to-any-file: ['docs/**', 'README.md', 'CONTRIBUTING.md']
+
+deps:
+- changed-files:
+  - any-glob-to-any-file: ['Directory.Packages.props']

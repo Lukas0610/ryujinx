@@ -1,29 +1,11 @@
-[links/discord]: https://discord.gg/xmHPGDfVCa
-[badges/discord]: https://img.shields.io/discord/1291765437100720243?label=ryujinx-mirror&logo=discord&logoColor=FFFFFF&color=5865F3
-
-As of now, the [ryujinx-mirror/ryujinx](https://github.com/ryujinx-mirror/ryujinx) repository serves as a downstream hard-fork of the original Ryujinx project. For the time being, this fork won't be accepting any new *major* changes until further information arises. We have reconstructed the essential build infrastructure, and you can download nightly binaries for Windows, Linux, and MacOS from the [latest release](https://github.com/ryujinx-mirror/ryujinx/releases/latest).
-
 > [!NOTE]
 > This fork is not affiliated with the **original** Ryujinx project, or Nintendo whatsoever.
-
-### Current Goals
-
-* ☑️ Reconstruct basic build infrastructure & workflows for this repository, based on revision hashes as opposed to semver releases (for now)
-* ☑️ To be as safe as possible, remove all previous in-app and meta references to Patreon, `ryujinx.org` etc while keeping full attribution of original authors and contributors in-tact.
-* Keep 'branding' as pure and faithful to the original project as possible. 
-
-### Join Discussion
-
-Feel free to join the [ryujinx-mirror Discord community][links/discord] to join in on the development of this fork going forward.<br>
-See `#ryujinx-info` for more information.
-
-[![ryujinx-mirror Discord][badges/discord]][links/discord]
 
 ___
 
 <h1 align="center">
   <br>
-  <a href="https://github.com/ryujinx-mirror/ryujinx"><img src="distribution/misc/Logo.svg" alt="Ryujinx" width="150"></a>
+  <a href="https://github.com/Lukas0610/ryujinx"><img src="distribution/misc/Logo.svg" alt="Ryujinx" width="150"></a>
   <br>
   <b>Ryujinx</b>
   <br>
@@ -44,7 +26,7 @@ ___
 As of May 2024, Ryujinx has been tested on approximately 4,300 titles;
 over 4,100 boot past menus and into gameplay, with roughly 3,550 of those being considered playable.
 
-You can check out the compatibility list [here](https://github.com/ryujinx-mirror/Ryujinx-Games-List/issues).
+You can check out the compatibility list [here](https://github.com/Lukas0610/ryujinx-Games-List/issues).
 
 Anyone is free to submit a new game test or update an existing game test entry;
 simply follow the new issue template and testing guidelines, or post as a reply to the applicable game issue.
@@ -55,26 +37,12 @@ Use the search function to see if a game has been tested already!
 To run this emulator, your PC must be equipped with at least 8GiB of RAM;
 failing to meet this requirement may result in a poor gameplay experience or unexpected crashes.
 
-<!--
-See our [Setup & Configuration Guide](https://github.com/ryujinx-mirror/Ryujinx/wiki/Ryujinx-Setup-&-Configuration-Guide) on how to set up the emulator.
-
-For our Local Wireless (LDN) builds, see our [Multiplayer: Local Play/Local Wireless Guide](https://github.com/ryujinx-mirror/Ryujinx/wiki/Multiplayer-(LDN-Local-Wireless)-Guide).
--->
-
-<!--Avalonia UI comes with translations for various languages. See [Crowdin](https://crwd.in/ryujinx) for more information.-->
-
 ## Latest build
 
 These builds are compiled automatically for each commit on the master branch.
 While we strive to ensure optimal stability and performance prior to pushing an update, our automated builds **may be unstable or completely broken**.
 
-See [the releases page](https://github.com/ryujinx-mirror/ryujinx/releases) for automatic builds for Windows, macOS, and Linux.
-
-<!--
-If you want to see details on updates to the emulator, you can visit our [Changelog](https://github.com/ryujinx-mirror/Ryujinx/wiki/Changelog).
-
-The latest automatic build for Windows, macOS, and Linux can be found on the [Official Website](https://ryujinx.org/download).
--->
+See [the releases page](https://github.com/Lukas0610/ryujinx/releases) for automatic builds for Windows, macOS, and Linux.
 
 ## Documentation
 
@@ -91,7 +59,7 @@ Make sure your SDK version is higher or equal to the required version specified 
 
 ### Step 2
 
-Either use `git clone https://github.com/ryujinx-mirror/ryujinx` on the command line to clone the repository or use Code --> Download zip button to get the files.
+Either use `git clone https://github.com/Lukas0610/ryujinx` on the command line to clone the repository or use Code --> Download zip button to get the files.
 
 ### Step 3
 
@@ -144,13 +112,6 @@ This folder is located in the user folder, which can be accessed by clicking `Op
 
   The emulator has settings for enabling or disabling some logging, remapping controllers, and more.
   You can configure all of them through the graphical interface or manually through the config file, `Config.json`, found in the user folder which can be accessed by clicking `Open Ryujinx Folder` under the File menu in the GUI.
-
-<!--
-## Contact
-
-If you have contributions, suggestions, need emulator support or just want to get in touch with the team, join our [Discord server](https://discord.com/invite/Ryujinx).
-You may also review our [FAQ](https://github.com/ryujinx-mirror/Ryujinx/wiki/Frequently-Asked-Questions).
--->
 
 ## License
 
