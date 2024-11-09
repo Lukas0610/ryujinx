@@ -54,6 +54,7 @@ namespace Ryujinx.HLE.HOS
             bool isArm64Host = RuntimeInformation.ProcessArchitecture == Architecture.Arm64;
 
             TranslatorConfiguration translatorConfiguration = new(context.Device.Configuration.UseStreamingPtc,
+                                                                  context.Device.Configuration.UseSparseAddressTable,
                                                                   context.Device.Configuration.PtcBackgroundThreadsCPUSet,
                                                                   context.Device.Configuration.PtcBackgroundThreadCount);
 

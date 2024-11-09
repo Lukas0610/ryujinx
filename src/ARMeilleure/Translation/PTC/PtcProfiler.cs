@@ -201,7 +201,7 @@ namespace ARMeilleure.Translation.PTC
                     return false;
                 }
 
-                if (outerHeader.Endianness != Ptc.GetEndianness())
+                if (outerHeader.Endianness != PtcUtils.GetEndianness())
                 {
                     InvalidateCompressedStream(compressedStream);
 
@@ -297,7 +297,7 @@ namespace ARMeilleure.Translation.PTC
                 Magic = _outerHeaderMagic,
 
                 InfoFileVersion = InternalVersion,
-                Endianness = Ptc.GetEndianness(),
+                Endianness = PtcUtils.GetEndianness(),
             };
 
             outerHeader.SetHeaderHash();

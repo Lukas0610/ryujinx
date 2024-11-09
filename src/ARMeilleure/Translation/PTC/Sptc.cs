@@ -26,7 +26,7 @@ namespace ARMeilleure.Translation.PTC
     class Sptc : IPtc
     {
 
-        private const uint InternalVersion = 0; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 1; //! To be incremented manually for each change to the ARMeilleure project.
         private const long DataOffset = 0x1000;
 
         private const int ReportRefreshRate = 50; // ms.
@@ -41,6 +41,8 @@ namespace ARMeilleure.Translation.PTC
 
         private readonly ManualResetEvent _waitEvent;
         private readonly object _lock;
+
+        private readonly PtcCacheFlags _cacheFlags;
 
         private bool _disposed;
 
@@ -85,9 +87,11 @@ namespace ARMeilleure.Translation.PTC
             Debug.Assert(FileMagic.Length == 13);
         }
 
-        public Sptc()
+        public Sptc(PtcCacheFlags cacheFlags)
         {
             _profiler = new SptcProfiler(this);
+
+            _cacheFlags = cacheFlags;
 
             _writeCompiledFunctionLock = new object();
             _writtenCompiledFunctions = new List<ulong>();
@@ -409,6 +413,12 @@ namespace ARMeilleure.Translation.PTC
                 return false;
             }
 
+            if (fileHeader.Flags != _cacheFlags)
+            {
+                InvalidateStream();
+                return false;
+            }
+
             _fileStream.Seek(DataOffset, SeekOrigin.Begin);
 
             ulong numOfStaleFunctions = 0;
@@ -538,10 +548,13 @@ namespace ARMeilleure.Translation.PTC
             PtcUtils.SerializeStructure(_fileStream, new FileHeader()
             {
                 InternalVersion = InternalVersion,
+
                 Endianness = PtcUtils.GetEndianness(),
                 FeatureInfo = PtcUtils.GetFeatureInfo(),
                 MemoryManagerMode = GetMemoryManagerMode(),
                 OSPlatform = PtcUtils.GetOSPlatform(),
+                Architecture = (uint)RuntimeInformation.ProcessArchitecture,
+                Flags = _cacheFlags,
             });
 
             _fileStream.Flush();
@@ -664,6 +677,7 @@ namespace ARMeilleure.Translation.PTC
             public byte MemoryManagerMode;
             public uint OSPlatform;
             public uint Architecture;
+            public PtcCacheFlags Flags;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]

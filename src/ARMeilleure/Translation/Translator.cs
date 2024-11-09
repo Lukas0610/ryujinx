@@ -55,13 +55,18 @@ namespace ARMeilleure.Translation
 
             _oldFuncs = new ConcurrentQueue<KeyValuePair<ulong, TranslatedFunction>>();
 
+            PtcCacheFlags ptcCacheFlags = PtcCacheFlags.None;
+
+            if (configuration.UseSparseAddressTable)
+                ptcCacheFlags |= PtcCacheFlags.SparseAddressTable;
+
             if (configuration.UseStreamingPtc)
             {
-                _ptc = new Sptc();
+                _ptc = new Sptc(ptcCacheFlags);
             }
             else
             {
-                _ptc = new Ptc();
+                _ptc = new Ptc(ptcCacheFlags);
             }
 
             Queue = new TranslatorQueue();

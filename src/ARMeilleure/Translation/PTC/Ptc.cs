@@ -27,7 +27,7 @@ namespace ARMeilleure.Translation.PTC
         private const string OuterHeaderMagicString = "PTCohd\0\0";
         private const string InnerHeaderMagicString = "PTCihd\0\0";
 
-        private const uint InternalVersion = 6978; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 6979; //! To be incremented manually for each change to the ARMeilleure project.
 
         private const string ActualDir = "0";
         private const string BackupDir = "1";
@@ -39,7 +39,9 @@ namespace ARMeilleure.Translation.PTC
         private const byte FillingByte = 0x00;
         private const CompressionLevel SaveCompressionLevel = CompressionLevel.Fastest;
 
-        public PtcProfiler _profiler;
+        private PtcProfiler _profiler;
+
+        private readonly PtcCacheFlags _cacheFlags;
 
         public IPtcProfiler Profiler => _profiler;
 
@@ -76,9 +78,11 @@ namespace ARMeilleure.Translation.PTC
         private volatile int _translateTotalCount;
         public event Action<PtcLoadingState, int, int> PtcStateChanged;
 
-        public Ptc()
+        public Ptc(PtcCacheFlags cacheFlags)
         {
             _profiler = new PtcProfiler(this);
+
+            _cacheFlags = cacheFlags;
 
             InitializeCarriers();
 
@@ -271,6 +275,13 @@ namespace ARMeilleure.Translation.PTC
                     return false;
                 }
 
+                if (outerHeader.Flags != _cacheFlags)
+                {
+                    InvalidateCompressedStream(compressedStream);
+
+                    return false;
+                }
+
                 IntPtr intPtr = IntPtr.Zero;
 
                 try
@@ -447,6 +458,7 @@ namespace ARMeilleure.Translation.PTC
                 MemoryManagerMode = GetMemoryManagerMode(),
                 OSPlatform = PtcUtils.GetOSPlatform(),
                 Architecture = (uint)RuntimeInformation.ProcessArchitecture,
+                Flags = _cacheFlags,
 
                 UncompressedStreamSize =
                 (long)Unsafe.SizeOf<InnerHeader>() +
@@ -912,6 +924,7 @@ namespace ARMeilleure.Translation.PTC
             public byte MemoryManagerMode;
             public uint OSPlatform;
             public uint Architecture;
+            public PtcCacheFlags Flags;
 
             public long UncompressedStreamSize;
 
