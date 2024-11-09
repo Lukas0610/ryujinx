@@ -658,7 +658,7 @@ namespace Ryujinx.Modules
                 return false;
             }
 
-            if (Program.Version.Contains("dirty") || !ReleaseInformation.IsValid)
+            if (Program.Version.Contains("-dev") || !ReleaseInformation.IsValid)
             {
                 if (showWarnings)
                 {
