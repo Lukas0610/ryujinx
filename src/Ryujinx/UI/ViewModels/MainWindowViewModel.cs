@@ -62,7 +62,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         private Timer _searchTimer;
         private string _dockedStatusText;
         private string _gpuStatusText;
-        private string _gpuNameText;
         private string _hostIoCacheStatusText;
         private string _gameStatusText;
         private string _volumeStatusText;
