@@ -1,10 +1,11 @@
 using Avalonia.Controls;
-using FluentAvalonia.Core;
 using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
+using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.UI.Common.Configuration;
+using Ryujinx.UI.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,9 @@ namespace Ryujinx.Ava.UI.Windows
 {
     public partial class SettingsWindow : StyleableWindow
     {
+
+        private IObjectObserver[] _gameBootTimeConfigurationObservers;
+
         internal SettingsViewModel ViewModel { get; set; }
 
         public SettingsWindow(ConfigurationState config, GameConfigurationState gameConfig, bool ingame, VirtualFileSystem virtualFileSystem, ContentManager contentManager)
@@ -26,6 +30,8 @@ namespace Ryujinx.Ava.UI.Windows
             ViewModel.SaveSettingsEvent += SaveSettings;
 
             InitializeComponent();
+
+            CreateGameBootTimeConfigurationObservers(gameConfig);
             Load();
         }
 
@@ -37,11 +43,28 @@ namespace Ryujinx.Ava.UI.Windows
             DataContext = ViewModel;
 
             InitializeComponent();
+
+            CreateGameBootTimeConfigurationObservers(config.Game);
             Load();
         }
 
-        public void SaveSettings()
+        public async void SaveSettings()
         {
+            if (ViewModel.IsIngame)
+            {
+                bool hasAnyGameBootTimeConfigurationChanged = _gameBootTimeConfigurationObservers.Any(x => x.HasChanged);
+
+                if (hasAnyGameBootTimeConfigurationChanged)
+                {
+                    await ContentDialogHelper.CreateInfoDialog(
+                        LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogGameBootTimeSettingsChangedWhileIngame),
+                        LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogGameBootTimeSettingsChangedWhileIngameMessage),
+                        LocaleManager.Instance[LocaleKeys.InputDialogOk],
+                        "",
+                        LocaleManager.Instance[LocaleKeys.RyujinxInfo]);
+                }
+            }
+
             InputPage.InputView?.SaveCurrentProfile();
 
             if (Owner is MainWindow window && ViewModel.DirectoryChanged)
@@ -118,7 +141,42 @@ namespace Ryujinx.Ava.UI.Windows
         {
             HotkeysPage.Dispose();
             InputPage.Dispose();
+
+            Array.ForEach(_gameBootTimeConfigurationObservers, static x => x.Destroy());
+
             base.OnClosing(e);
         }
+
+        private void CreateGameBootTimeConfigurationObservers(GameConfigurationState gameConfig)
+        {
+            _gameBootTimeConfigurationObservers = new IObjectObserver[]
+            {
+                ReactiveObjectObserver.Create(gameConfig.Graphics.GraphicsBackend),
+                ReactiveObjectObserver.Create(gameConfig.Graphics.BackendThreading),
+                ReactiveObjectObserver.Create(gameConfig.System.AudioBackend),
+                ReactiveObjectObserver.Create(gameConfig.System.MemoryConfiguration),
+                ReactiveObjectObserver.Create(gameConfig.System.Language),
+                ReactiveObjectObserver.Create(gameConfig.System.Region),
+                ReactiveObjectObserver.Create(gameConfig.Graphics.EnableVsync),
+                ReactiveObjectObserver.Create(gameConfig.System.EnablePtc),
+                ReactiveObjectObserver.Create(gameConfig.System.UseStreamingPtc),
+                ReactiveObjectObserver.Create(gameConfig.System.EnableInternetAccess),
+                ReactiveObjectObserver.Create(gameConfig.System.EnableFsIntegrityChecks),
+                ReactiveObjectObserver.Create(gameConfig.System.EnableHostFsBuffering),
+                ReactiveObjectObserver.Create(gameConfig.System.EnableHostFsBufferingPrefetch),
+                ReactiveObjectObserver.Create(gameConfig.System.HostFsBufferingMaxCacheSize),
+                ReactiveObjectObserver.Create(gameConfig.System.FsGlobalAccessLogMode),
+                // ReactiveObjectObserver.Create(gameConfig.System.SystemTimeOffset), -- ignore tz offset as this keeps changing
+                ReactiveObjectObserver.Create(gameConfig.System.TimeZone),
+                ReactiveObjectObserver.Create(gameConfig.System.MemoryManagerMode),
+                ReactiveObjectObserver.Create(gameConfig.System.UseHypervisor),
+                ReactiveObjectObserver.Create(gameConfig.System.UseSparseAddressTable),
+                ReactiveObjectObserver.Create(gameConfig.System.HleKernelThreadsCPUSet),
+                ReactiveObjectObserver.Create(gameConfig.System.HleKernelThreadsCPUSetStaticCore),
+                ReactiveObjectObserver.Create(gameConfig.System.PtcBackgroundThreadsCPUSet),
+                ReactiveObjectObserver.Create(gameConfig.System.PtcBackgroundThreadCount),
+            };
+        }
+
     }
 }

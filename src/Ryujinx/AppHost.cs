@@ -222,11 +222,9 @@ namespace Ryujinx.Ava
             }
 
             gameConfig.System.IgnoreMissingServices.Event += UpdateIgnoreMissingServicesState;
+            gameConfig.System.EnableDockedMode.Event += UpdateDockedModeState;
+            gameConfig.System.AudioVolume.Event += UpdateAudioVolumeState;
             gameConfig.Graphics.AspectRatio.Event += UpdateAspectRatioState;
-            gameConfig.System.EnableDockedMode.Event += UpdateDockedModeState;
-            gameConfig.System.AudioVolume.Event += UpdateAudioVolumeState;
-            gameConfig.System.EnableDockedMode.Event += UpdateDockedModeState;
-            gameConfig.System.AudioVolume.Event += UpdateAudioVolumeState;
             gameConfig.Graphics.AntiAliasing.Event += UpdateAntiAliasing;
             gameConfig.Graphics.ScalingFilter.Event += UpdateScalingFilter;
             gameConfig.Graphics.ScalingFilterLevel.Event += UpdateScalingFilterLevel;
