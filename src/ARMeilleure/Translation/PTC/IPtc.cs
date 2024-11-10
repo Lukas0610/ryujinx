@@ -13,7 +13,9 @@ namespace ARMeilleure.Translation.PTC
 
         IPtcProfiler Profiler { get; }
 
-        bool Available { get; }
+        void BeginExecution();
+
+        void Enable();
 
         void Disable();
 

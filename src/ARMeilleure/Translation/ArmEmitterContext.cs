@@ -6,6 +6,7 @@ using ARMeilleure.Instructions;
 using ARMeilleure.IntermediateRepresentation;
 using ARMeilleure.Memory;
 using ARMeilleure.State;
+using ARMeilleure.Translation.PTC;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -15,6 +16,7 @@ namespace ARMeilleure.Translation
 {
     class ArmEmitterContext : EmitterContext
     {
+        private readonly IPtc _ptc;
         private readonly Dictionary<ulong, Operand> _labels;
 
         private OpCode _optOpLastCompare;
@@ -51,7 +53,6 @@ namespace ARMeilleure.Translation
 
         public ulong EntryAddress { get; }
         public bool HighCq { get; }
-        public bool HasPtc { get; }
         public Aarch32Mode Mode { get; }
 
         private int _ifThenBlockStateIndex = 0;
@@ -59,14 +60,16 @@ namespace ARMeilleure.Translation
         public bool IsInIfThenBlock => _ifThenBlockStateIndex < _ifThenBlockState.Length;
         public Condition CurrentIfThenBlockCond => _ifThenBlockState[_ifThenBlockStateIndex];
 
+        public bool IsPtcEnabled => _ptc.State == PtcState.Enabled;
+
         public ArmEmitterContext(
+            IPtc ptc,
             IMemoryManager memory,
             EntryTable<uint> countTable,
             IAddressTable<ulong> funcTable,
             TranslatorStubs stubs,
             ulong entryAddress,
             bool highCq,
-            bool hasPtc,
             Aarch32Mode mode)
         {
             Memory = memory;
@@ -75,9 +78,9 @@ namespace ARMeilleure.Translation
             Stubs = stubs;
             EntryAddress = entryAddress;
             HighCq = highCq;
-            HasPtc = hasPtc;
             Mode = mode;
 
+            _ptc = ptc;
             _labels = new Dictionary<ulong, Operand>();
         }
 
@@ -85,7 +88,7 @@ namespace ARMeilleure.Translation
         {
             SyncQcFlag();
 
-            if (!HasPtc)
+            if (!IsPtcEnabled)
             {
                 return base.Call(info, callArgs);
             }

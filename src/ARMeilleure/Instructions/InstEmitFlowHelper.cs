@@ -199,7 +199,7 @@ namespace ARMeilleure.Instructions
             // onto the dispatch stub.
             if (guestAddress.Kind == OperandKind.Constant && context.FunctionTable.IsValid(guestAddress.Value))
             {
-                Operand hostAddressAddr = context.HasPtc
+                Operand hostAddressAddr = context.IsPtcEnabled
                     ? Const(ref context.FunctionTable.GetValue(guestAddress.Value), new Symbol(SymbolType.FunctionTable, guestAddress.Value))
                     : Const(ref context.FunctionTable.GetValue(guestAddress.Value));
 
@@ -218,7 +218,7 @@ namespace ARMeilleure.Instructions
                     Const(3)
                     );
 
-                Operand tableBase = context.HasPtc
+                Operand tableBase = context.IsPtcEnabled
                     ? Const(table.Base, Translator.FunctionTableSymbol)
                     : Const(table.Base);
 
@@ -237,7 +237,7 @@ namespace ARMeilleure.Instructions
             }
             else
             {
-                hostAddress = context.HasPtc
+                hostAddress = context.IsPtcEnabled
                     ? Const((long)context.Stubs.DispatchStub, Translator.DispatchStubSymbol)
                     : Const((long)context.Stubs.DispatchStub);
             }

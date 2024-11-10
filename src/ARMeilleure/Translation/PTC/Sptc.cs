@@ -39,9 +39,6 @@ namespace ARMeilleure.Translation.PTC
 
         private static readonly byte[] FileMagic = "SptcData\0\0\0\xff"u8.ToArray();
 
-        private readonly ManualResetEvent _waitEvent;
-        private readonly object _lock;
-
         private readonly PtcCacheFlags _cacheFlags;
 
         private bool _disposed;
@@ -69,8 +66,6 @@ namespace ARMeilleure.Translation.PTC
         public IPtcProfiler Profiler => _profiler;
 
         public PtcState State { get; private set; }
-
-        public bool Available { get; private set; } = true;
 
         public string CacheFileName { get; private set; }
 
@@ -104,9 +99,6 @@ namespace ARMeilleure.Translation.PTC
                 IsBackground = true,
             };
 
-            _waitEvent = new ManualResetEvent(true);
-            _lock = new object();
-
             _disposed = false;
 
             TitleIdText = TitleIdTextDefault;
@@ -117,31 +109,32 @@ namespace ARMeilleure.Translation.PTC
             ProfileFileName = string.Empty;
         }
 
-        private void Enable()
-        {
-            State = PtcState.Enabled;
-        }
-
         public void Continue()
         {
-            State = PtcState.Enabled;
+            Enable();
+        }
+
+        public void BeginExecution() { }
+
+        public void Enable()
+        {
+            if (State != PtcState.Stopped)
+            {
+                State = PtcState.Enabled;
+            }
+        }
+
+        public void Disable()
+        {
+            if (State != PtcState.Stopped)
+            {
+                State = PtcState.Disabled;
+            }
         }
 
         public void Stop()
         {
-            Available = false;
-
-            if (State == PtcState.Enabled)
-            {
-                State = PtcState.Stopped;
-            }
-        }
-
-        public void Disable() { }
-
-        public void Wait()
-        {
-            _waitEvent.WaitOne();
+            State = PtcState.Stopped;
         }
 
         public void Dispose()
@@ -150,12 +143,7 @@ namespace ARMeilleure.Translation.PTC
             {
                 _disposed = true;
 
-                Available = false;
-
                 _bgSaveQueue.CompleteAdding();
-
-                Wait();
-                _waitEvent.Dispose();
 
                 _bgSaveThread.Join();
                 _fileStream.Flush();
@@ -166,8 +154,6 @@ namespace ARMeilleure.Translation.PTC
 
         public void Initialize(string titleIdText, string buildIdHashText, string displayVersion, bool enabled, MemoryManagerType memoryMode)
         {
-            Wait();
-
             _profiler.Wait();
             _profiler.ClearEntries();
 

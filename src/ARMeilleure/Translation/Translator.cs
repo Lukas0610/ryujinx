@@ -109,8 +109,7 @@ namespace ARMeilleure.Translation
                 }
 
                 _ptc.Profiler.Start();
-
-                _ptc.Disable();
+                _ptc.BeginExecution();
 
                 // All threads are normal priority except from the last, which just fills as much of the last core
                 // as the os lets it with a low priority. If we only have one rejit thread, it should be normal priority
@@ -243,13 +242,13 @@ namespace ARMeilleure.Translation
         internal TranslatedFunction Translate(ulong address, ExecutionMode mode, bool highCq, bool singleStep = false)
         {
             var context = new ArmEmitterContext(
+                _ptc,
                 Memory,
                 CountTable,
                 FunctionTable,
                 Stubs,
                 address,
                 highCq,
-                _ptc.State != PtcState.Disabled,
                 mode: Aarch32Mode.User);
 
             Logger.StartPass(PassName.Decoding);
@@ -284,14 +283,14 @@ namespace ARMeilleure.Translation
 
             var options = highCq ? CompilerOptions.HighCq : CompilerOptions.None;
 
-            if (context.HasPtc && !singleStep)
+            if (context.IsPtcEnabled && !singleStep)
             {
                 options |= CompilerOptions.Relocatable;
             }
 
             CompiledFunction compiledFunc = Compiler.Compile(cfg, argTypes, retType, options, RuntimeInformation.ProcessArchitecture);
 
-            if (context.HasPtc && _ptc.Available && !singleStep)
+            if (context.IsPtcEnabled && !singleStep)
             {
                 Hash128 hash = PtcUtils.ComputeHash(Memory, address, funcSize);
 
@@ -469,7 +468,7 @@ namespace ARMeilleure.Translation
 
             Operand lblEnd = Label();
 
-            Operand address = context.HasPtc 
+            Operand address = context.IsPtcEnabled 
                 ? Const(ref counter.Value, CountTableSymbol)
                 : Const(ref counter.Value);
 

@@ -60,8 +60,6 @@ namespace ARMeilleure.Translation.PTC
 
         private bool _disposed;
 
-        public bool Available { get; private set; } = true;
-
         public string TitleIdText { get; private set; }
         public string BuildIdHashText { get; private set; }
         public string DisplayVersion { get; private set; }
@@ -107,7 +105,7 @@ namespace ARMeilleure.Translation.PTC
 
         public void Initialize(string titleIdText, string buildIdHashText, string displayVersion, bool enabled, MemoryManagerType memoryMode)
         {
-            Wait();
+            _waitEvent.WaitOne();
 
             _profiler.Wait();
             _profiler.ClearEntries();
@@ -989,34 +987,38 @@ namespace ARMeilleure.Translation.PTC
             public int RelocEntriesCount;
         }
 
-        private void Enable()
-        {
-            State = PtcState.Enabled;
-        }
-
         public void Continue()
         {
-            State = PtcState.Enabled;
+            Enable();
         }
 
-        public void Stop()
+        public void BeginExecution()
         {
-            Available = false;
-
-            if (State == PtcState.Enabled)
+            if (State != PtcState.Stopped)
             {
-                State = PtcState.Stopped;
+                State = PtcState.Disabled;
+            }
+        }
+
+        public void Enable()
+        {
+            if (State != PtcState.Stopped)
+            {
+                State = PtcState.Enabled;
             }
         }
 
         public void Disable()
         {
-            State = PtcState.Disabled;
+            if (State != PtcState.Stopped)
+            {
+                State = PtcState.Disabled;
+            }
         }
 
-        private void Wait()
+        public void Stop()
         {
-            _waitEvent.WaitOne();
+            State = PtcState.Stopped;
         }
 
         public void Dispose()
@@ -1025,9 +1027,7 @@ namespace ARMeilleure.Translation.PTC
             {
                 _disposed = true;
 
-                Available = false;
-
-                Wait();
+                _waitEvent.WaitOne();
                 _waitEvent.Dispose();
 
                 DisposeCarriers();
