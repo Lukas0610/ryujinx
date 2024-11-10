@@ -89,6 +89,12 @@ namespace ARMeilleure.Translation.PTC
             T structure = default;
 
             Span<T> spanT = MemoryMarshal.CreateSpan(ref structure, 1);
+
+            if ((stream.Length - stream.Position) < spanT.Length)
+            {
+                throw new EndOfStreamException();
+            }
+
             int bytesCount = stream.Read(MemoryMarshal.AsBytes(spanT));
 
             if (bytesCount != Unsafe.SizeOf<T>())
@@ -97,6 +103,26 @@ namespace ARMeilleure.Translation.PTC
             }
 
             return structure;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryDeserializeStructure<T>(Stream stream, ref T structure) where T : struct
+        {
+            Span<T> spanT = MemoryMarshal.CreateSpan(ref structure, 1);
+
+            if ((stream.Length - stream.Position) < spanT.Length)
+            {
+                return false;
+            }
+
+            int bytesCount = stream.Read(MemoryMarshal.AsBytes(spanT));
+
+            if (bytesCount != Unsafe.SizeOf<T>())
+            {
+                return false;
+            }
+
+            return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,9 +137,20 @@ namespace ARMeilleure.Translation.PTC
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryDeserializeHashedStructure<T>(Stream stream, out T structure) where T : struct
         {
-            structure = DeserializeStructure<T>(stream);
+            structure = default;
 
-            Hash128 hash = DeserializeStructure<Hash128>(stream);
+            if (!TryDeserializeStructure(stream, ref structure))
+            {
+                return false;
+            }
+
+            Hash128 hash = default;
+
+            if (!TryDeserializeStructure(stream, ref hash))
+            {
+                return false;
+            }
+
             Hash128 actualHash = XXHash128.ComputeHash(SerializeStructure(structure));
 
             return hash == actualHash;
@@ -122,9 +159,18 @@ namespace ARMeilleure.Translation.PTC
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryDeserializeHashedStructureByRef<T>(Stream stream, ref T structure) where T : struct
         {
-            structure = DeserializeStructure<T>(stream);
+            if (!TryDeserializeStructure(stream, ref structure))
+            {
+                return false;
+            }
 
-            Hash128 hash = DeserializeStructure<Hash128>(stream);
+            Hash128 hash = default;
+
+            if (!TryDeserializeStructure(stream, ref hash))
+            {
+                return false;
+            }
+
             Hash128 actualHash = XXHash128.ComputeHash(SerializeStructure(structure));
 
             return hash == actualHash;
