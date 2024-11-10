@@ -165,7 +165,6 @@ namespace Ryujinx.Ava.UI.Windows
                 ReactiveObjectObserver.Create(gameConfig.System.EnableHostFsBuffering),
                 ReactiveObjectObserver.Create(gameConfig.System.EnableHostFsBufferingPrefetch),
                 ReactiveObjectObserver.Create(gameConfig.System.HostFsBufferingMaxCacheSize),
-                ReactiveObjectObserver.Create(gameConfig.System.FsGlobalAccessLogMode),
                 // ReactiveObjectObserver.Create(gameConfig.System.SystemTimeOffset), -- ignore tz offset as this keeps changing
                 ReactiveObjectObserver.Create(gameConfig.System.TimeZone),
                 ReactiveObjectObserver.Create(gameConfig.System.MemoryManagerMode),

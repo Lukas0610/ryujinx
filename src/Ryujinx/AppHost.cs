@@ -921,7 +921,7 @@ namespace Ryujinx.Ava
                                                  GameConfig.System.EnableHostFsBuffering,
                                                  GameConfig.System.EnableHostFsBufferingPrefetch,
                                                  GameConfig.System.HostFsBufferingMaxCacheSize,
-                                                 GameConfig.System.FsGlobalAccessLogMode,
+                                                 ConfigurationState.Instance.Logger.FsGlobalAccessLogMode,
                                                  GameConfig.System.SystemTimeOffset,
                                                  GameConfig.System.TimeZone,
                                                  GameConfig.System.MemoryManagerMode,

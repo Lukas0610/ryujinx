@@ -69,6 +69,11 @@ namespace Ryujinx.UI.Common.Configuration
         public bool LoggingEnableFsAccessLog { get; set; }
 
         /// <summary>
+        /// Enables FS access log output to the console. Possible modes are 0-3
+        /// </summary>
+        public int FsGlobalAccessLogMode { get; set; }
+
+        /// <summary>
         /// Controls which log messages are written to the log targets
         /// </summary>
         public LogClass[] LoggingFilteredClasses { get; set; }

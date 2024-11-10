@@ -658,6 +658,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 _config.Logger.EnableGuest.Value = EnableGuest;
                 _config.Logger.EnableDebug.Value = EnableDebug;
                 _config.Logger.EnableFsAccessLog.Value = EnableFsAccessLog;
+                _config.Logger.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
                 _config.Logger.GraphicsDebugLevel.Value = (GraphicsDebugLevel)OpenglDebugLevel;
             }
 
@@ -742,9 +743,6 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             // Network
             _gameConfig.System.EnableInternetAccess.Value = EnableInternetAccess;
-
-            // Logging
-            _gameConfig.System.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
 
             _gameConfig.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[NetworkInterfaceIndex]];
             _gameConfig.Multiplayer.Mode.Value = (MultiplayerMode)MultiplayerModeIndex;

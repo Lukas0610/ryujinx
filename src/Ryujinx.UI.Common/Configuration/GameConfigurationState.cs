@@ -82,11 +82,6 @@ namespace Ryujinx.UI.Common.Configuration
             public ReactiveObject<long> HostFsBufferingMaxCacheSize { get; set; }
 
             /// <summary>
-            /// Enables FS access log output to the console. Possible modes are 0-3
-            /// </summary>
-            public ReactiveObject<int> FsGlobalAccessLogMode { get; private set; }
-
-            /// <summary>
             /// The selected audio backend
             /// </summary>
             public ReactiveObject<AudioBackend> AudioBackend { get; private set; }
@@ -163,8 +158,6 @@ namespace Ryujinx.UI.Common.Configuration
                 EnableHostFsBufferingPrefetch.Event += (sender, e) => LogValueChange(state, e, nameof(EnableHostFsBufferingPrefetch));
                 HostFsBufferingMaxCacheSize = new ReactiveObject<long>();
                 HostFsBufferingMaxCacheSize.Event += (sender, e) => LogValueChange(state, e, nameof(HostFsBufferingMaxCacheSize));
-                FsGlobalAccessLogMode = new ReactiveObject<int>();
-                FsGlobalAccessLogMode.Event += (sender, e) => LogValueChange(state, e, nameof(FsGlobalAccessLogMode));
                 AudioBackend = new ReactiveObject<AudioBackend>();
                 AudioBackend.Event += (sender, e) => LogValueChange(state, e, nameof(AudioBackend));
                 MemoryManagerMode = new ReactiveObject<MemoryManagerMode>();
@@ -484,7 +477,6 @@ namespace Ryujinx.UI.Common.Configuration
                 EnableHostFsBuffering = System.EnableHostFsBuffering,
                 EnableHostFsBufferingPrefetch = System.EnableHostFsBufferingPrefetch,
                 HostFsBufferingMaxCacheSize = System.HostFsBufferingMaxCacheSize,
-                FsGlobalAccessLogMode = System.FsGlobalAccessLogMode,
                 AudioBackend = System.AudioBackend,
                 AudioVolume = System.AudioVolume,
                 MemoryManagerMode = System.MemoryManagerMode,
@@ -543,7 +535,6 @@ namespace Ryujinx.UI.Common.Configuration
             System.EnableHostFsBuffering.Value = true;
             System.EnableHostFsBufferingPrefetch.Value = false;
             System.HostFsBufferingMaxCacheSize.Value = 2L * 1024 * 1024 * 1024; // 2 GiB
-            System.FsGlobalAccessLogMode.Value = 0;
             System.AudioBackend.Value = AudioBackend.SDL2;
             System.AudioVolume.Value = 1;
             System.MemoryManagerMode.Value = MemoryManagerMode.HostMappedUnsafe;
@@ -658,7 +649,6 @@ namespace Ryujinx.UI.Common.Configuration
             System.EnableHostFsBuffering.Value = gameConfigurationFileFormat.EnableHostFsBuffering;
             System.EnableHostFsBufferingPrefetch.Value = gameConfigurationFileFormat.EnableHostFsBufferingPrefetch;
             System.HostFsBufferingMaxCacheSize.Value = gameConfigurationFileFormat.HostFsBufferingMaxCacheSize;
-            System.FsGlobalAccessLogMode.Value = gameConfigurationFileFormat.FsGlobalAccessLogMode;
             System.AudioBackend.Value = gameConfigurationFileFormat.AudioBackend;
             System.AudioVolume.Value = gameConfigurationFileFormat.AudioVolume;
             System.MemoryManagerMode.Value = gameConfigurationFileFormat.MemoryManagerMode;

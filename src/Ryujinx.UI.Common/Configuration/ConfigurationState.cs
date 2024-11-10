@@ -243,6 +243,11 @@ namespace Ryujinx.UI.Common.Configuration
             public ReactiveObject<bool> EnableFsAccessLog { get; private set; }
 
             /// <summary>
+            /// Enables FS access log output to the console. Possible modes are 0-3
+            /// </summary>
+            public ReactiveObject<int> FsGlobalAccessLogMode { get; private set; }
+
+            /// <summary>
             /// Controls which log messages are written to the log targets
             /// </summary>
             public ReactiveObject<LogClass[]> FilteredClasses { get; private set; }
@@ -267,6 +272,7 @@ namespace Ryujinx.UI.Common.Configuration
                 EnableTrace = new ReactiveObject<bool>();
                 EnableGuest = new ReactiveObject<bool>();
                 EnableFsAccessLog = new ReactiveObject<bool>();
+                FsGlobalAccessLogMode = new ReactiveObject<int>();
                 FilteredClasses = new ReactiveObject<LogClass[]>();
                 EnableFileLog = new ReactiveObject<bool>();
                 EnableFileLog.Event += static (sender, e) => LogValueChange(e, nameof(EnableFileLog));
@@ -351,6 +357,7 @@ namespace Ryujinx.UI.Common.Configuration
                 LoggingEnableTrace = Logger.EnableTrace,
                 LoggingEnableGuest = Logger.EnableGuest,
                 LoggingEnableFsAccessLog = Logger.EnableFsAccessLog,
+                FsGlobalAccessLogMode = Logger.FsGlobalAccessLogMode,
                 LoggingFilteredClasses = Logger.FilteredClasses,
                 LoggingGraphicsDebugLevel = Logger.GraphicsDebugLevel,
                 CheckUpdatesOnStart = CheckUpdatesOnStart,
@@ -423,6 +430,7 @@ namespace Ryujinx.UI.Common.Configuration
             Logger.EnableTrace.Value = false;
             Logger.EnableGuest.Value = true;
             Logger.EnableFsAccessLog.Value = false;
+            Logger.FsGlobalAccessLogMode.Value = 0;
             Logger.FilteredClasses.Value = Array.Empty<LogClass>();
             Logger.GraphicsDebugLevel.Value = GraphicsDebugLevel.None;
             CheckUpdatesOnStart.Value = true;
@@ -496,6 +504,7 @@ namespace Ryujinx.UI.Common.Configuration
             Logger.EnableTrace.Value = configurationFileFormat.LoggingEnableTrace;
             Logger.EnableGuest.Value = configurationFileFormat.LoggingEnableGuest;
             Logger.EnableFsAccessLog.Value = configurationFileFormat.LoggingEnableFsAccessLog;
+            Logger.FsGlobalAccessLogMode.Value = configurationFileFormat.FsGlobalAccessLogMode;
             Logger.FilteredClasses.Value = configurationFileFormat.LoggingFilteredClasses;
             Logger.GraphicsDebugLevel.Value = configurationFileFormat.LoggingGraphicsDebugLevel;
             CheckUpdatesOnStart.Value = configurationFileFormat.CheckUpdatesOnStart;
