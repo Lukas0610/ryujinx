@@ -543,7 +543,6 @@ namespace Ryujinx.Ava
         public void StopLoading()
         {
             Device.HostFileSystem.AbortRequests();
-            AppExit?.Invoke(this, EventArgs.Empty);
         }
 
         public void Stop()

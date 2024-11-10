@@ -1308,6 +1308,10 @@ namespace Ryujinx.Ava.UI.ViewModels
                 AppHost?.Start();
                 AppHost?.DisposeContext();
             }
+            else
+            {
+                AppHost_AppExit(this, EventArgs.Empty);
+            }
         }
 
         private async Task HandleRelaunch()
