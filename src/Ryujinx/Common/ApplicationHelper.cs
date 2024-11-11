@@ -428,10 +428,16 @@ namespace Ryujinx.Ava.Common
 
         public static bool PurgePtcCache(string applicationId)
         {
-            DirectoryInfo mainDir = new(Path.Combine(AppDataManager.GamesDirPath, applicationId, "cache", "cpu", "0"));
-            DirectoryInfo backupDir = new(Path.Combine(AppDataManager.GamesDirPath, applicationId, "cache", "cpu", "1"));
+            DirectoryInfo cpuDir = new(Path.Combine(AppDataManager.GamesDirPath, applicationId, "cache", "cpu"));
+            DirectoryInfo mainDir = new(Path.Combine(cpuDir.FullName, "0"));
+            DirectoryInfo backupDir = new(Path.Combine(cpuDir.FullName, "1"));
 
             List<FileInfo> cacheFiles = new();
+
+            if (cpuDir.Exists)
+            {
+                cacheFiles.AddRange(cpuDir.EnumerateFiles("*.sptcdata"));
+            }
 
             if (mainDir.Exists)
             {
