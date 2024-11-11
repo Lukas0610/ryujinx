@@ -89,7 +89,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             Version = Program.Version;
             UpdateLogoTheme(ConfigurationState.Instance.UI.BaseStyle.Value);
-            Dispatcher.UIThread.InvokeAsync(DownloadPatronsJson);
 
             ThemeManager.ThemeChanged += ThemeManager_ThemeChanged;
         }
@@ -121,29 +120,6 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             ThemeManager.ThemeChanged -= ThemeManager_ThemeChanged;
             GC.SuppressFinalize(this);
-        }
-
-        private async Task DownloadPatronsJson()
-        {
-            if (!NetworkInterface.GetIsNetworkAvailable())
-            {
-                Supporters = LocaleManager.Instance[LocaleKeys.ConnectionError];
-
-                return;
-            }
-
-            HttpClient httpClient = new();
-
-            try
-            {
-                string patreonJsonString = await httpClient.GetStringAsync("https://patreon.ryujinx.org/");
-
-                Supporters = string.Join(", ", JsonHelper.Deserialize(patreonJsonString, CommonJsonContext.Default.StringArray)) + "\n\n";
-            }
-            catch
-            {
-                Supporters = LocaleManager.Instance[LocaleKeys.ApiError];
-            }
         }
     }
 }

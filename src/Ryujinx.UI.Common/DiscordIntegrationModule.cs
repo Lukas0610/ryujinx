@@ -33,7 +33,7 @@ namespace Ryujinx.UI.Common
                     new Button
                     {
                         Label = "Website",
-                        Url = "https://ryujinx.org/",
+                        Url = "https://github.com/Lukas0610/ryujinx",
                     },
                 ],
             };
@@ -83,7 +83,7 @@ namespace Ryujinx.UI.Common
                     new Button
                     {
                         Label = "Website",
-                        Url = "https://ryujinx.org/",
+                        Url = "https://github.com/Lukas0610/ryujinx",
                     },
                 ],
             });

@@ -160,8 +160,8 @@ namespace Ryujinx.HLE.HOS.Applets.Error
             {
                 message = "An error has occured.\n\n"
                         + "Please try again later.\n\n"
-                        + "If the problem persists, please refer to the Ryujinx website.\n"
-                        + "www.ryujinx.org";
+                        + "If the problem persists, please refer to the Ryujinx GitHub-Repository.\n"
+                        + "https://github.com/Lukas0610/ryujinx";
             }
 
             string[] buttons = GetButtonsText(module, description, "DlgBtn");
