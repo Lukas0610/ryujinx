@@ -26,7 +26,7 @@ namespace ARMeilleure.Translation.PTC
     class Sptc : IPtc
     {
 
-        private const uint InternalVersion = 1; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 2; //! To be incremented manually for each change to the ARMeilleure project.
         private const long DataOffset = 0x1000;
 
         private const int ReportRefreshRate = 50; // ms.
@@ -38,6 +38,8 @@ namespace ARMeilleure.Translation.PTC
         public static readonly Encoding StreamEncoding = Encoding.UTF8;
 
         private static readonly byte[] FileMagic = "SptcData\0\0\0\xff"u8.ToArray();
+        private static readonly byte[] EntryBeginMagic = "EntryBegin\xff"u8.ToArray();
+        private static readonly byte[] EntryEndMagic = "EntryEnd\0\0\xff"u8.ToArray();
 
         private readonly PtcCacheFlags _cacheFlags;
 
@@ -203,7 +205,7 @@ namespace ARMeilleure.Translation.PTC
 
             if (cacheFileInfo.Exists && cacheFileInfo.Length > 0)
             {
-                LoadImpl(translator, false);
+                LoadImpl(translator);
             }
             else
             {
@@ -349,12 +351,11 @@ namespace ARMeilleure.Translation.PTC
             _fileWriter = new BinaryWriter(_fileStream, StreamEncoding, true);
         }
 
-        private bool LoadImpl(Translator translator, bool tryBackup)
+        private bool LoadImpl(Translator translator)
         {
             OpenStream();
 
             byte[] writtenMagic = _fileReader.ReadBytes(FileMagic.Length);
-
             if (!FileMagic.SequenceEqual(writtenMagic))
             {
                 InvalidateStream();
@@ -408,17 +409,36 @@ namespace ARMeilleure.Translation.PTC
             _fileStream.Seek(DataOffset, SeekOrigin.Begin);
 
             ulong numOfStaleFunctions = 0;
+            ulong numOfPerformedStubs = 0;
+            ulong numOfStubbedFunctions = 0;
+            ulong numOfCorruptedEntries = 0;
 
             while (_fileStream.Position < _fileStream.Length)
             {
                 long currentEntryStreamStart = _fileStream.Position;
 
+                byte[] writtenEntryBeginMagic = _fileReader.ReadBytes(EntryBeginMagic.Length);
+                if (!EntryBeginMagic.SequenceEqual(writtenEntryBeginMagic))
+                {
+                    // An invalid entry begin magic block indicates a full corruption
+                    // (e.g. misaligned writes) of the cache-file.
+                    //
+                    // Consider this and all following entries to be corrupted and drop them by
+                    // truncating the file at the begin of the current entry.
+                    _fileStream.SetLength(currentEntryStreamStart);
+                    Interlocked.Increment(ref numOfCorruptedEntries);
+
+                    break;
+                }
+
                 if (!PtcUtils.TryDeserializeHashedStructure(_fileStream, out StreamedInfoEntry infoEntry))
                 {
-                    // An invalid info-entry is a fatal error and every upcoming entry
-                    // should be considered corrupted. Discard the current and all upcoming
-                    // entries by truncating the file at the beginning of the current entry.
+                    // An invalid entry header indicates a partial corruption of the current entry.
+                    //
+                    // Consider this and all following entries to be corrupted and drop them by
+                    // truncating the file at the begin of the current entry.
                     _fileStream.SetLength(currentEntryStreamStart);
+                    Interlocked.Increment(ref numOfCorruptedEntries);
 
                     break;
                 }
@@ -429,6 +449,7 @@ namespace ARMeilleure.Translation.PTC
                 if (hasCodeChanged || hasHighCqChanged)
                 {
                     infoEntry.Stubbed = true;
+                    Interlocked.Increment(ref numOfPerformedStubs);
                 }
 
                 byte[] code = new byte[infoEntry.CodeLength];
@@ -446,6 +467,7 @@ namespace ARMeilleure.Translation.PTC
                 else
                 {
                     infoEntry.Stubbed = true;
+                    Interlocked.Increment(ref numOfPerformedStubs);
                 }
 
                 RelocEntry[] relocEntries = new RelocEntry[infoEntry.RelocEntriesCount];
@@ -453,26 +475,45 @@ namespace ARMeilleure.Translation.PTC
 
                 for (int i = 0; i < relocEntries.Length; i++)
                 {
-                    if (!PtcUtils.TryDeserializeHashedStructure(_fileStream, out StreamedRelocEntry streamedRelocEntry))
+                    if (PtcUtils.TryDeserializeHashedStructure(_fileStream, out StreamedRelocEntry streamedRelocEntry))
+                    {
+                        relocEntries[i] = new RelocEntry(streamedRelocEntry.Position,
+                                                         new Symbol(streamedRelocEntry.SymbolType, streamedRelocEntry.SymbolValue));
+                    }
+                    else
                     {
                         infoEntry.Stubbed = true;
+                        Interlocked.Increment(ref numOfPerformedStubs);
                     }
-
-                    relocEntries[i] = new RelocEntry(streamedRelocEntry.Position,
-                                                     new Symbol(streamedRelocEntry.SymbolType, streamedRelocEntry.SymbolValue));
                 }
 
                 for (int i = 0; i < unwindPushEntries.Length; i++)
                 {
-                    if (!PtcUtils.TryDeserializeHashedStructure(_fileStream, out StreamedUnwindPushEntry streamedUnwindPushEntry))
+                    if (PtcUtils.TryDeserializeHashedStructure(_fileStream, out StreamedUnwindPushEntry streamedUnwindPushEntry))
+                    {
+                        unwindPushEntries[i] = new UnwindPushEntry(streamedUnwindPushEntry.PseudoOp,
+                                                                   streamedUnwindPushEntry.PrologOffset,
+                                                                   streamedUnwindPushEntry.RegIndex,
+                                                                   streamedUnwindPushEntry.StackOffsetOrAllocSize);
+                    }
+                    else
                     {
                         infoEntry.Stubbed = true;
+                        Interlocked.Increment(ref numOfPerformedStubs);
                     }
+                }
 
-                    unwindPushEntries[i] = new UnwindPushEntry(streamedUnwindPushEntry.PseudoOp,
-                                                               streamedUnwindPushEntry.PrologOffset,
-                                                               streamedUnwindPushEntry.RegIndex,
-                                                               streamedUnwindPushEntry.StackOffsetOrAllocSize);
+                byte[] writtenEntryEndMagic = _fileReader.ReadBytes(EntryEndMagic.Length);
+                if (!EntryEndMagic.SequenceEqual(writtenEntryEndMagic))
+                {
+                    // An invalid entry end magic block indicates an interruption while writing the entry to file.
+                    //
+                    // Consider this and all following entries to be corrupted and drop them by
+                    // truncating the file at the begin of the current entry.
+                    _fileStream.SetLength(currentEntryStreamStart);
+                    Interlocked.Increment(ref numOfCorruptedEntries);
+
+                    break;
                 }
 
                 if (!infoEntry.Stubbed)
@@ -503,20 +544,23 @@ namespace ARMeilleure.Translation.PTC
                     long nextEntryStreamStart = _fileStream.Position;
 
                     // Return to the beginning of the current entry a overwrite the existing header
-                    _fileStream.Seek(currentEntryStreamStart, SeekOrigin.Current);
+                    _fileStream.Seek(currentEntryStreamStart, SeekOrigin.Begin);
+
+                    _fileStream.Write(EntryBeginMagic);
                     PtcUtils.SerializeStructure(_fileStream, infoEntry);
 
                     // Skip to the beginning of the next entry
-                    _fileStream.Seek(nextEntryStreamStart, SeekOrigin.Current);
+                    _fileStream.Seek(nextEntryStreamStart, SeekOrigin.Begin);
+
+                    Interlocked.Increment(ref numOfStubbedFunctions);
                 }
             }
 
             Debug.Assert(_fileStream.Position == _fileStream.Length);
 
             Logger.Info?.Print(LogClass.Ptc,
-                $"{translator.Functions.Count} translated functions loaded from " +
-                $"{(tryBackup ? "backup translation-cache" : "translation-cache")}" +
-                $"(Size={_fileStream.Length}, StaleFunctions={numOfStaleFunctions})");
+                $"{translator.Functions.Count} functions loaded from streaming translation cache" +
+                $"(size={_fileStream.Length}, stale={numOfStaleFunctions}, stubs={numOfPerformedStubs}, stubbed={numOfStubbedFunctions}, corrupted={numOfCorruptedEntries})");
 
             return true;
         }
@@ -585,6 +629,8 @@ namespace ARMeilleure.Translation.PTC
 
                 Hash128 codeHash = XXHash128.ComputeHash(code);
 
+                _fileStream.Write(EntryBeginMagic);
+
                 PtcUtils.SerializeHashedStructure(_fileStream, new StreamedInfoEntry()
                 {
                     Address = address,
@@ -599,7 +645,6 @@ namespace ARMeilleure.Translation.PTC
                     UnwindPushEntriesCount = unwindInfo.PushEntries.Length,
                     UnwindPrologSize = unwindInfo.PrologSize,
                 });
-
 
                 _fileStream.Write(code);
 
@@ -624,6 +669,7 @@ namespace ARMeilleure.Translation.PTC
                     });
                 }
 
+                _fileStream.Write(EntryEndMagic);
                 _fileStream.Flush();
             }
         }
