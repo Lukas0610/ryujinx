@@ -1,5 +1,10 @@
 namespace ARMeilleure
 {
+    using Ryujinx.Common.Logging;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
+    using System.Runtime.InteropServices;
     using Arm64HardwareCapabilities = ARMeilleure.CodeGen.Arm64.HardwareCapabilities;
     using X86HardwareCapabilities = ARMeilleure.CodeGen.X86.HardwareCapabilities;
 
@@ -66,5 +71,60 @@ namespace ARMeilleure
 
         internal static bool UseAvx512Ortho => UseAvx512F && UseAvx512Vl;
         internal static bool UseAvx512OrthoFloat => UseAvx512Ortho && UseAvx512Dq;
+
+        private const BindingFlags OptimizationPropertyBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+
+        private static readonly string[] Arm64OptimizationPropertyNames = new[]
+        {
+            nameof(UseAdvSimd),
+            nameof(UseArm64Aes),
+            nameof(UseArm64Pmull),
+        };
+
+        private static readonly string[] X86OptimizationPropertyNames = new[]
+        {
+            nameof(ForceLegacySse),
+            nameof(UseSse),
+            nameof(UseSse2),
+            nameof(UseSse3),
+            nameof(UseSsse3),
+            nameof(UseSse41),
+            nameof(UseSse42),
+            nameof(UsePopCnt),
+            nameof(UseAvx),
+            nameof(UseAvx512F),
+            nameof(UseAvx512Vl),
+            nameof(UseAvx512Bw),
+            nameof(UseAvx512Dq),
+            nameof(UseF16c),
+            nameof(UseFma),
+            nameof(UseAesni),
+            nameof(UsePclmulqdq),
+            nameof(UseSha),
+            nameof(UseGfni),
+            nameof(UseAvx512Ortho),
+            nameof(UseAvx512OrthoFloat),
+        };
+
+        static Optimizations()
+        {
+            string[] optimizationPropertyNames = (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                ? Arm64OptimizationPropertyNames
+                : X86OptimizationPropertyNames;
+
+            List<string> propertyDisplayStrings = new();
+            int propertyNameMaxLength = optimizationPropertyNames.Max(x => x.Length);
+
+            foreach (string propertyName in optimizationPropertyNames)
+            {
+                bool propertyValue = (bool)typeof(Optimizations)
+                    .GetProperty(propertyName, OptimizationPropertyBindingFlags)
+                    .GetValue(null);
+
+                propertyDisplayStrings.Add($"\t\t{propertyName.PadRight(propertyNameMaxLength, ' ')} = {propertyValue}");
+            }
+
+            Logger.Info?.Print(LogClass.Cpu, $"\n{string.Join("\n", propertyDisplayStrings)}");
+        }
     }
 }
