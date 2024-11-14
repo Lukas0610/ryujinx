@@ -518,7 +518,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void LoadConfiguration()
         {
-            if (_config != null)
+            if (_gameConfig.IsGlobalState)
             {
                 // User Interface
                 EnableDiscordIntegration = _config.EnableDiscordIntegration;
@@ -624,9 +624,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             MultiplayerModeIndex = (int)_gameConfig.Multiplayer.Mode.Value;
         }
 
-        public void SaveConfiguration()
+        private void ApplyAndSaveConfiguration()
         {
-            if (_config != null)
+            if (_gameConfig.IsGlobalState)
             {
                 // User Interface
                 _config.EnableDiscordIntegration.Value = EnableDiscordIntegration;
@@ -661,8 +661,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 _config.Logger.FsGlobalAccessLogMode.Value = FsGlobalAccessLogMode;
                 _config.Logger.GraphicsDebugLevel.Value = (GraphicsDebugLevel)OpenglDebugLevel;
             }
-
-            if (!_gameConfig.IsGlobalState)
+            else
             {
                 _gameConfig.UseGameConfig.Value = UseCustomGameConfig;
             }
@@ -747,20 +746,25 @@ namespace Ryujinx.Ava.UI.ViewModels
             _gameConfig.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[NetworkInterfaceIndex]];
             _gameConfig.Multiplayer.Mode.Value = (MultiplayerMode)MultiplayerModeIndex;
 
-            if (_config != null)
-            {
-                _config.ToFileFormat().SaveConfig(Program.ConfigurationPath);
-            }
-            else
-            {
-                _gameConfig.ToFileFormat().SaveConfig(Program.ConfigurationPath);
-            }
+            SaveConfig();
 
             MainWindow.UpdateGraphicsConfig(_gameConfig);
 
             SaveSettingsEvent?.Invoke();
 
             _directoryChanged = false;
+        }
+
+        private void SaveConfig()
+        {
+            if (_gameConfig.IsGlobalState)
+            {
+                _config.ToFileFormat().SaveConfig(Program.ConfigurationPath);
+            }
+            else
+            {
+                _gameConfig.ToFileFormat().SaveConfig(_gameConfig.ConfigurationFilePath);
+            }
         }
 
         private static void RevertIfNotSaved()
@@ -770,12 +774,12 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public void ApplyButton()
         {
-            SaveConfiguration();
+            ApplyAndSaveConfiguration();
         }
 
         public void OkButton()
         {
-            SaveConfiguration();
+            ApplyAndSaveConfiguration();
             CloseWindow?.Invoke();
         }
 
@@ -783,6 +787,33 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             RevertIfNotSaved();
             CloseWindow?.Invoke();
+        }
+
+        public void DefaultsButton()
+        {
+            if (_gameConfig.IsGlobalState)
+            {
+                _config.LoadDefault();
+            }
+            else
+            {
+                _gameConfig.LoadDefault();
+            }
+
+            SaveConfig();
+            CloseWindow?.Invoke();
+        }
+
+        public void GlobalValuesButton()
+        {
+            if (!_gameConfig.IsGlobalState)
+            {
+                _gameConfig.Load(_config.Game.ToFileFormat());
+                _gameConfig.UseGameConfig.Value = UseCustomGameConfig;
+
+                SaveConfig();
+                CloseWindow?.Invoke();
+            }
         }
     }
 }

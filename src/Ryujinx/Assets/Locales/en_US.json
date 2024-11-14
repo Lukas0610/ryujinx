@@ -198,6 +198,8 @@
   "SettingsButtonSave": "Save",
   "SettingsButtonClose": "Close",
   "SettingsButtonOk": "OK",
+  "SettingsButtonDefaults": "Apply Defaults",
+  "SettingsButtonGlobalValues": "Apply Global Settings",
   "SettingsButtonCancel": "Cancel",
   "SettingsButtonApply": "Apply",
   "ControllerSettingsPlayer": "Player",
