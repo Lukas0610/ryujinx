@@ -186,11 +186,16 @@ namespace ARMeilleure.CodeGen.Arm64
 
                 if (block.SuccessorsCount == 0)
                 {
-                    // The only blocks which can have 0 successors are exit blocks.
-                    Operation last = block.Operations.Last;
+                    // Some function-blocks see to have no operators, which causes a null-reference
+                    // exception when attempting to access the instruction, so just skip the checks
+                    if (block.Operations.Count > 0)
+                    {
+                        // The only blocks which can have 0 successors are exit blocks.
+                        Operation last = block.Operations.Last;
 
-                    Debug.Assert(last.Instruction == Instruction.Tailcall ||
-                                 last.Instruction == Instruction.Return);
+                        Debug.Assert(last.Instruction == Instruction.Tailcall ||
+                                     last.Instruction == Instruction.Return);
+                    }
                 }
                 else
                 {
