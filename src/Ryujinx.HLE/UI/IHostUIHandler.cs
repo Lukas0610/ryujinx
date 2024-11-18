@@ -1,4 +1,5 @@
 using Ryujinx.HLE.HOS.Applets;
+using Ryujinx.HLE.HOS.Applets.Browser;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 
 namespace Ryujinx.HLE.UI
@@ -23,6 +24,12 @@ namespace Ryujinx.HLE.UI
         /// </summary>
         /// <returns>True when OK is pressed, False otherwise.</returns>
         bool DisplayMessageDialog(ControllerAppletUIArgs args);
+
+        /// <summary>
+        /// Displays an Input Dialog box to the user and blocks until text is entered.
+        /// </summary>
+        /// <returns>True when OK is pressed, False otherwise. Also returns True on internal errors</returns>
+        BrowserUIResult DisplayBrowserDialog(BrowserUIArgs args);
 
         /// <summary>
         /// Tell the UI that we need to transisition to another program.

@@ -7,11 +7,13 @@ using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.Applets;
+using Ryujinx.HLE.HOS.Applets.Browser;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 using Ryujinx.HLE.UI;
 using Ryujinx.UI.Common.Configuration;
 using System;
 using System.Threading;
+using Tmds.DBus.Protocol;
 
 namespace Ryujinx.Ava.UI.Applet
 {
@@ -154,6 +156,51 @@ namespace Ryujinx.Ava.UI.Applet
             userText = error ? null : inputText;
 
             return error || okPressed;
+        }
+
+        public BrowserUIResult DisplayBrowserDialog(BrowserUIArgs args)
+        {
+            ManualResetEvent dialogCloseEvent = new(false);
+
+            bool success = true;
+
+            Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                try
+                {
+                    _parent.ViewModel.AppHost.NpadManager.BlockInputUpdates();
+
+                    BrowserAppletWindow browserDialog = new(_parent.ViewModel.AppHost)
+                    {
+                        WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                    };
+
+                    browserDialog.Navigate(args);
+
+                    await browserDialog.ShowDialog(_parent);
+
+                    dialogCloseEvent.Set();
+                    browserDialog.Close();
+                }
+                catch (Exception ex)
+                {
+                    success = false;
+
+                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogSoftwareKeyboardErrorExceptionMessage, ex));
+                }
+                finally
+                {
+                    dialogCloseEvent.Set();
+                }
+            });
+
+            dialogCloseEvent.WaitOne();
+            _parent.ViewModel.AppHost.NpadManager.UnblockInputUpdates();
+
+            return new BrowserUIResult()
+            {
+                ExitReason = success ? WebExitReason.ExitButton : WebExitReason.ErrorDialog,
+            };
         }
 
         public void ExecuteProgram(Switch device, ProgramSpecifyKind kind, ulong value)

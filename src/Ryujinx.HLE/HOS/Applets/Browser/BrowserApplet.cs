@@ -12,13 +12,18 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
     {
         public event EventHandler AppletStateChanged;
 
+        private readonly Horizon _system;
+
         private AppletSession _normalSession;
 
         private CommonArguments _commonArguments;
         private List<BrowserArgument> _arguments;
         private ShimKind _shimKind;
 
-        public BrowserApplet(Horizon system) { }
+        public BrowserApplet(Horizon system)
+        {
+            _system = system;
+        }
 
         public ResultCode GetResult()
         {
@@ -44,11 +49,19 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
                 Logger.Stub?.PrintStub(LogClass.ServiceAm, $"{argument.Type}: {argument.GetValue()}");
             }
 
+            BrowserUIArgs uiArgs = new()
+            {
+                DocumentKind = GetArgument<DocumentKind?>(_arguments, WebArgTLVType.DocumentKind, null),
+                DocumentPath = GetArgument<string>(_arguments, WebArgTLVType.DocumentPath, null)?.TrimEnd('\0'),
+            };
+
+            BrowserUIResult uiResult = _system.Device.UIHandler.DisplayBrowserDialog(uiArgs);
+
             if ((_commonArguments.AppletVersion >= 0x80000 && _shimKind == ShimKind.Web) || (_commonArguments.AppletVersion >= 0x30000 && _shimKind == ShimKind.Share))
             {
                 List<BrowserOutput> result = new()
                 {
-                    new BrowserOutput(BrowserOutputType.ExitReason, (uint)WebExitReason.ExitButton),
+                    new BrowserOutput(BrowserOutputType.ExitReason, (uint)uiResult.ExitReason),
                 };
 
                 _normalSession.Push(BuildResponseNew(result));
@@ -57,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
             {
                 WebCommonReturnValue result = new()
                 {
-                    ExitReason = WebExitReason.ExitButton,
+                    ExitReason = uiResult.ExitReason,
                 };
 
                 _normalSession.Push(BuildResponseOld(result));
@@ -68,18 +81,33 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
             return ResultCode.Success;
         }
 
+        private static T GetArgument<T>(List<BrowserArgument> arguments, WebArgTLVType type, T defaultValue = default)
+        {
+            object value = arguments.Find(x => x.Type == type).GetValue();
+
+            if (value is T castValue)
+            {
+                return castValue;
+            }
+
+            return defaultValue;
+        }
+
         private static byte[] BuildResponseOld(WebCommonReturnValue result)
         {
             using MemoryStream stream = MemoryStreamManager.Shared.GetStream();
             using BinaryWriter writer = new(stream);
+
             writer.WriteStruct(result);
 
             return stream.ToArray();
         }
+
         private byte[] BuildResponseNew(List<BrowserOutput> outputArguments)
         {
             using MemoryStream stream = MemoryStreamManager.Shared.GetStream();
             using BinaryWriter writer = new(stream);
+
             writer.WriteStruct(new WebArgHeader
             {
                 Count = (ushort)outputArguments.Count,

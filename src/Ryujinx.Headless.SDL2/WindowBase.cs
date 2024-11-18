@@ -7,6 +7,7 @@ using Ryujinx.Graphics.GAL.Multithreading;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.HLE.HOS.Applets;
+using Ryujinx.HLE.HOS.Applets.Browser;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 using Ryujinx.HLE.UI;
 using Ryujinx.Input;
@@ -476,6 +477,14 @@ namespace Ryujinx.Headless.SDL2
             userText = "Ryujinx";
 
             return true;
+        }
+
+        public BrowserUIResult DisplayBrowserDialog(BrowserUIArgs args)
+        {
+            return new BrowserUIResult()
+            {
+                ExitReason = WebExitReason.ExitButton,
+            };
         }
 
         public bool DisplayMessageDialog(string title, string message)

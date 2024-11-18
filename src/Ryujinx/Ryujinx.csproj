@@ -43,7 +43,6 @@
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="DynamicData" />
     <PackageReference Include="FluentAvaloniaUI" />
-
     <PackageReference Include="OpenTK.Core" />
     <PackageReference Include="PeanutButter.INI" />
     <PackageReference Include="Ryujinx.Audio.OpenAL.Dependencies" Condition="'$(RuntimeIdentifier)' != 'linux-x64' AND '$(RuntimeIdentifier)' != 'linux-arm64' AND '$(RuntimeIdentifier)' != 'osx-x64' AND '$(RuntimeIdentifier)' != 'osx-arm64'" />
@@ -54,6 +53,7 @@
     <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" />
     <PackageReference Include="SPB" />
     <PackageReference Include="SharpZipLib" />
+    <PackageReference Include="WebViewControl-Avalonia" />
   </ItemGroup>
 
   <ItemGroup>
@@ -162,5 +162,10 @@
   </ItemGroup>
   <ItemGroup>
     <AdditionalFiles Include="Assets\Locales\en_US.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="UI\Applet\BrowserAppletWindow.axaml.cs">
+      <DependentUpon>BrowserAppletWindow.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>
