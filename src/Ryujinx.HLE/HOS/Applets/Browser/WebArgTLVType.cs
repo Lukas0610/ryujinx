@@ -12,6 +12,7 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
         ShareStartPage = 0x9,
         Whitelist = 0xA,
         NewsFlag = 0xB,
+        UnknownFlag0xC = 0xC,
         UserID = 0xE,
         AlbumEntry0 = 0xF,
         ScreenShotEnabled = 0x10,

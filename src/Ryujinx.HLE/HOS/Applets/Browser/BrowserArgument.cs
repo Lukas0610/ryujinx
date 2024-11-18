@@ -28,6 +28,7 @@ namespace Ryujinx.HLE.HOS.Applets.Browser
             { WebArgTLVType.SystemDataId,                   typeof(ulong) },
             { WebArgTLVType.Whitelist,                      typeof(string) },
             { WebArgTLVType.NewsFlag,                       typeof(bool) },
+            { WebArgTLVType.UnknownFlag0xC,                 typeof(bool) },
             { WebArgTLVType.UserID,                         typeof(UserId) },
             { WebArgTLVType.ScreenShotEnabled,              typeof(bool) },
             { WebArgTLVType.EcClientCertEnabled,            typeof(bool) },
