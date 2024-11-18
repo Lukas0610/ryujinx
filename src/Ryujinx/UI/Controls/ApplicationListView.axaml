@@ -61,7 +61,7 @@
                                     <ColumnDefinition Width="10" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="150" />
-                                    <ColumnDefinition Width="100" />
+                                    <ColumnDefinition Width="130" />
                                 </Grid.ColumnDefinitions>
                                 <Image
                                     Grid.RowSpan="3"
