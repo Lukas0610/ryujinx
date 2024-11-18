@@ -84,8 +84,9 @@ namespace Ryujinx.Ava.UI.Applet
 
                            ConfigurationState config = ConfigurationState.Instance;
                            GameConfigurationState gameConfig = config.Game;
+                           bool ingame = _parent.ViewModel.IsGameLoading || _parent.ViewModel.IsGameRunning;
 
-                           _parent.SettingsWindow = new SettingsWindow(config, gameConfig, false, _parent.VirtualFileSystem, _parent.ContentManager);
+                           _parent.SettingsWindow = new SettingsWindow(config, gameConfig, ingame, _parent.VirtualFileSystem, _parent.ContentManager);
 
                            await _parent.SettingsWindow.ShowDialog(window);
 

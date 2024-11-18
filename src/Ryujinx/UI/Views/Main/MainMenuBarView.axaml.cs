@@ -132,8 +132,9 @@ namespace Ryujinx.Ava.UI.Views.Main
         {
             ConfigurationState config = ConfigurationState.Instance;
             GameConfigurationState gameConfig = config.Game;
+            bool ingame = ViewModel.IsGameLoading || ViewModel.IsGameRunning;
 
-            Window.SettingsWindow = new(config, gameConfig, false, Window.VirtualFileSystem, Window.ContentManager);
+            Window.SettingsWindow = new(config, gameConfig, ingame, Window.VirtualFileSystem, Window.ContentManager);
 
             await Window.SettingsWindow.ShowDialog(Window);
 

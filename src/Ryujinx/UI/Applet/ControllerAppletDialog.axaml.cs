@@ -120,8 +120,9 @@ namespace Ryujinx.Ava.UI.Applet
                 {
                     ConfigurationState config = ConfigurationState.Instance;
                     GameConfigurationState gameConfig = config.Game;
+                    bool ingame = _mainWindow.ViewModel.IsGameLoading || _mainWindow.ViewModel.IsGameRunning;
 
-                    _mainWindow.SettingsWindow = new SettingsWindow(config, gameConfig, false, _mainWindow.VirtualFileSystem, _mainWindow.ContentManager);
+                    _mainWindow.SettingsWindow = new SettingsWindow(config, gameConfig, ingame, _mainWindow.VirtualFileSystem, _mainWindow.ContentManager);
                     _mainWindow.SettingsWindow.NavPanel.Content = _mainWindow.SettingsWindow.InputPage;
                     _mainWindow.SettingsWindow.NavPanel.SelectedItem = _mainWindow.SettingsWindow.NavPanel.MenuItems.ElementAt(1);
 
