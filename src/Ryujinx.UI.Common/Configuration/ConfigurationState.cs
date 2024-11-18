@@ -7,6 +7,7 @@ using Ryujinx.UI.Common.Helper;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 
 namespace Ryujinx.UI.Common.Configuration
 {
@@ -492,7 +493,7 @@ namespace Ryujinx.UI.Common.Configuration
                 configurationFileUpdated = true;
             }
 
-            Game = GameConfigurationState.Global();
+            Game ??= GameConfigurationState.Global();
             Game.Load(configurationFileFormat.Game);
 
             Logger.EnableFileLog.Value = configurationFileFormat.EnableFileLog;
@@ -553,6 +554,15 @@ namespace Ryujinx.UI.Common.Configuration
                 ToFileFormat().SaveConfig(configurationFilePath);
 
                 Ryujinx.Common.Logging.Logger.Notice.Print(LogClass.Application, $"Configuration file updated to version {ConfigurationFileFormat.CurrentVersion}");
+            }
+        }
+
+        public void Reload(string configurationFilePath)
+        {
+            if (File.Exists(configurationFilePath) &&
+                ConfigurationFileFormat.TryLoad(configurationFilePath, out ConfigurationFileFormat configFormat))
+            {
+                Load(configFormat, configurationFilePath);
             }
         }
 

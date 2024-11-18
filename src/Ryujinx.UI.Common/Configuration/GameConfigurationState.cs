@@ -10,6 +10,7 @@ using Ryujinx.UI.Common.Configuration.System;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text.Json.Nodes;
 
 namespace Ryujinx.UI.Common.Configuration
@@ -680,6 +681,15 @@ namespace Ryujinx.UI.Common.Configuration
             }
 
             EnableLogging = true;
+        }
+
+        public void Reload()
+        {
+            if (File.Exists(ConfigurationFilePath) &&
+                GameConfigurationFileFormat.TryLoad(ConfigurationFilePath, out GameConfigurationFileFormat gameConfigFormat))
+            {
+                Load(gameConfigFormat);
+            }
         }
 
         private static GraphicsBackend DefaultGraphicsBackend()

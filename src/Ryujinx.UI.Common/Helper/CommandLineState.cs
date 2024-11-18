@@ -8,10 +8,7 @@ namespace Ryujinx.UI.Common.Helper
     {
         public static string[] Arguments { get; private set; }
 
-        public static bool? OverrideDockedMode { get; private set; }
         public static bool? OverrideHardwareAcceleration { get; private set; }
-        public static string OverrideGraphicsBackend { get; private set; }
-        public static string OverrideHideCursor { get; private set; }
         public static string BaseDirPathArg { get; private set; }
         public static string Profile { get; private set; }
         public static string LaunchPathArg { get; private set; }
@@ -64,36 +61,9 @@ namespace Ryujinx.UI.Common.Helper
 
                         arguments.Add(arg);
                         break;
-                    case "-g":
-                    case "--graphics-backend":
-                        if (i + 1 >= args.Length)
-                        {
-                            Logger.Error?.Print(LogClass.Application, $"Invalid option '{arg}'");
-
-                            continue;
-                        }
-
-                        OverrideGraphicsBackend = args[++i];
-                        break;
                     case "-i":
                     case "--application-id":
                         LaunchApplicationId = args[++i];
-                        break;
-                    case "--docked-mode":
-                        OverrideDockedMode = true;
-                        break;
-                    case "--handheld-mode":
-                        OverrideDockedMode = false;
-                        break;
-                    case "--hide-cursor":
-                        if (i + 1 >= args.Length)
-                        {
-                            Logger.Error?.Print(LogClass.Application, $"Invalid option '{arg}'");
-
-                            continue;
-                        }
-
-                        OverrideHideCursor = args[++i];
                         break;
                     case "--software-gui":
                         OverrideHardwareAcceleration = false;

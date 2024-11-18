@@ -220,37 +220,6 @@ namespace Ryujinx.Ava
 
             UseHardwareAcceleration = ConfigurationState.Instance.EnableHardwareAcceleration.Value;
 
-            // Check if graphics backend was overridden
-            if (CommandLineState.OverrideGraphicsBackend != null)
-            {
-                if (CommandLineState.OverrideGraphicsBackend.ToLower() == "opengl")
-                {
-                    ConfigurationState.Instance.Game.Graphics.GraphicsBackend.Value = GraphicsBackend.OpenGl;
-                }
-                else if (CommandLineState.OverrideGraphicsBackend.ToLower() == "vulkan")
-                {
-                    ConfigurationState.Instance.Game.Graphics.GraphicsBackend.Value = GraphicsBackend.Vulkan;
-                }
-            }
-
-            // Check if docked mode was overriden.
-            if (CommandLineState.OverrideDockedMode.HasValue)
-            {
-                ConfigurationState.Instance.Game.System.EnableDockedMode.Value = CommandLineState.OverrideDockedMode.Value;
-            }
-
-            // Check if HideCursor was overridden.
-            if (CommandLineState.OverrideHideCursor is not null)
-            {
-                ConfigurationState.Instance.Game.HideCursor.Value = CommandLineState.OverrideHideCursor!.ToLower() switch
-                {
-                    "never" => HideCursorMode.Never,
-                    "onidle" => HideCursorMode.OnIdle,
-                    "always" => HideCursorMode.Always,
-                    _ => ConfigurationState.Instance.Game.HideCursor.Value,
-                };
-            }
-
             // Check if hardware-acceleration was overridden.
             if (CommandLineState.OverrideHardwareAcceleration != null)
             {
