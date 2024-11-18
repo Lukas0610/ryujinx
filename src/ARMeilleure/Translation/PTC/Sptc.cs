@@ -413,6 +413,10 @@ namespace ARMeilleure.Translation.PTC
             ulong numOfStubbedFunctions = 0;
             ulong numOfCorruptedEntries = 0;
 
+            Stopwatch chrono = new();
+
+            chrono.Start();
+
             while (_fileStream.Position < _fileStream.Length)
             {
                 long currentEntryStreamStart = _fileStream.Position;
@@ -554,7 +558,17 @@ namespace ARMeilleure.Translation.PTC
 
                     Interlocked.Increment(ref numOfStubbedFunctions);
                 }
+
+                TimeSpan chronoElapsed = chrono.Elapsed;
+
+                if (chronoElapsed.TotalSeconds >= 1.0)
+                {
+                    Logger.Info?.Print(LogClass.Ptc, $"Loading functions from streaming translation cache, {translator.Functions.Count} function(s) done");
+                    chrono.Restart();
+                }
             }
+
+            chrono.Stop();
 
             Debug.Assert(_fileStream.Position == _fileStream.Length);
 

@@ -100,6 +100,8 @@ namespace ARMeilleure.Translation
         {
             if (Interlocked.Increment(ref _threadCount) == 1)
             {
+                Optimizations.LogOptimizations();
+
                 if (_ptc.State == PtcState.Enabled)
                 {
                     Debug.Assert(Functions.Count == 0);

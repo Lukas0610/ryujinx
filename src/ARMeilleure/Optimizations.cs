@@ -106,7 +106,7 @@ namespace ARMeilleure
             nameof(UseAvx512OrthoFloat),
         };
 
-        static Optimizations()
+        internal static void LogOptimizations()
         {
             string[] optimizationPropertyNames = (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
                 ? Arm64OptimizationPropertyNames
@@ -124,7 +124,7 @@ namespace ARMeilleure
                 propertyDisplayStrings.Add($"\t\t{propertyName.PadRight(propertyNameMaxLength, ' ')} = {propertyValue}");
             }
 
-            Logger.Info?.Print(LogClass.Cpu, $"\n{string.Join("\n", propertyDisplayStrings)}");
+            Logger.Info?.Print(LogClass.Cpu, $"\n{string.Join("\n", propertyDisplayStrings)}", nameof(Optimizations));
         }
     }
 }
