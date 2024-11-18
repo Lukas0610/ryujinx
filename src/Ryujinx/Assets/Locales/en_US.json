@@ -837,5 +837,7 @@
   "SettingsUseCustomGameConfig": "Use custom Game-Settings",
   "MenuBarOptionsOpenApplicationSettings": "Open Game-Settings",
   "DialogGameBootTimeSettingsChangedWhileIngame": "Boot-Time game settings have been changed",
-  "DialogGameBootTimeSettingsChangedWhileIngameMessage": "Some settings you have changed are only applied when the game is starting. To apply those settings, you have to restart the game."
+  "DialogGameBootTimeSettingsChangedWhileIngameMessage": "Some settings you have changed are only applied when the game is starting. To apply those settings, you have to restart the game.",
+  "DialogUseCustomGameConfigChangedWhileIngame": "Game-Settings enabled/disabled while ingame",
+  "DialogUseCustomGameConfigChangedWhileIngameMessage": "You enabled/disabled per-game settings while ingame. To apply the changed per-game settings, you have to restart the game."
 }

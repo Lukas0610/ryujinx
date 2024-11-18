@@ -305,7 +305,7 @@ namespace Ryujinx.Ava.UI.Controls
 
             if (viewModel?.SelectedApplication != null)
             {
-                await viewModel.OpenApplicationSettings(viewModel.SelectedApplication.GameConfig, false);
+                await viewModel.OpenApplicationSettings(viewModel.SelectedApplication.GameConfig, false, false);
             }
         }
 

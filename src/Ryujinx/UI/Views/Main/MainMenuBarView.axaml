@@ -157,8 +157,7 @@
                 <Separator />
                 <MenuItem
                     Click="OpenApplicationSettings_Click"
-                    Header="{locale:Locale MenuBarOptionsOpenApplicationSettings}"
-                    IsEnabled="{Binding !GameConfigIsGlobal}" />
+                    Header="{locale:Locale MenuBarOptionsOpenApplicationSettings}" />
                 <Separator />
                 <MenuItem
                     Name="ScanAmiiboMenuItem"

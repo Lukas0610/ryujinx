@@ -139,6 +139,7 @@ namespace Ryujinx.Ava
         public event EventHandler<StatusUpdatedEventArgs> StatusUpdatedEvent;
 
         public GameConfigurationState GameConfig { get; }
+        public GameConfigurationState ApplicationGameConfig { get; }
         public VirtualFileSystem VirtualFileSystem { get; }
         public ContentManager ContentManager { get; }
         public NpadManager NpadManager { get; }
@@ -154,6 +155,7 @@ namespace Ryujinx.Ava
 
         public AppHost(
             GameConfigurationState gameConfig,
+            GameConfigurationState appGameConfig,
             RendererHost renderer,
             InputManager inputManager,
             string applicationPath,
@@ -184,6 +186,7 @@ namespace Ryujinx.Ava
                 : CursorStates.CursorIsHidden;
 
             GameConfig = gameConfig;
+            ApplicationGameConfig = appGameConfig;
             NpadManager = _inputManager.CreateNpadManager();
             TouchScreenManager = _inputManager.CreateTouchScreenManager();
             ApplicationPath = applicationPath;

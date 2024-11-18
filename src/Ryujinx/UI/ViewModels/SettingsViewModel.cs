@@ -279,12 +279,14 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool IsGameConfig { get; }
 
+        public bool IsGameConfigInactive { get; }
+
         public AvaloniaList<string> GameDirectories { get; set; }
 
         public ObservableCollection<ComboBoxItem> AvailableGpus { get; set; }
 
         public bool CanChangeUseCustomGameConfig
-            => !IsGlobalConfig && !IsIngame;
+            => !IsGlobalConfig;
 
         public bool IsConfigEnabled
             => IsGlobalConfigEnabled || IsGameConfigEnabled;
@@ -334,8 +336,8 @@ namespace Ryujinx.Ava.UI.ViewModels
             get => new(_networkInterfaces.Keys);
         }
 
-        public SettingsViewModel(ConfigurationState config, GameConfigurationState gameConfig, bool ingame, VirtualFileSystem virtualFileSystem, ContentManager contentManager)
-            : this(config, gameConfig, ingame)
+        public SettingsViewModel(ConfigurationState config, GameConfigurationState gameConfig, bool ingame, bool isGameConfigInactive, VirtualFileSystem virtualFileSystem, ContentManager contentManager)
+            : this(config, gameConfig, ingame, isGameConfigInactive)
         {
             _virtualFileSystem = virtualFileSystem;
             _contentManager = contentManager;
@@ -346,7 +348,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public SettingsViewModel(ConfigurationState config, GameConfigurationState gameConfig, bool ingame)
+        public SettingsViewModel(ConfigurationState config, GameConfigurationState gameConfig, bool ingame, bool isGameConfigInactive)
         {
             Config = config;
             GameConfig = gameConfig;
@@ -354,6 +356,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             IsIngame = ingame;
             IsGlobalConfig = gameConfig.IsGlobalState;
             IsGameConfig = !gameConfig.IsGlobalState;
+            IsGameConfigInactive = isGameConfigInactive;
 
             GameDirectories = new AvaloniaList<string>();
             TimeZones = new AvaloniaList<TimeZone>();
@@ -446,6 +449,19 @@ namespace Ryujinx.Ava.UI.ViewModels
         {
             switch (e.PropertyName)
             {
+                case nameof(UseCustomGameConfig):
+                    if (IsGameConfigInactive && GameConfig.UseGameConfig != UseCustomGameConfig)
+                    {
+                        Dispatcher.UIThread.InvokeAsync(() =>
+                            ContentDialogHelper.CreateInfoDialog(
+                                LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogUseCustomGameConfigChangedWhileIngame),
+                                LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogUseCustomGameConfigChangedWhileIngameMessage),
+                                LocaleManager.Instance[LocaleKeys.InputDialogOk],
+                                "",
+                                LocaleManager.Instance[LocaleKeys.RyujinxInfo])
+                        );
+                    }
+                    break;
                 case nameof(GraphicsBackendMultithreadingIndex):
                     if (GraphicsBackendMultithreadingIndex != (int)GameConfig.Graphics.BackendThreading.Value)
                     {

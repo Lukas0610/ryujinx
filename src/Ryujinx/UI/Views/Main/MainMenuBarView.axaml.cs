@@ -106,10 +106,21 @@ namespace Ryujinx.Ava.UI.Views.Main
         private async void OpenApplicationSettings_Click(object sender, RoutedEventArgs e)
         {
             GameConfigurationState gameConfig = Window.ViewModel.AppHost?.GameConfig;
+            GameConfigurationState appGameConfig = Window.ViewModel.AppHost?.ApplicationGameConfig;
 
+            // As `gameConfig` may be the global game-config provided by  `ConfigurationState.Instance.Game`,
+            // we should not let the user modify the global configuration by pressing on a button called
+            // "Open Game-Settings", which obviously is going to be confusing.
+            //
+            // For that reason, the actual app-config was also provided to AppHost on creation, allowing us
+            // to modify the actual per-game configuration if the active game-config is the global config.
             if (gameConfig != null && !gameConfig.IsGlobalState)
             {
-                await Window.ViewModel.OpenApplicationSettings(gameConfig, true);
+                await Window.ViewModel.OpenApplicationSettings(gameConfig, true, false);
+            }
+            else if (appGameConfig != null && !appGameConfig.IsGlobalState)
+            {
+                await Window.ViewModel.OpenApplicationSettings(appGameConfig, true, true);
             }
         }
 
@@ -134,7 +145,7 @@ namespace Ryujinx.Ava.UI.Views.Main
             GameConfigurationState gameConfig = config.Game;
             bool ingame = ViewModel.IsGameLoading || ViewModel.IsGameRunning;
 
-            Window.SettingsWindow = new(config, gameConfig, ingame, Window.VirtualFileSystem, Window.ContentManager);
+            Window.SettingsWindow = new(config, gameConfig, ingame, false, Window.VirtualFileSystem, Window.ContentManager);
 
             await Window.SettingsWindow.ShowDialog(Window);
 

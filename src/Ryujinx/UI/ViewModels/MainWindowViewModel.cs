@@ -1650,11 +1650,11 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        public async Task OpenApplicationSettings(GameConfigurationState gameConfig, bool ingame)
+        public async Task OpenApplicationSettings(GameConfigurationState gameConfig, bool ingame, bool isGameConfigInactive)
         {
             ConfigurationState config = ConfigurationState.Instance;
 
-            MainWindow.SettingsWindow = new SettingsWindow(config, gameConfig, ingame, VirtualFileSystem, ContentManager);
+            MainWindow.SettingsWindow = new SettingsWindow(config, gameConfig, ingame, isGameConfigInactive, VirtualFileSystem, ContentManager);
 
             await MainWindow.SettingsWindow.ShowDialog(MainWindow);
 
@@ -1677,15 +1677,11 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             // @remark: don't forget the per-game settings-view
             GameConfigurationState gameConfig = ConfigurationState.Instance.Game;
+            GameConfigurationState appGameConfig = SelectedApplication.GameConfig;
 
-            if (SelectedApplication.GameConfig != null)
+            if (appGameConfig != null && !appGameConfig.IsGlobalState && appGameConfig.UseGameConfig)
             {
-                GameConfigurationState appGameConfig = SelectedApplication.GameConfig;
-
-                if (!appGameConfig.IsGlobalState && appGameConfig.UseGameConfig)
-                {
-                    gameConfig = appGameConfig;
-                }
+                gameConfig = appGameConfig;
             }
 
             GameConfigIsGlobal = gameConfig.IsGlobalState;
@@ -1710,6 +1706,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             AppHost = new AppHost(
                 gameConfig,
+                appGameConfig,
                 RendererHostControl,
                 InputManager,
                 application.Path,

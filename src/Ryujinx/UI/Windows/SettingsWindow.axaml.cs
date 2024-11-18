@@ -19,11 +19,11 @@ namespace Ryujinx.Ava.UI.Windows
 
         internal SettingsViewModel ViewModel { get; set; }
 
-        public SettingsWindow(ConfigurationState config, GameConfigurationState gameConfig, bool ingame, VirtualFileSystem virtualFileSystem, ContentManager contentManager)
+        public SettingsWindow(ConfigurationState config, GameConfigurationState gameConfig, bool ingame, bool isGameConfigInactive, VirtualFileSystem virtualFileSystem, ContentManager contentManager)
         {
             Title = $"Ryujinx {Program.Version} - {LocaleManager.Instance[LocaleKeys.Settings]}";
 
-            ViewModel = new SettingsViewModel(config, gameConfig, ingame, virtualFileSystem, contentManager);
+            ViewModel = new SettingsViewModel(config, gameConfig, ingame, isGameConfigInactive, virtualFileSystem, contentManager);
             DataContext = ViewModel;
 
             ViewModel.CloseWindow += Close;
@@ -39,7 +39,7 @@ namespace Ryujinx.Ava.UI.Windows
         {
             ConfigurationState config = ConfigurationState.Instance;
 
-            ViewModel = new SettingsViewModel(config, config.Game, false);
+            ViewModel = new SettingsViewModel(config, config.Game, false, false);
             DataContext = ViewModel;
 
             InitializeComponent();
@@ -50,19 +50,14 @@ namespace Ryujinx.Ava.UI.Windows
 
         public async void SaveSettings()
         {
-            if (ViewModel.IsIngame)
+            if (ViewModel.IsIngame && _gameBootTimeConfigurationObservers.Any(x => x.HasChanged))
             {
-                bool hasAnyGameBootTimeConfigurationChanged = _gameBootTimeConfigurationObservers.Any(x => x.HasChanged);
-
-                if (hasAnyGameBootTimeConfigurationChanged)
-                {
-                    await ContentDialogHelper.CreateInfoDialog(
-                        LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogGameBootTimeSettingsChangedWhileIngame),
-                        LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogGameBootTimeSettingsChangedWhileIngameMessage),
-                        LocaleManager.Instance[LocaleKeys.InputDialogOk],
-                        "",
-                        LocaleManager.Instance[LocaleKeys.RyujinxInfo]);
-                }
+                await ContentDialogHelper.CreateInfoDialog(
+                    LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogGameBootTimeSettingsChangedWhileIngame),
+                    LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogGameBootTimeSettingsChangedWhileIngameMessage),
+                    LocaleManager.Instance[LocaleKeys.InputDialogOk],
+                    "",
+                    LocaleManager.Instance[LocaleKeys.RyujinxInfo]);
             }
 
             InputPage.InputView?.SaveCurrentProfile();
