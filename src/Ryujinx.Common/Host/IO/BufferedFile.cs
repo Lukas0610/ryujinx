@@ -24,6 +24,7 @@ namespace Ryujinx.Common.Host.IO
         private long _length;
         private int _pageCount;
 
+        private int _prefetched = 0;
         private int _opened = 0;
         private int _disposed = 0;
 
@@ -146,6 +147,12 @@ namespace Ryujinx.Common.Host.IO
                              HostFileSystemRequestProgressDelegate progressDelegate)
         {
             ObjectDisposedException.ThrowIf(IsDisposed(), this);
+
+            if (Interlocked.CompareExchange(ref _prefetched, 1, 0) != 0)
+            {
+                // Only run prefetch on this file-object once
+                return true;
+            }
 
             bool success = true;
 
