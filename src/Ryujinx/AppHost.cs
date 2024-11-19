@@ -132,7 +132,7 @@ namespace Ryujinx.Ava
 
         private readonly string _crashMarkerFilePath;
 
-        private readonly object _lockObject = new();
+        private readonly Lock _lockObject = new();
 
         public event EventHandler AppExit;
         public event EventHandler<StatusInitEventArgs> StatusInitEvent;

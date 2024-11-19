@@ -3,6 +3,7 @@ using Ryujinx.Horizon.Sdk.Fs;
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 
 namespace Ryujinx.Horizon.Sdk.Ngc.Detail
 {
@@ -22,13 +23,13 @@ namespace Ryujinx.Horizon.Sdk.Ngc.Detail
         }
 
         private readonly IFsClient _fsClient;
-        private readonly object _lock;
+        private readonly Lock _lock;
         private bool _intialized;
         private ulong _cacheSize;
 
         public ContentsReader(IFsClient fsClient)
         {
-            _lock = new();
+            _lock = new Lock();
             _fsClient = fsClient;
         }
 

@@ -5,13 +5,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 {
     static class KConditionVariable
     {
-        public static void Wait(KernelContext context, LinkedList<KThread> threadList, object mutex, long timeout)
+        public static void Wait(KernelContext context, LinkedList<KThread> threadList, Lock mutex, long timeout)
         {
             KThread currentThread = KernelStatic.GetCurrentThread();
 
             context.CriticalSection.Enter();
 
-            Monitor.Exit(mutex);
+            mutex.Exit();
 
             currentThread.Withholder = threadList;
 
@@ -44,7 +44,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
                 }
             }
 
-            Monitor.Enter(mutex);
+            mutex.Enter();
         }
 
         public static void NotifyAll(KernelContext context, LinkedList<KThread> threadList)

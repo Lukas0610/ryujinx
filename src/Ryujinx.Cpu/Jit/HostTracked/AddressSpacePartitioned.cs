@@ -4,6 +4,7 @@ using Ryujinx.Memory.Tracking;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Ryujinx.Cpu.Jit.HostTracked
 {
@@ -18,11 +19,13 @@ namespace Ryujinx.Cpu.Jit.HostTracked
         private readonly Action<ulong, IntPtr, ulong> _updatePtCallback;
         private readonly bool _useProtectionMirrors;
 
+        private readonly Lock _lock = new();
+
         public AddressSpacePartitioned(MemoryTracking tracking, MemoryBlock backingMemory, NativePageTable nativePageTable, bool useProtectionMirrors)
         {
             _backingMemory = backingMemory;
             _partitions = new();
-            _asAllocator = new(tracking, nativePageTable.Read, _partitions);
+            _asAllocator = new(tracking, nativePageTable.Read, _lock);
             _updatePtCallback = nativePageTable.Update;
             _useProtectionMirrors = useProtectionMirrors;
         }
@@ -31,7 +34,7 @@ namespace Ryujinx.Cpu.Jit.HostTracked
         {
             ulong endVa = va + size;
 
-            lock (_partitions)
+            lock (_lock)
             {
                 EnsurePartitionsLocked(va, size);
 
@@ -62,7 +65,7 @@ namespace Ryujinx.Cpu.Jit.HostTracked
             {
                 AddressSpacePartition partition;
 
-                lock (_partitions)
+                lock (_lock)
                 {
                     int partitionIndex = FindPartitionIndexLocked(va);
                     if (partitionIndex < 0)
@@ -95,7 +98,7 @@ namespace Ryujinx.Cpu.Jit.HostTracked
         {
             ulong endVa = va + size;
 
-            lock (_partitions)
+            lock (_lock)
             {
                 while (va < endVa)
                 {
@@ -236,7 +239,7 @@ namespace Ryujinx.Cpu.Jit.HostTracked
 
         private AddressSpacePartition FindPartition(ulong va)
         {
-            lock (_partitions)
+            lock (_lock)
             {
                 int index = FindPartitionIndexLocked(va);
                 if (index >= 0)
@@ -250,7 +253,7 @@ namespace Ryujinx.Cpu.Jit.HostTracked
 
         private AddressSpacePartition FindPartitionWithIndex(ulong va, out int index)
         {
-            lock (_partitions)
+            lock (_lock)
             {
                 index = FindPartitionIndexLocked(va);
                 if (index >= 0)

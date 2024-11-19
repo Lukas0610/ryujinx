@@ -49,7 +49,7 @@ namespace ARMeilleure.Translation.PTC
 
         private MemoryManagerType _memoryMode;
 
-        private readonly object _writeCompiledFunctionLock;
+        private readonly Lock _writeCompiledFunctionLock;
         private readonly List<ulong> _writtenCompiledFunctions;
 
         private readonly BlockingCollection<EnqueuedCompiledFunction> _bgSaveQueue;
@@ -90,7 +90,7 @@ namespace ARMeilleure.Translation.PTC
 
             _cacheFlags = cacheFlags;
 
-            _writeCompiledFunctionLock = new object();
+            _writeCompiledFunctionLock = new Lock();
             _writtenCompiledFunctions = new List<ulong>();
 
             _bgSaveQueue = new BlockingCollection<EnqueuedCompiledFunction>(new ConcurrentQueue<EnqueuedCompiledFunction>());

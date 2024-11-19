@@ -24,7 +24,7 @@ namespace ARMeilleure.Translation.PTC
 
         private readonly Sptc _ptc;
         private readonly ManualResetEvent _waitEvent;
-        private readonly object _lock;
+        private readonly Lock _lock;
 
         private readonly BlockingCollection<FuncProfile> _bgSaveQueue;
         private readonly Thread _bgSaveThread;
@@ -52,7 +52,7 @@ namespace ARMeilleure.Translation.PTC
         {
             _ptc = ptc;
             _waitEvent = new ManualResetEvent(true);
-            _lock = new object();
+            _lock = new Lock();
 
             _bgSaveQueue = new BlockingCollection<FuncProfile>(new ConcurrentQueue<FuncProfile>());
             _bgSaveThread = new Thread(BackgroundSaveThreadStart)

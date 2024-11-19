@@ -22,6 +22,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.FileSystem
@@ -56,7 +57,7 @@ namespace Ryujinx.HLE.FileSystem
         private readonly VirtualFileSystem _virtualFileSystem;
         private readonly HostFileSystem _hostFileSystem;
 
-        private readonly object _lock = new();
+        private readonly Lock _lock = new();
 
         public ContentManager(VirtualFileSystem virtualFileSystem, HostFileSystem hostFileSystem)
         {

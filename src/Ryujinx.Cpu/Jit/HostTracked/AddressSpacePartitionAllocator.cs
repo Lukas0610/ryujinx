@@ -3,6 +3,7 @@ using Ryujinx.Common.Collections;
 using Ryujinx.Memory;
 using Ryujinx.Memory.Tracking;
 using System;
+using System.Threading;
 
 namespace Ryujinx.Cpu.Jit.HostTracked
 {
@@ -115,9 +116,9 @@ namespace Ryujinx.Cpu.Jit.HostTracked
             }
 
             private readonly AddressIntrusiveRedBlackTree<Mapping> _mappingTree;
-            private readonly object _lock;
+            private readonly Lock _lock;
 
-            public Block(MemoryTracking tracking, Func<ulong, ulong> readPtCallback, MemoryBlock memory, ulong size, object locker) : base(memory, size)
+            public Block(MemoryTracking tracking, Func<ulong, ulong> readPtCallback, MemoryBlock memory, ulong size, Lock locker) : base(memory, size)
             {
                 _tracking = tracking;
                 _readPtCallback = readPtCallback;
@@ -174,12 +175,12 @@ namespace Ryujinx.Cpu.Jit.HostTracked
 
         private readonly MemoryTracking _tracking;
         private readonly Func<ulong, ulong> _readPtCallback;
-        private readonly object _lock;
+        private readonly Lock _lock;
 
         public AddressSpacePartitionAllocator(
             MemoryTracking tracking,
             Func<ulong, ulong> readPtCallback,
-            object locker) : base(DefaultBlockAlignment, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible)
+            Lock locker) : base(DefaultBlockAlignment, MemoryAllocationFlags.Reserve | MemoryAllocationFlags.ViewCompatible)
         {
             _tracking = tracking;
             _readPtCallback = readPtCallback;

@@ -115,7 +115,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Threading
 
         public CPUSet HostCPUSet { get; private set; }
 
-        private readonly object _activityOperationLock = new();
+        private readonly Lock _activityOperationLock = new();
 
         public KThread(KernelContext context) : base(context)
         {
