@@ -29,6 +29,7 @@ namespace Ryujinx.HLE
         public Hid Hid { get; }
         public TamperMachine TamperMachine { get; }
         public IHostUIHandler UIHandler { get; }
+        public ApplicationDocumentRegistry ApplicationDocumentRegistry { get; }
 
         public bool EnableDeviceVsync { get; set; } = true;
 
@@ -73,6 +74,8 @@ namespace Ryujinx.HLE
             System.FsIntegrityCheckLevel            = Configuration.FsIntegrityCheckLevel;
             System.GlobalAccessLogMode              = Configuration.FsGlobalAccessLogMode;
 #pragma warning restore IDE0055
+
+            ApplicationDocumentRegistry = new ApplicationDocumentRegistry(this);
         }
 
         public bool LoadCart(string exeFsDir, string romFsFile = null)

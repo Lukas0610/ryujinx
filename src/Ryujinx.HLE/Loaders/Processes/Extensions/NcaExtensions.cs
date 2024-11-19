@@ -128,22 +128,22 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
             return nca.Header.ContentType == NcaContentType.Control;
         }
 
-        public static (Nca, Nca) GetUpdateData(this Nca mainNca, VirtualFileSystem fileSystem, HostFileSystem hostFileSystem, IntegrityCheckLevel checkLevel, int programIndex, out string updatePath)
+        public static ContentMetaData GetUpdateContent(this Nca mainNca, VirtualFileSystem fileSystem, HostFileSystem hostFileSystem, IntegrityCheckLevel checkLevel, int programIndex, out string updatePath)
         {
             updatePath = null;
 
-            // Load Update NCAs.
-            Nca updatePatchNca = null;
-            Nca updateControlNca = null;
+            ContentMetaData updateContent = null;
 
             // Clear the program index part.
             ulong titleIdBase = mainNca.GetProgramIdBase();
 
             // Load update information if exists.
             string titleUpdateMetadataPath = Path.Combine(AppDataManager.GamesDirPath, titleIdBase.ToString("x16"), "updates.json");
+
             if (File.Exists(titleUpdateMetadataPath))
             {
                 updatePath = JsonHelper.DeserializeFromFile(titleUpdateMetadataPath, _applicationSerializerContext.TitleUpdateMetadata).Selected;
+
                 if (File.Exists(updatePath))
                 {
                     IFileSystem updatePartitionFileSystem = PartitionFileSystemUtils.OpenApplicationFileSystem(updatePath, fileSystem, hostFileSystem);
@@ -155,11 +155,27 @@ namespace Ryujinx.HLE.Loaders.Processes.Extensions
                             continue;
                         }
 
-                        updatePatchNca = content.GetNcaByType(fileSystem.KeySet, ContentType.Program, programIndex);
-                        updateControlNca = content.GetNcaByType(fileSystem.KeySet, ContentType.Control, programIndex);
+                        updateContent = content;
                         break;
                     }
                 }
+            }
+
+            return updateContent;
+        }
+
+        public static (Nca, Nca) GetUpdateData(this Nca mainNca, VirtualFileSystem fileSystem, HostFileSystem hostFileSystem, IntegrityCheckLevel checkLevel, int programIndex, out string updatePath)
+        {
+            ContentMetaData content = GetUpdateContent(mainNca, fileSystem, hostFileSystem, checkLevel, programIndex, out updatePath);
+
+            // Load Update NCAs.
+            Nca updatePatchNca = null;
+            Nca updateControlNca = null;
+
+            if (content != null)
+            {
+                updatePatchNca = content.GetNcaByType(fileSystem.KeySet, ContentType.Program, programIndex);
+                updateControlNca = content.GetNcaByType(fileSystem.KeySet, ContentType.Control, programIndex);
             }
 
             return (updatePatchNca, updateControlNca);

@@ -14,7 +14,16 @@
     Height="720"
     CanResize="False"
     Focusable="True">
+    
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Escape" Command="{Binding Close}" />
+        <KeyBinding Gesture="F12" Command="{Binding ShowWebViewDevTools}" />
+    </Window.KeyBindings>
 
-    <webview:WebView x:Name="WebView" Focusable="True" />
+    <webview:WebView x:Name="WebView"
+                     Focusable="True"
+                     AllowDeveloperTools="True"
+                     DisableBuiltinContextMenus="True"
+                     DisableFileDialogs="True "/>
     
 </Window>

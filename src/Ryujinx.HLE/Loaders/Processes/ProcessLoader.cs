@@ -90,6 +90,8 @@ namespace Ryujinx.HLE.Loaders.Processes
             PartitionFileSystem partitionFileSystem = new();
             partitionFileSystem.Initialize(file.AsStorage()).ThrowIfFailure();
 
+            _device.ApplicationDocumentRegistry.InitializeFromNsp(partitionFileSystem, applicationId);
+
             (bool success, ProcessResult processResult) = partitionFileSystem.TryLoad(_device, path, applicationId, out string errorMessage);
 
             if (processResult.ProcessId == 0)
