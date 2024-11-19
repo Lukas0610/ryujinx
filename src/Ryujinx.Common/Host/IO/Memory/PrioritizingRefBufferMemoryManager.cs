@@ -191,6 +191,8 @@ namespace Ryujinx.Common.Host.IO.Memory
                 if (oldestNode != null)
                 {
                     oldestNode.Value.Evict();
+                    RemovePageNode(oldestNode);
+
                     Interlocked.Increment(ref _counterEvictedPages);
 
                     return true;
