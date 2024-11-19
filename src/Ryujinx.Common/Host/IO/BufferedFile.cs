@@ -18,7 +18,7 @@ namespace Ryujinx.Common.Host.IO
         private readonly bool _disposeWithLastStream;
         private readonly bool _closeFileStreamAfterPrefetching;
 
-        private readonly SemaphoreSlim _lock = new(1, 1);
+        private readonly Lock _lock = new();
 
         private FileStream _fileStream;
         private long _length;
@@ -95,7 +95,7 @@ namespace Ryujinx.Common.Host.IO
         /// </summary>
         public void Open()
         {
-            _lock.Wait();
+            _lock.Enter();
             try
             {
                 // Only allow to initialize/open an instance once.
@@ -119,7 +119,7 @@ namespace Ryujinx.Common.Host.IO
             }
             finally
             {
-                _lock.Release();
+                _lock.Exit();
             }
         }
 

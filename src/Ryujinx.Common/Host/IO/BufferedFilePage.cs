@@ -10,7 +10,7 @@ namespace Ryujinx.Common.Host.IO
         private static ulong _globalIdentifierCounter;
 
         private readonly BufferedFile _file;
-        private readonly SemaphoreSlim _evictionLock;
+        private readonly Lock _evictionLock;
 
         private SemaphoreSlim _lock;
 
@@ -36,7 +36,7 @@ namespace Ryujinx.Common.Host.IO
 
             _file = file;
             _lock = new SemaphoreSlim(1, int.MaxValue);
-            _evictionLock = new SemaphoreSlim(1, 1);
+            _evictionLock = new Lock();
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Ryujinx.Common.Host.IO
         /// </summary>
         public void Evict()
         {
-            _evictionLock.Wait();
+            _evictionLock.Enter();
             try
             {
                 _file.MemoryManager.FreePage(this);
@@ -55,20 +55,20 @@ namespace Ryujinx.Common.Host.IO
             }
             finally
             {
-                _evictionLock.Release();
+                _evictionLock.Exit();
             }
         }
 
         internal void AcquireLock()
         {
-            _evictionLock.Wait();
+            _evictionLock.Enter();
             try
             {
                 _lock.Wait();
             }
             finally
             {
-                _evictionLock.Release();
+                _evictionLock.Exit();
             }
         }
 

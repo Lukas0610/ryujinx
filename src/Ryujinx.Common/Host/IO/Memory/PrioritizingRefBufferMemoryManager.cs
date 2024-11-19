@@ -22,8 +22,8 @@ namespace Ryujinx.Common.Host.IO.Memory
         private readonly PrioritizedLinkedList<BufferedFilePage>[] _tables;
         private readonly Dictionary<ulong, LinkedListNode<BufferedFilePage>> _index;
 
-        private readonly SemaphoreSlim _indexLock = new SemaphoreSlim(1, 1);
-        private readonly SemaphoreSlim _evictionLock = new SemaphoreSlim(1, 1);
+        private readonly Lock _indexLock = new Lock();
+        private readonly Lock _evictionLock = new Lock();
 
         private long _currentSize;
 
@@ -66,19 +66,19 @@ namespace Ryujinx.Common.Host.IO.Memory
         {
             LinkedListNode<BufferedFilePage> node;
 
-            _indexLock.Wait();
+            _indexLock.Enter();
             try
             {
                 if (!_index.TryGetValue(page.GlobalIdentifier, out node))
                 {
-                    _tables[0].Lock.Wait();
+                    _tables[0].Lock.Enter();
                     try
                     {
                         node = _tables[0].AddLast(page);
                     }
                     finally
                     {
-                        _tables[0].Lock.Release();
+                        _tables[0].Lock.Exit();
                     }
 
                     _index[page.GlobalIdentifier] = node;
@@ -90,7 +90,7 @@ namespace Ryujinx.Common.Host.IO.Memory
             }
             finally
             {
-                _indexLock.Release();
+                _indexLock.Exit();
             }
 
             lock (node)
@@ -102,24 +102,24 @@ namespace Ryujinx.Common.Host.IO.Memory
                 {
                     PrioritizedLinkedList<BufferedFilePage> nextTable = _tables[nextPriority];
 
-                    currentTable.Lock.Wait();
+                    currentTable.Lock.Enter();
                     try
                     {
                         currentTable.Remove(node);
                     }
                     finally
                     {
-                        currentTable.Lock.Release();
+                        currentTable.Lock.Exit();
                     }
 
-                    nextTable.Lock.Wait();
+                    nextTable.Lock.Enter();
                     try
                     {
                         nextTable.AddFirst(node);
                     }
                     finally
                     {
-                        nextTable.Lock.Release();
+                        nextTable.Lock.Exit();
                     }
                 }
             }
@@ -130,7 +130,7 @@ namespace Ryujinx.Common.Host.IO.Memory
         {
             LinkedListNode<BufferedFilePage> node;
 
-            _indexLock.Wait();
+            _indexLock.Enter();
             try
             {
                 if (!_index.TryGetValue(page.GlobalIdentifier, out node))
@@ -138,7 +138,7 @@ namespace Ryujinx.Common.Host.IO.Memory
             }
             finally
             {
-                _indexLock.Release();
+                _indexLock.Exit();
             }
 
             RemovePageNode(node);
@@ -155,7 +155,7 @@ namespace Ryujinx.Common.Host.IO.Memory
             if (!ShouldEvict())
                 return 0;
 
-            _evictionLock.Wait();
+            _evictionLock.Enter();
             try
             {
                 while (ShouldEvict() && hasEvicted)
@@ -170,7 +170,7 @@ namespace Ryujinx.Common.Host.IO.Memory
             }
             finally
             {
-                _evictionLock.Release();
+                _evictionLock.Exit();
             }
 
             return evictions;
@@ -206,24 +206,24 @@ namespace Ryujinx.Common.Host.IO.Memory
         {
             var table = (PrioritizedLinkedList<BufferedFilePage>)node.List;
 
-            _indexLock.Wait();
+            _indexLock.Enter();
             try
             {
                 _index.Remove(node.Value.GlobalIdentifier);
             }
             finally
             {
-                _indexLock.Release();
+                _indexLock.Exit();
             }
 
-            table.Lock.Wait();
+            table.Lock.Enter();
             try
             {
                 table.Remove(node);
             }
             finally
             {
-                table.Lock.Release();
+                table.Lock.Exit();
             }
 
             Interlocked.Add(ref _currentSize, -node.Value.Size);
@@ -234,13 +234,13 @@ namespace Ryujinx.Common.Host.IO.Memory
 
             public int Priority { get; }
 
-            public SemaphoreSlim Lock { get; }
+            public Lock Lock { get; }
 
             public PrioritizedLinkedList(int priority)
                 : base()
             {
                 Priority = priority;
-                Lock = new SemaphoreSlim(1, 1);
+                Lock = new Lock();
             }
 
         }
