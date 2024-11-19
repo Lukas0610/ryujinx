@@ -458,7 +458,7 @@ namespace ARMeilleure.Translation.PTC
 
                 byte[] code = new byte[infoEntry.CodeLength];
 
-                _fileStream.Read(code, 0, code.Length);
+                _fileStream.ReadExactly(code, 0, code.Length);
 
                 Hash128 computedCodeHash = XXHash128.ComputeHash(code);
                 if (computedCodeHash == infoEntry.CodeHash)

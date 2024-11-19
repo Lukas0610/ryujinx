@@ -124,7 +124,7 @@ namespace Ryujinx.Common.Host
             using Stream stream = OpenFileRead(path);
             byte[] buffer = new byte[stream.Length];
 
-            stream.Read(buffer, 0, buffer.Length);
+            stream.ReadExactly(buffer, 0, buffer.Length);
 
             return buffer;
         }

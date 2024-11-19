@@ -9,7 +9,6 @@ namespace Ryujinx.Headless.SDL2
         public string DockedMode;
         public string AspectRatio;
         public string GameStatus;
-        public string FifoStatus;
         public string GpuStatus;
         public string HostIoCacheStatus;
 
