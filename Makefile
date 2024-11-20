@@ -1,6 +1,8 @@
 .PHONY: all
 
-all: clean win-x64 linux-x64
+-include Makefile.user.mk
+
+all: clean win-x64 linux-x64 linux-arm64 osx-arm64
 release: clean win-x64-package linux-x64-package linux-arm64-package osx-arm64-package
 clean: win-x64-clean linux-x64-clean linux-arm64-clean osx-arm64-clean
 
