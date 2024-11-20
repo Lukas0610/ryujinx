@@ -1,4 +1,6 @@
 using ARMeilleure.State;
+using Ryujinx.Common.Host.IO.Stats;
+using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -29,9 +31,17 @@ namespace ARMeilleure.Translation.PTC
         private readonly BlockingCollection<FuncProfile> _bgSaveQueue;
         private readonly Thread _bgSaveThread;
 
+        private readonly Timer _logStatsTimer;
+
         private FileStream _fileStream;
         private BinaryReader _fileReader;
         private BinaryWriter _fileWriter;
+
+        private ulong _statsCachedFunctions = 0;
+        private ulong _statsCachedAddedFunctions = 0;
+        private ulong _statsCachedCorruptedFunctions = 0;
+        private ulong _statsRuntimeAddedFunctions = 0;
+        private ulong _statsRuntimeAddedDuplicatedFunctions = 0;
 
         private bool _disposed;
 
@@ -62,6 +72,8 @@ namespace ARMeilleure.Translation.PTC
                 IsBackground = true,
             };
 
+            _logStatsTimer = new Timer(LogStats);
+
             _disposed = false;
 
             ProfiledFuncs = new Dictionary<ulong, FuncProfile>();
@@ -84,7 +96,9 @@ namespace ARMeilleure.Translation.PTC
             if (_ptc.State == PtcState.Enabled)
             {
                 Enabled = true;
+
                 _bgSaveThread.Start();
+                _logStatsTimer.Change(0, 30000);
             }
         }
 
@@ -92,6 +106,8 @@ namespace ARMeilleure.Translation.PTC
         {
             _bgSaveQueue.CompleteAdding();
             _bgSaveThread.Join();
+
+            _logStatsTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
             _fileStream.Flush();
 
@@ -129,7 +145,14 @@ namespace ARMeilleure.Translation.PTC
                     FuncProfile profile = new(address, mode, highCq: false);
 
                     if (ProfiledFuncs.TryAdd(address, profile))
+                    {
                         _bgSaveQueue.Add(profile);
+                        Interlocked.Increment(ref _statsRuntimeAddedFunctions);
+                    }
+                    else
+                    {
+                        Interlocked.Increment(ref _statsRuntimeAddedDuplicatedFunctions);
+                    }
                 }
             }
         }
@@ -160,6 +183,17 @@ namespace ARMeilleure.Translation.PTC
         {
             ProfiledFuncs.Clear();
             ProfiledFuncs.TrimExcess();
+        }
+
+        private void LogStats(object state)
+        {
+            ulong runtimeAddedFunctions = Interlocked.Read(ref _statsRuntimeAddedFunctions);
+            ulong runtimeAddedDuplicatedFunctions = Interlocked.Read(ref _statsRuntimeAddedDuplicatedFunctions);
+            ulong cachedAddedFunctions = _statsCachedAddedFunctions;
+
+            ulong totalFunctions = runtimeAddedFunctions + cachedAddedFunctions;
+
+            Logger.Info?.Print(LogClass.Ptc, $"SPTC Profiler Runtime Stats: {totalFunctions} function(s) present ({runtimeAddedFunctions} added at runtime, {runtimeAddedDuplicatedFunctions} duplicated)");
         }
 
         private void OpenStream()
@@ -199,9 +233,12 @@ namespace ARMeilleure.Translation.PTC
 
                 if (PtcUtils.TryDeserializeHashedStructure(_fileStream, out FuncProfile profile))
                 {
+                    _statsCachedFunctions++;
+
                     if (!ProfiledFuncs.ContainsKey(profile.Address))
                     {
                         ProfiledFuncs.Add(profile.Address, profile);
+                        _statsCachedAddedFunctions++;
                     }
                 }
                 else
@@ -211,8 +248,12 @@ namespace ARMeilleure.Translation.PTC
                     // Overwrite current entry
                     _fileStream.Seek(funcProfileStreamStart, SeekOrigin.Begin);
                     PtcUtils.SerializeHashedStructure(_fileStream, profile);
+
+                    _statsCachedCorruptedFunctions++;
                 }
             }
+
+            Logger.Info?.Print(LogClass.Ptc, $"SPTC Profiler Cache Stats: {_statsCachedFunctions} function(s) loaded ({_statsCachedAddedFunctions} duplicated, {_statsCachedCorruptedFunctions} corrupted)");
 
             Debug.Assert(_fileStream.Position == _fileStream.Length);
 
