@@ -493,8 +493,13 @@ namespace Ryujinx.UI.Common.Configuration
                 configurationFileUpdated = true;
             }
 
-            Game ??= GameConfigurationState.Global();
-            Game.Load(configurationFileFormat.Game);
+            // In case the configuration file format was just migrated, `configurationFileFormat.Game` will be null,
+            // but the game-configuration state was already initialized and loaded by the migration logic
+            if (configurationFileFormat.Game != null)
+            {
+                Game ??= GameConfigurationState.Global();
+                Game.Load(configurationFileFormat.Game);
+            }
 
             Logger.EnableFileLog.Value = configurationFileFormat.EnableFileLog;
             Logger.EnableDebug.Value = configurationFileFormat.LoggingEnableDebug;
