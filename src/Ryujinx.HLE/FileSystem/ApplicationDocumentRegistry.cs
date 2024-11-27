@@ -69,8 +69,13 @@ namespace Ryujinx.HLE.FileSystem
         private void InitializeFromNca(ContentMetaData content, ContentType type, Dictionary<string, byte[]> files)
         {
             Nca nca = content.GetNcaByType(_virtualFileSystem.KeySet, type);
-            IFileSystem ncaFs = nca?.OpenFileSystem(NcaSectionType.Data, _checkLevel);
 
+            if (nca == null)
+            {
+                return;
+            }
+
+            IFileSystem ncaFs = nca.OpenFileSystem(NcaSectionType.Data, _checkLevel);
             string updatePath = null;
 
             try
