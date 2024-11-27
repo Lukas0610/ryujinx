@@ -68,6 +68,7 @@
     <ProjectReference Include="..\ARMeilleure\ARMeilleure.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.OpenGL\Ryujinx.Graphics.OpenGL.csproj" />
     <ProjectReference Include="..\Ryujinx.Graphics.Gpu\Ryujinx.Graphics.Gpu.csproj" />
+    <ProjectReference Include="..\Ryujinx.Media\Ryujinx.Media.csproj" />
     <ProjectReference Include="..\Ryujinx.UI.Common\Ryujinx.UI.Common.csproj" />
     <ProjectReference Include="..\Ryujinx.UI.LocaleGenerator\Ryujinx.UI.LocaleGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
@@ -166,6 +167,9 @@
   <ItemGroup>
     <Compile Update="UI\Applet\BrowserAppletWindow.axaml.cs">
       <DependentUpon>BrowserAppletWindow.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="UI\Views\Settings\SettingsCaptureView.axaml.cs">
+      <DependentUpon>SettingsCaptureView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

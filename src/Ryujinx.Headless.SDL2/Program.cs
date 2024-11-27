@@ -30,6 +30,8 @@ using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.Input;
 using Ryujinx.Input.HLE;
 using Ryujinx.Input.SDL2;
+using Ryujinx.Media;
+using Ryujinx.Media.Capture;
 using Ryujinx.SDL2.Common;
 using Silk.NET.Vulkan;
 using System;
@@ -54,6 +56,7 @@ namespace Ryujinx.Headless.SDL2
         private static LibHacHorizonManager _libHacHorizonManager;
         private static UserChannelPersistence _userChannelPersistence;
         private static InputManager _inputManager;
+        private static CaptureHandler _captureHandler;
         private static Switch _emulationContext;
         private static WindowBase _window;
         private static WindowsMultimediaTimerResolution _windowsMultimediaTimerResolution;
@@ -69,6 +72,8 @@ namespace Ryujinx.Headless.SDL2
 
             // Make process DPI aware for proper window sizing on high-res screens.
             ForceDpiAware.Windows();
+
+            FFmpegModule.Initialize();
 
             Console.Title = $"Ryujinx Console {Version} (Headless SDL2)";
 
@@ -349,6 +354,7 @@ namespace Ryujinx.Headless.SDL2
             _accountManager = new AccountManager(_libHacHorizonManager.RyujinxClient, option.UserProfile);
             _userChannelPersistence = new UserChannelPersistence();
 
+            _captureHandler = new CaptureHandler();
             _inputManager = new InputManager(new SDL2KeyboardDriver(), new SDL2GamepadDriver());
 
             GraphicsConfig.EnableShaderCache = true;
@@ -515,7 +521,7 @@ namespace Ryujinx.Headless.SDL2
                 : new OpenGLWindow(_inputManager, options.LoggingGraphicsDebugLevel, options.AspectRatio, options.EnableMouse, options.HideCursorMode);
         }
 
-        private static IRenderer CreateRenderer(Options options, WindowBase window)
+        private static IRenderer CreateRenderer(Options options, WindowBase window, CaptureHandler captureHandler)
         {
             if (options.GraphicsBackend == GraphicsBackend.Vulkan && window is VulkanWindow vulkanWindow)
             {
@@ -541,10 +547,11 @@ namespace Ryujinx.Headless.SDL2
                     api,
                     (instance, vk) => new SurfaceKHR((ulong)(vulkanWindow.CreateWindowSurface(instance.Handle))),
                     vulkanWindow.GetRequiredInstanceExtensions,
-                    preferredGpuId);
+                    preferredGpuId,
+                    captureHandler);
             }
 
-            return new OpenGLRenderer();
+            return new OpenGLRenderer(captureHandler);
         }
 
         private static Switch InitializeEmulationContext(WindowBase window, IRenderer renderer, Options options)
@@ -594,7 +601,7 @@ namespace Ryujinx.Headless.SDL2
                 CPUSet.ParseOrDefault(options.PtcBackgroundThreadsCPUSet),
                 options.PtcBackgroundThreadCount);
 
-            return new Switch(configuration);
+            return new Switch(configuration, new CaptureHandler());
         }
 
         private static void ExecutionEntrypoint()
@@ -613,6 +620,8 @@ namespace Ryujinx.Headless.SDL2
             _emulationContext.Dispose();
             _window.Dispose();
 
+            _captureHandler.Dispose();
+
             if (OperatingSystem.IsWindows())
             {
                 _windowsMultimediaTimerResolution?.Dispose();
@@ -627,7 +636,7 @@ namespace Ryujinx.Headless.SDL2
             Logger.RestartTime();
 
             WindowBase window = CreateWindow(options);
-            IRenderer renderer = CreateRenderer(options, window);
+            IRenderer renderer = CreateRenderer(options, window, _captureHandler);
 
             _window = window;
 

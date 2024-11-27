@@ -15,7 +15,7 @@ namespace Ryujinx.UI.Common.Configuration
         /// <summary>
         /// The current version of the file format
         /// </summary>
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2;
 
         /// <summary>
         /// Version of the configuration file format
@@ -281,6 +281,103 @@ namespace Ryujinx.UI.Common.Configuration
         /// Number of PTC background threads to start
         /// </summary>
         public int PtcBackgroundThreadCount { get; set; }
+
+        /// <summary>
+        /// Whether to automatically begin capturing when starting the game
+        /// </summary>
+        public bool CaptureBeginOnStart { get; set; }
+
+        /// <summary>
+        /// The output-format used for game captures
+        /// </summary>
+        public CaptureOutputFormatValue CaptureOutputFormat { get; set; }
+
+        /// <summary>
+        /// The video-codec used for game captures
+        /// </summary>
+        public CaptureVideoCodecValue CaptureVideoCodec { get; set; }
+
+        /// <summary>
+        /// Whether to scale the game capture video to a predefined dimension
+        /// </summary>
+        public bool CaptureVideoScaleEnabled { get; set; }
+
+        /// <summary>
+        /// Width to scale the game capture video to.
+        /// </summary>
+        public int CaptureVideoScaleWidth { get; set; }
+
+        /// <summary>
+        /// Whether to scale the width of the video automatically depending on
+        /// the configured height, keeping the original aspect ratio.
+        /// </summary>
+        public bool CaptureVideoScaleWidthAuto { get; set; }
+
+        /// <summary>
+        /// Height to scale the game capture video to.
+        /// </summary>
+        public int CaptureVideoScaleHeight { get; set; }
+
+        /// <summary>
+        /// Whether to scale the hight of the video automatically depending on
+        /// the configured width, keeping the original aspect ratio.
+        /// </summary>
+        public bool CaptureVideoScaleHeightAuto { get; set; }
+
+        /// <summary>
+        /// Whether to control quality of the video-stream in game captures by bitrate
+        /// </summary>
+        public bool CaptureVideoUseBitrate { get; set; }
+
+        /// <summary>
+        /// Whether to control quality of the video-stream in game captures by a codec-dependent level
+        /// </summary>
+        public long CaptureVideoBitrate { get; set; }
+
+        /// <summary>
+        /// The level of quality of the video-stream in game captures (depending on the selected codec)
+        /// </summary>
+        public bool CaptureVideoUseQualityLevel { get; set; }
+
+        /// <summary>
+        /// The bitrate of the video-stream in game captures
+        /// </summary>
+        public int CaptureVideoQualityLevel { get; set; }
+
+        /// <summary>
+        /// Whether to try and encode video-stream in game captures without loss of image-information
+        /// </summary>
+        public bool CaptureVideoUseLossless { get; set; }
+
+        /// <summary>
+        /// Number of threads to use for encoding video-frames if multithreading is supported by the video-codec.
+        /// </summary>
+        public int CaptureVideoEncoderThreadCount { get; set; }
+
+        /// <summary>
+        /// Whether to use hardware-acceleration when encoding video-frames for game captures
+        /// </summary>
+        public bool CaptureVideoEncoderHardwareAcceleration { get; set; }
+
+        /// <summary>
+        /// Allow NVENC-devices to be considered when initializing hardware-acceleration
+        /// </summary>
+        public bool CaptureVideoEncoderHardwareAccelerationAllowNvenc { get; set; }
+
+        /// <summary>
+        /// Allow Intel QSV-devices to be considered when initializing hardware-acceleration
+        /// </summary>
+        public bool CaptureVideoEncoderHardwareAccelerationAllowQsv { get; set; }
+
+        /// <summary>
+        /// Allow Vulkan-devices to be considered when initializing hardware-acceleration
+        /// </summary>
+        public bool CaptureVideoEncoderHardwareAccelerationAllowVulkan { get; set; }
+
+        /// <summary>
+        /// The audio-codec used for game captures
+        /// </summary>
+        public CaptureAudioCodecValue CaptureAudioCodec { get; set; }
 
         /// <summary>
         /// Loads a configuration file from disk

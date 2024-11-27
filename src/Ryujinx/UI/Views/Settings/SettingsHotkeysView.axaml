@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsHotkeysView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -53,6 +53,18 @@
                     <TextBlock Text="{locale:Locale SettingsTabHotkeysToggleVsyncHotkey}" />
                     <ToggleButton Name="ToggleVsync">
                         <TextBlock Text="{Binding KeyboardHotkey.ToggleVsync, Converter={StaticResource Key}}" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="{locale:Locale SettingsTabHotkeysStartCaptureHotkey}" />
+                    <ToggleButton Name="StartCapture">
+                        <TextBlock Text="{Binding KeyboardHotkey.StartCapture, Converter={StaticResource Key}}" />
+                    </ToggleButton>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="{locale:Locale SettingsTabHotkeysStopCaptureHotkey}" />
+                    <ToggleButton Name="StopCapture">
+                        <TextBlock Text="{Binding KeyboardHotkey.StopCapture, Converter={StaticResource Key}}" />
                     </ToggleButton>
                 </StackPanel>
                 <StackPanel>

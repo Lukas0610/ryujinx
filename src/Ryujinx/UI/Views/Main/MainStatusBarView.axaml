@@ -260,13 +260,59 @@
                 BorderThickness="1"
                 IsVisible="{Binding ShowHostIoStatusText}" />
             <TextBlock
-                MinWidth="120"
+                MinWidth="210"
                 Margin="5,0,5,0"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 IsVisible="{Binding ShowHostIoStatusText}"
                 Text="{Binding HostIoCacheStatusText}"
                 TextAlignment="Start" />
+            <Border
+                Width="2"
+                Height="12"
+                Margin="0"
+                BorderBrush="Gray"
+                Background="Gray"
+                BorderThickness="1"
+                IsVisible="{Binding CaptureHandlerRunning}" />
+            <StackPanel
+                MinWidth="120"
+                Orientation="Horizontal"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsVisible="{Binding CaptureHandlerRunning}">
+                <Canvas
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Width="12"
+                    Height="12">
+                    <Canvas.Styles>
+                        <Style Selector="Ellipse">
+                            <Style.Animations>
+                                <Animation Duration="00:00:01">
+                                    <KeyFrame Cue="0%">
+                                        <Setter Property="Fill" Value="Gray"/>
+                                    </KeyFrame>
+                                    <KeyFrame Cue="50%">
+                                        <Setter Property="Fill" Value="Red"/>
+                                    </KeyFrame>
+                                    <KeyFrame Cue="100%">
+                                        <Setter Property="Fill" Value="Gray"/>
+                                    </KeyFrame>
+                                </Animation>
+                            </Style.Animations>
+                        </Style>
+                    </Canvas.Styles>
+                    <Ellipse Fill="Red" Width="12" Height="12" />
+                </Canvas>
+                <TextBlock
+                    Margin="5,0,5,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Text="{Binding CaptureHandlerElapsedText}"
+                    TextAlignment="Start" />
+            </StackPanel>
         </StackPanel>
         <StackPanel
             Grid.Column="3"

@@ -3,6 +3,7 @@ using Ryujinx.Audio.Backends.Dummy;
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Media.Capture;
 using Ryujinx.Memory;
 using System;
 using System.Threading;
@@ -96,7 +97,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             throw new ArgumentException("No valid sample format configuration found!");
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, CaptureHandler captureHandler, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (channelCount == 0)
             {
@@ -123,7 +124,7 @@ namespace Ryujinx.Audio.Backends.CompatLayer
             SampleFormat hardwareSampleFormat = SelectHardwareSampleFormat(sampleFormat);
             uint hardwareChannelCount = SelectHardwareChannelCount(channelCount);
 
-            IHardwareDeviceSession realSession = _realDriver.OpenDeviceSession(direction, memoryManager, hardwareSampleFormat, sampleRate, hardwareChannelCount);
+            IHardwareDeviceSession realSession = _realDriver.OpenDeviceSession(direction, captureHandler, memoryManager, hardwareSampleFormat, sampleRate, hardwareChannelCount);
 
             if (hardwareChannelCount == channelCount && hardwareSampleFormat == sampleFormat)
             {

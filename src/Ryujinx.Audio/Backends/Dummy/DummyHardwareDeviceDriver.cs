@@ -1,5 +1,6 @@
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
+using Ryujinx.Media.Capture;
 using Ryujinx.Memory;
 using System;
 using System.Threading;
@@ -24,7 +25,7 @@ namespace Ryujinx.Audio.Backends.Dummy
             Volume = 1f;
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, CaptureHandler captureHandler, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (sampleRate == 0)
             {

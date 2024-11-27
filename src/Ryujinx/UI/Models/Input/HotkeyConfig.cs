@@ -16,6 +16,28 @@ namespace Ryujinx.Ava.UI.Models.Input
             }
         }
 
+        private Key _startCapture;
+        public Key StartCapture
+        {
+            get => _startCapture;
+            set
+            {
+                _startCapture = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private Key _stopCapture;
+        public Key StopCapture
+        {
+            get => _stopCapture;
+            set
+            {
+                _stopCapture = value;
+                OnPropertyChanged();
+            }
+        }
+
         private Key _screenshot;
         public Key Screenshot
         {
@@ -109,6 +131,8 @@ namespace Ryujinx.Ava.UI.Models.Input
             if (config != null)
             {
                 ToggleVsync = config.ToggleVsync;
+                StartCapture = config.StartCapture;
+                StopCapture = config.StopCapture;
                 Screenshot = config.Screenshot;
                 ShowUI = config.ShowUI;
                 Pause = config.Pause;
@@ -124,6 +148,8 @@ namespace Ryujinx.Ava.UI.Models.Input
         {
             var config = new KeyboardHotkeys
             {
+                StartCapture = StartCapture,
+                StopCapture = StopCapture,
                 ToggleVsync = ToggleVsync,
                 Screenshot = Screenshot,
                 ShowUI = ShowUI,

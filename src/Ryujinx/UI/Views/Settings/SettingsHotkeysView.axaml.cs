@@ -85,6 +85,12 @@ namespace Ryujinx.Ava.UI.Views.Settings
                                     case "ToggleVsync":
                                         viewModel.KeyboardHotkey.ToggleVsync = buttonValue.AsHidType<Key>();
                                         break;
+                                    case "StartCapture":
+                                        viewModel.KeyboardHotkey.StartCapture = buttonValue.AsHidType<Key>();
+                                        break;
+                                    case "StopCapture":
+                                        viewModel.KeyboardHotkey.StopCapture = buttonValue.AsHidType<Key>();
+                                        break;
                                     case "Screenshot":
                                         viewModel.KeyboardHotkey.Screenshot = buttonValue.AsHidType<Key>();
                                         break;

@@ -1,5 +1,8 @@
+using Ryujinx.Common.Buffers;
 using Ryujinx.Common.Memory;
 using Ryujinx.Graphics.GAL;
+using Ryujinx.Media;
+using Ryujinx.Media.Capture;
 using Silk.NET.Vulkan;
 using System;
 using System.Collections.Generic;
@@ -606,7 +609,7 @@ namespace Ryujinx.Graphics.Vulkan
             return new TextureView(_gd, _device, info, Storage, FirstLayer + firstLayer, FirstLevel + firstLevel);
         }
 
-        public byte[] GetData(int x, int y, int width, int height)
+        public IBuffer GetData(IBufferPool bufferPool, int x, int y, int width, int height)
         {
             int size = width * height * Info.BytesPerPixel;
             using var bufferHolder = _gd.BufferManager.Create(_gd, size);
@@ -620,9 +623,20 @@ namespace Ryujinx.Graphics.Vulkan
             }
 
             bufferHolder.WaitForFences();
-            byte[] bitmap = new byte[size];
-            GetDataFromBuffer(bufferHolder.GetDataStorage(0, size), size, Span<byte>.Empty).CopyTo(bitmap);
-            return bitmap;
+
+            IBuffer dataBuffer = bufferPool.Rent(size);
+            Span<byte> dataStorage = bufferHolder.GetDataStorage(0, size);
+
+            if (NeedsD24S8Conversion())
+            {
+                FormatConverter.ConvertD32FS8ToD24S8(dataBuffer.Span, dataStorage);
+            }
+            else
+            {
+                dataStorage.CopyTo(dataBuffer.Span);
+            }
+
+            return dataBuffer;
         }
 
         public PinnedSpan<byte> GetData()

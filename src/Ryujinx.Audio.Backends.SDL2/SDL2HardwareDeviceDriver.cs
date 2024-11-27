@@ -1,6 +1,7 @@
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Media.Capture;
 using Ryujinx.Memory;
 using Ryujinx.SDL2.Common;
 using System;
@@ -78,7 +79,7 @@ namespace Ryujinx.Audio.Backends.SDL2
             return _pauseEvent;
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, CaptureHandler captureHandler, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (channelCount == 0)
             {
@@ -95,7 +96,7 @@ namespace Ryujinx.Audio.Backends.SDL2
                 throw new NotImplementedException("Input direction is currently not implemented on SDL2 backend!");
             }
 
-            SDL2HardwareDeviceSession session = new(this, memoryManager, sampleFormat, sampleRate, channelCount);
+            SDL2HardwareDeviceSession session = new(this, captureHandler, memoryManager, sampleFormat, sampleRate, channelCount);
 
             _sessions.TryAdd(session, 0);
 

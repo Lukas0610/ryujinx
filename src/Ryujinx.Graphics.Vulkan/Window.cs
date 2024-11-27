@@ -1,5 +1,10 @@
+using Ryujinx.Common.Buffers;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Vulkan.Effects;
+using Ryujinx.Media;
+using Ryujinx.Media.Capture;
+using Ryujinx.Media.Capture.Encoder.Configuration;
+using Ryujinx.Media.Capture.Encoder.Frames;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 using System;
@@ -17,6 +22,8 @@ namespace Ryujinx.Graphics.Vulkan
         private readonly SurfaceKHR _surface;
         private readonly PhysicalDevice _physicalDevice;
         private readonly Device _device;
+        private readonly CaptureHandler _captureHandler;
+
         private SwapchainKHR _swapchain;
 
         private Image[] _swapchainImages;
@@ -42,12 +49,13 @@ namespace Ryujinx.Graphics.Vulkan
         private ScalingFilter _currentScalingFilter;
         private bool _colorSpacePassthroughEnabled;
 
-        public unsafe Window(VulkanRenderer gd, SurfaceKHR surface, PhysicalDevice physicalDevice, Device device)
+        public unsafe Window(VulkanRenderer gd, SurfaceKHR surface, PhysicalDevice physicalDevice, Device device, CaptureHandler captureHandler)
         {
             _gd = gd;
             _physicalDevice = physicalDevice;
             _device = device;
             _surface = surface;
+            _captureHandler = captureHandler;
 
             CreateSwapchain();
         }
@@ -386,7 +394,20 @@ namespace Ryujinx.Graphics.Vulkan
                 srcY1 = crop.Bottom;
             }
 
-            if (ScreenCaptureRequested)
+            int width = srcX1 - srcX0;
+            int height = srcY1 - srcY0;
+
+            _captureHandler.UpdateConfiguration(new VideoCaptureConfiguration()
+            {
+                Width = width,
+                Height = height,
+                PixelFormat = view.Info.Format.IsBgr() ? MediaPixelFormat.Bgra8888 : MediaPixelFormat.Rgba8888,
+            });
+
+            bool screenCaptureRequested = ScreenCaptureRequested;
+            bool captureHandlerRunning = _captureHandler.Running;
+
+            if (screenCaptureRequested || captureHandlerRunning)
             {
                 if (_effect != null)
                 {
@@ -400,9 +421,12 @@ namespace Ryujinx.Graphics.Vulkan
                     cbs = _gd.CommandBufferPool.Rent();
                 }
 
-                CaptureFrame(view, srcX0, srcY0, srcX1 - srcX0, srcY1 - srcY0, view.Info.Format.IsBgr(), crop.FlipX, crop.FlipY);
+                CaptureFrame(view, srcX0, srcY0, width, height, view.Info.Format.IsBgr(), crop.FlipX, crop.FlipY, screenCaptureRequested, captureHandlerRunning);
 
-                ScreenCaptureRequested = false;
+                if (screenCaptureRequested)
+                {
+                    ScreenCaptureRequested = false;
+                }
             }
 
             float ratioX = crop.IsStretched ? 1.0f : MathF.Min(1.0f, _height * crop.AspectRatioX / (_width * crop.AspectRatioY));
@@ -621,15 +645,35 @@ namespace Ryujinx.Graphics.Vulkan
                 in barrier);
         }
 
-        private void CaptureFrame(TextureView texture, int x, int y, int width, int height, bool isBgra, bool flipX, bool flipY)
+        private void CaptureFrame(TextureView texture, int x, int y, int width, int height, bool isBgra, bool flipX, bool flipY, bool forScreenCapture, bool forCaptureHandler)
         {
-            byte[] bitmap = texture.GetData(x, y, width, height);
+            IBuffer buffer = texture.GetData(_captureHandler.VideoBufferPool, x, y, width, height);
 
-            _gd.OnScreenCaptured(new ScreenCaptureImageInfo(width, height, isBgra, bitmap, flipX, flipY));
+            if (forScreenCapture)
+            {
+                _gd.OnScreenCaptured(new ScreenCaptureImageInfo(buffer, width, height, isBgra, flipX, flipY));
+            }
+
+            if (forCaptureHandler)
+            {
+                // buffer will be disposed/returned when encoder is done with the input data
+                _captureHandler.EnqueueFrame(new VideoCaptureFrame()
+                {
+                    Flip = (flipX ? MediaImageFlip.Horizontal : MediaImageFlip.None) | (flipY ? MediaImageFlip.Vertical : MediaImageFlip.None),
+                    Buffer = buffer,
+                });
+            }
+            else
+            {
+                buffer.Dispose();
+            }
         }
 
         public override void SetSize(int width, int height)
         {
+            Width = width;
+            Height = height;
+
             // We don't need to use width and height as we can get the size from the surface.
             _swapchainIsDirty = true;
         }

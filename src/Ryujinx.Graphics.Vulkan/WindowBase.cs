@@ -5,6 +5,8 @@ namespace Ryujinx.Graphics.Vulkan
 {
     internal abstract class WindowBase : IWindow
     {
+        public int Width { get; protected set; }
+        public int Height { get; protected set; }
         public bool ScreenCaptureRequested { get; set; }
 
         public abstract void Dispose();

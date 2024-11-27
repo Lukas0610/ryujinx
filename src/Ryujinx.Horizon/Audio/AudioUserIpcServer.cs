@@ -1,6 +1,7 @@
 using Ryujinx.Horizon.Sdk.Audio.Detail;
 using Ryujinx.Horizon.Sdk.Sf.Hipc;
 using Ryujinx.Horizon.Sdk.Sm;
+using Ryujinx.Media.Capture;
 
 namespace Ryujinx.Horizon.Audio
 {
@@ -27,7 +28,7 @@ namespace Ryujinx.Horizon.Audio
             _sm.Initialize().AbortOnFailure();
 
             _serverManager = new ServerManager(allocator, _sm, MaxPortsCount, _options, MaxSessionsCount);
-            _managers = new AudioManagers(HorizonStatic.Options.AudioDeviceDriver, HorizonStatic.Options.TickSource);
+            _managers = new AudioManagers(HorizonStatic.Options.AudioDeviceDriver, HorizonStatic.Options.CaptureHandler, HorizonStatic.Options.TickSource);
 
             AudioRendererManager audioRendererManager = new(_managers.AudioRendererManager, _managers.AudioDeviceSessionRegistry);
             AudioOutManager audioOutManager = new(_managers.AudioOutputManager);

@@ -9,6 +9,7 @@ using Ryujinx.Common.GraphicsDriver;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.SystemInterop;
 using Ryujinx.Graphics.Vulkan.MoltenVK;
+using Ryujinx.Media;
 using Ryujinx.Modules;
 using Ryujinx.SDL2.Common;
 using Ryujinx.UI.Common;
@@ -115,6 +116,9 @@ namespace Ryujinx.Ava
 
             // Initialize the configuration.
             ConfigurationState.Initialize();
+
+            // Initialize the Ryujinx.Media FFmpeg module
+            FFmpegModule.Initialize(CommonRuntimeInformation.GetNativeRuntimesDirectory(AppDataManager.BaseDirPath));
 
             // Initialize the logger system.
             LoggerModule.Initialize();

@@ -1,0 +1,267 @@
+<UserControl
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsCaptureView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    mc:Ignorable="d"
+    x:DataType="viewModels:SettingsViewModel">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <ScrollViewer Name="CapturePage"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel Margin="10" HorizontalAlignment="Stretch" Orientation="Vertical" Spacing="10">
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCapture}" />
+                <StackPanel Margin="10,0,0,0"
+                            HorizontalAlignment="Stretch"
+                            Orientation="Vertical"
+                            Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureBeginOnStartTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureBeginOnStart}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding CaptureBeginOnStart}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureBeginOnStartTooltip}" />
+                    </StackPanel>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCaptureOutput}" />
+                <StackPanel Margin="10,0,0,0" HorizontalAlignment="Stretch" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{locale:Locale SettingsTabCaptureOutputFormat}"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureOutputFormatTooltip}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding CaptureOutputFormat}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureOutputFormatTooltip}"
+                                  HorizontalContentAlignment="Left"
+                                  Width="350">
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureOutputFormatTypeAutoTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureOutputFormatTypeAuto}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureOutputFormatTypeMkvTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureOutputFormatTypeMkv}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureOutputFormatTypeMpegtsTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureOutputFormatTypeMpegts}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCaptureVideo}" />
+                <StackPanel Margin="10,0,0,0" HorizontalAlignment="Stretch" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{locale:Locale SettingsTabCaptureVideoCodec}"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoCodecTooltip}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding CaptureVideoCodec}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoCodecTooltip}"
+                                  HorizontalContentAlignment="Left"
+                                  Width="350">
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoCodecTypeAutoTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureVideoCodecTypeAuto}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoCodecTypeH264Tooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureVideoCodecTypeH264}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoCodecTypeHevcTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureVideoCodecTypeHevc}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoScaleTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoScale}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding CaptureVideoScaleEnabled}" />
+                        <StackPanel Orientation="Vertical" Spacing="5" IsEnabled="{Binding CaptureVideoScaleEnabled}">
+                            <TextBlock Text="{locale:Locale SettingsTabCaptureVideoScaleWidth}" />
+                            <ui:NumberBox Minimum="1"
+                                          Width="250"
+                                          SpinButtonPlacementMode="Inline"
+                                          SmallChange="2"
+                                          LargeChange="2"
+                                          Value="{Binding CaptureVideoScaleWidth}"
+                                          IsEnabled="{Binding !CaptureVideoScaleWidthAuto}"
+                                          ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoScaleWidthTooltip}" />
+                            <CheckBox IsChecked="{Binding CaptureVideoScaleWidthAuto}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureVideoScaleWidthAuto}"
+                                           ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoScaleWidthAutoTooltip}" />
+                            </CheckBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Vertical" Spacing="5" Margin="10,0,0,0" IsEnabled="{Binding CaptureVideoScaleEnabled}">
+                            <TextBlock Text="{locale:Locale SettingsTabCaptureVideoScaleHeight}" />
+                            <ui:NumberBox Minimum="1"
+                                          Width="250"
+                                          SpinButtonPlacementMode="Inline"
+                                          SmallChange="2"
+                                          LargeChange="2"
+                                          Value="{Binding CaptureVideoScaleHeight}"
+                                          IsEnabled="{Binding !CaptureVideoScaleHeightAuto}"
+                                          ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoScaleHeightTooltip}" />
+                            <CheckBox IsChecked="{Binding CaptureVideoScaleHeightAuto}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureVideoScaleHeightAuto}"
+                                           ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoScaleHeightAutoTooltip}" />
+                            </CheckBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderThreadCountTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoEncoderThreadCount}"
+                                   Width="250" />
+                        <ui:NumberBox Maximum="{Binding EnvironmentProcessorCount}"
+                                      Minimum="1"
+                                      Width="350"
+                                      SpinButtonPlacementMode="Inline"
+                                      SmallChange="1"
+                                      LargeChange="1"
+                                      Value="{Binding CaptureVideoEncoderThreadCount}"
+                                      ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderThreadCountTooltip}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAcceleration}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding CaptureVideoEncoderHardwareAcceleration}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationTooltip}" />
+                    </StackPanel>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCaptureVideoQuality}" />
+                <StackPanel Margin="10,0,0,0" HorizontalAlignment="Stretch" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoUseAutoTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoUseAuto}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding CaptureVideoUseAuto}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoUseAutoTooltip}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoBitrateTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoBitrate}"
+                                   Width="250" />
+                        <StackPanel Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Spacing="5">
+                            <CheckBox IsChecked="{Binding CaptureVideoUseBitrate}"
+                                      ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoUseBitrateTooltip}" />
+                            <ui:NumberBox Minimum="100"
+                                          Width="350"
+                                          SpinButtonPlacementMode="Inline"
+                                          SmallChange="100"
+                                          LargeChange="500"
+                                          IsEnabled="{Binding CaptureVideoUseBitrate}"
+                                          Value="{Binding CaptureVideoBitrate}"
+                                          ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoBitrateTooltip}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoQualityLevelTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoQualityLevel}"
+                                   Width="250" />
+                        <StackPanel Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Spacing="5">
+                            <CheckBox IsChecked="{Binding CaptureVideoUseQualityLevel}"
+                                      ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoUseQualityLevelTooltip}" />
+                            <ui:NumberBox Minimum="1"
+                                          Width="350"
+                                          SpinButtonPlacementMode="Inline"
+                                          SmallChange="1"
+                                          LargeChange="1"
+                                          IsEnabled="{Binding CaptureVideoUseQualityLevel}"
+                                          Value="{Binding CaptureVideoQualityLevel}"
+                                          ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoQualityLevelTooltip}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoUseLosslessTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoUseLossless}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding CaptureVideoUseLossless}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoUseLosslessTooltip}" />
+                    </StackPanel>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCaptureAudio}" />
+                <StackPanel Margin="10,0,0,0" HorizontalAlignment="Stretch" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{locale:Locale SettingsTabCaptureAudioCodec}"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureAudioCodecTooltip}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding CaptureAudioCodec}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureAudioCodecTooltip}"
+                                  HorizontalContentAlignment="Left"
+                                  Width="350">
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureAudioCodecTypeAutoTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureAudioCodecTypeAuto}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureAudioCodecTypePcmTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureAudioCodecTypePcm}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureAudioCodecTypeAacTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureAudioCodecTypeAac}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureAudioCodecTypeOpusTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureAudioCodecTypeOpus}" />
+                            </ComboBoxItem>
+                            <ComboBoxItem ToolTip.Tip="{locale:Locale SettingsTabCaptureAudioCodecTypeVorbisTooltip}">
+                                <TextBlock Text="{locale:Locale SettingsTabCaptureAudioCodecTypeVorbis}" />
+                            </ComboBoxItem>
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{locale:Locale SettingsTabCaptureHardware}" />
+                <StackPanel Margin="10,0,0,0" HorizontalAlignment="Stretch" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowNvencTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowNvenc}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding CaptureVideoEncoderHardwareAccelerationAllowNvenc}"
+                                  IsEnabled="{Binding CaptureVideoEncoderHardwareAcceleration}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowNvencTooltip}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowQsvTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowQsv}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding CaptureVideoEncoderHardwareAccelerationAllowQsv}"
+                                  IsEnabled="{Binding CaptureVideoEncoderHardwareAcceleration}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowQsvTooltip}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowVulkanTooltip}"
+                                   Text="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowVulkan}"
+                                   Width="250" />
+                        <CheckBox IsChecked="{Binding CaptureVideoEncoderHardwareAccelerationAllowVulkan}"
+                                  IsEnabled="{Binding CaptureVideoEncoderHardwareAcceleration}"
+                                  ToolTip.Tip="{locale:Locale SettingsTabCaptureVideoEncoderHardwareAccelerationAllowVulkanTooltip}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

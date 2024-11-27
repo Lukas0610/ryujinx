@@ -160,16 +160,27 @@
                     Header="{locale:Locale MenuBarOptionsOpenApplicationSettings}" />
                 <Separator />
                 <MenuItem
-                    Name="ScanAmiiboMenuItem"
-                    AttachedToVisualTree="ScanAmiiboMenuItem_AttachedToVisualTree"
-                    Click="OpenAmiiboWindow"
-                    Header="{locale:Locale MenuBarActionsScanAmiibo}"
-                    IsEnabled="{Binding IsAmiiboRequested}" />
+                    Command="{Binding StartCapture}"
+                    Header="{locale:Locale MenuBarFileToolsStartCapture}"
+                    InputGesture="{Binding StartCaptureKey}"
+                    IsEnabled="{Binding CanStartCapture}" />
+                <MenuItem
+                    Command="{Binding StopCapture}"
+                    Header="{locale:Locale MenuBarFileToolsStopCapture}"
+                    InputGesture="{Binding StopCaptureKey}"
+                    IsEnabled="{Binding CanStopCapture}" />
                 <MenuItem
                     Command="{Binding TakeScreenshot}"
                     Header="{locale:Locale MenuBarFileToolsTakeScreenshot}"
                     InputGesture="{Binding ScreenshotKey}"
                     IsEnabled="{Binding IsGameRunning}" />
+                <Separator />
+                <MenuItem
+                    Name="ScanAmiiboMenuItem"
+                    AttachedToVisualTree="ScanAmiiboMenuItem_AttachedToVisualTree"
+                    Click="OpenAmiiboWindow"
+                    Header="{locale:Locale MenuBarActionsScanAmiibo}"
+                    IsEnabled="{Binding IsAmiiboRequested}" />
                 <MenuItem
                     Command="{Binding HideUi}"
                     Header="{locale:Locale MenuBarFileToolsHideUi}"

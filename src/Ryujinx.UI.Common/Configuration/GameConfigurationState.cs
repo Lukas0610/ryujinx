@@ -6,6 +6,7 @@ using Ryujinx.Common.Configuration.Multiplayer;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Vulkan;
 using Ryujinx.HLE;
+using Ryujinx.Media.Capture;
 using Ryujinx.UI.Common.Configuration.System;
 using System;
 using System.Collections.Generic;
@@ -342,6 +343,152 @@ namespace Ryujinx.UI.Common.Configuration
         }
 
         /// <summary>
+        /// Game-Capturing configuration section
+        /// </summary>
+        public class CaptureSection
+        {
+
+            /// <summary>
+            /// Whether to automatically begin capturing when starting the game
+            /// </summary>
+            public ReactiveObject<bool> BeginOnStart { get; set; }
+
+            /// <summary>
+            /// The output-format used for game captures
+            /// </summary>
+            public ReactiveObject<CaptureOutputFormatValue> OutputFormat { get; set; }
+
+            /// <summary>
+            /// The video-codec used for game captures
+            /// </summary>
+            public ReactiveObject<CaptureVideoCodecValue> VideoCodec { get; set; }
+
+            /// <summary>
+            /// Whether to scale the game capture video to a predefined dimension
+            /// </summary>
+            public ReactiveObject<bool> VideoScaleEnabled { get; set; }
+
+            /// <summary>
+            /// Width to scale the game capture video-output to.
+            /// </summary>
+            public ReactiveObject<int> VideoScaleWidth { get; set; }
+
+            /// <summary>
+            /// Whether to scale the width of the video automatically depending on
+            /// the configured height, keeping the original aspect ratio.
+            /// </summary>
+            public ReactiveObject<bool> VideoScaleWidthAuto { get; set; }
+
+            /// <summary>
+            /// Height to scale the game capture video-output to.
+            /// </summary>
+            public ReactiveObject<int> VideoScaleHeight { get; set; }
+
+            /// <summary>
+            /// Whether to scale the hight of the video automatically depending on
+            /// the configured width, keeping the original aspect ratio.
+            /// </summary>
+            public ReactiveObject<bool> VideoScaleHeightAuto { get; set; }
+
+            /// <summary>
+            /// Whether to control quality by bitrate
+            /// </summary>
+            public ReactiveObject<bool> VideoUseBitrate { get; set; }
+
+            /// <summary>
+            /// The bitrate of the video-stream in game captures
+            /// </summary>
+            public ReactiveObject<long> VideoBitrate { get; set; }
+
+            /// <summary>
+            /// The level of quality of the video-stream in game captures (depending on the selected codec)
+            /// </summary>
+            public ReactiveObject<bool> VideoUseQualityLevel { get; set; }
+
+            /// <summary>
+            /// The bitrate of the video-stream in game captures
+            /// </summary>
+            public ReactiveObject<int> VideoQualityLevel { get; set; }
+
+            /// <summary>
+            /// Whether to try and encode video-stream in game captures without loss of image-information
+            /// </summary>
+            public ReactiveObject<bool> VideoUseLossless { get; set; }
+
+            /// <summary>
+            /// Number of threads to use for encoding video-frames if multithreading is supported by the video-codec.
+            /// </summary>
+            public ReactiveObject<int> VideoEncoderThreadCount { get; set; }
+
+            /// <summary>
+            /// Whether to use hardware-acceleration when encoding video-frames for game captures
+            /// </summary>
+            public ReactiveObject<bool> VideoEncoderHardwareAcceleration { get; set; }
+
+            /// <summary>
+            /// Allow NVENC-devices to be considered when initializing hardware-acceleration
+            /// </summary>
+            public ReactiveObject<bool> VideoEncoderHardwareAccelerationAllowNvenc { get; set; }
+
+            /// <summary>
+            /// Allow Intel QSV-devices to be considered when initializing hardware-acceleration
+            /// </summary>
+            public ReactiveObject<bool> VideoEncoderHardwareAccelerationAllowQsv { get; set; }
+
+            /// <summary>
+            /// Allow Vulkan-devices to be considered when initializing hardware-acceleration
+            /// </summary>
+            public ReactiveObject<bool> VideoEncoderHardwareAccelerationAllowVulkan { get; set; }
+
+            /// <summary>
+            /// The audio-codec used for game captures
+            /// </summary>
+            public ReactiveObject<CaptureAudioCodecValue> AudioCodec { get; set; }
+
+            public CaptureSection(GameConfigurationState state)
+            {
+                BeginOnStart = new ReactiveObject<bool>();
+                BeginOnStart.Event += (sender, e) => LogValueChange(state, e, nameof(BeginOnStart));
+                OutputFormat = new ReactiveObject<CaptureOutputFormatValue>();
+                OutputFormat.Event += (sender, e) => LogValueChange(state, e, nameof(OutputFormat));
+                VideoCodec = new ReactiveObject<CaptureVideoCodecValue>();
+                VideoCodec.Event += (sender, e) => LogValueChange(state, e, nameof(VideoCodec));
+                VideoScaleEnabled = new ReactiveObject<bool>();
+                VideoScaleEnabled.Event += (sender, e) => LogValueChange(state, e, nameof(VideoScaleEnabled));
+                VideoScaleWidth = new ReactiveObject<int>();
+                VideoScaleWidth.Event += (sender, e) => LogValueChange(state, e, nameof(VideoScaleWidth));
+                VideoScaleWidthAuto = new ReactiveObject<bool>();
+                VideoScaleWidthAuto.Event += (sender, e) => LogValueChange(state, e, nameof(VideoScaleWidthAuto));
+                VideoScaleHeight = new ReactiveObject<int>();
+                VideoScaleHeight.Event += (sender, e) => LogValueChange(state, e, nameof(VideoScaleHeight));
+                VideoScaleHeightAuto = new ReactiveObject<bool>();
+                VideoScaleHeightAuto.Event += (sender, e) => LogValueChange(state, e, nameof(VideoScaleHeightAuto));
+                VideoUseBitrate = new ReactiveObject<bool>();
+                VideoUseBitrate.Event += (sender, e) => LogValueChange(state, e, nameof(VideoUseBitrate));
+                VideoBitrate = new ReactiveObject<long>();
+                VideoBitrate.Event += (sender, e) => LogValueChange(state, e, nameof(VideoBitrate));
+                VideoUseQualityLevel = new ReactiveObject<bool>();
+                VideoUseQualityLevel.Event += (sender, e) => LogValueChange(state, e, nameof(VideoUseQualityLevel));
+                VideoQualityLevel = new ReactiveObject<int>();
+                VideoQualityLevel.Event += (sender, e) => LogValueChange(state, e, nameof(VideoQualityLevel));
+                VideoUseLossless = new ReactiveObject<bool>();
+                VideoUseLossless.Event += (sender, e) => LogValueChange(state, e, nameof(VideoUseLossless));
+                VideoEncoderThreadCount = new ReactiveObject<int>();
+                VideoEncoderThreadCount.Event += (sender, e) => LogValueChange(state, e, nameof(VideoEncoderThreadCount));
+                VideoEncoderHardwareAcceleration = new ReactiveObject<bool>();
+                VideoEncoderHardwareAcceleration.Event += (sender, e) => LogValueChange(state, e, nameof(VideoEncoderHardwareAcceleration));
+                VideoEncoderHardwareAccelerationAllowNvenc = new ReactiveObject<bool>();
+                VideoEncoderHardwareAccelerationAllowNvenc.Event += (sender, e) => LogValueChange(state, e, nameof(VideoEncoderHardwareAccelerationAllowNvenc));
+                VideoEncoderHardwareAccelerationAllowQsv = new ReactiveObject<bool>();
+                VideoEncoderHardwareAccelerationAllowQsv.Event += (sender, e) => LogValueChange(state, e, nameof(VideoEncoderHardwareAccelerationAllowQsv));
+                VideoEncoderHardwareAccelerationAllowVulkan = new ReactiveObject<bool>();
+                VideoEncoderHardwareAccelerationAllowVulkan.Event += (sender, e) => LogValueChange(state, e, nameof(VideoEncoderHardwareAccelerationAllowVulkan));
+                AudioCodec = new ReactiveObject<CaptureAudioCodecValue>();
+                AudioCodec.Event += (sender, e) => LogValueChange(state, e, nameof(AudioCodec));
+            }
+        }
+
+        /// <summary>
         /// Multiplayer configuration section
         /// </summary>
         public class MultiplayerSection
@@ -383,6 +530,11 @@ namespace Ryujinx.UI.Common.Configuration
         /// The Multiplayer section
         /// </summary>
         public MultiplayerSection Multiplayer { get; private set; }
+
+        /// <summary>
+        /// The game-capture section
+        /// </summary>
+        public CaptureSection Capture { get; private set; }
 
         /// <summary>
         /// Whether to use the game-specific configuration values instead of the global values
@@ -433,6 +585,7 @@ namespace Ryujinx.UI.Common.Configuration
             System = new SystemSection(this);
             Graphics = new GraphicsSection(this);
             Hid = new HidSection();
+            Capture = new CaptureSection(this);
             Multiplayer = new MultiplayerSection(this);
             UseGameConfig = new ReactiveObject<bool>();
             UseGameConfig.Event += (sender, e) => LogValueChange(this, e, nameof(UseGameConfig));
@@ -499,6 +652,25 @@ namespace Ryujinx.UI.Common.Configuration
                 PreferredGpu = Graphics.PreferredGpu,
                 MultiplayerLanInterfaceId = Multiplayer.LanInterfaceId,
                 MultiplayerMode = Multiplayer.Mode,
+                CaptureBeginOnStart = Capture.BeginOnStart,
+                CaptureOutputFormat = Capture.OutputFormat,
+                CaptureVideoCodec = Capture.VideoCodec,
+                CaptureVideoScaleEnabled = Capture.VideoScaleEnabled,
+                CaptureVideoScaleWidth = Capture.VideoScaleWidth,
+                CaptureVideoScaleWidthAuto = Capture.VideoScaleWidthAuto,
+                CaptureVideoScaleHeight = Capture.VideoScaleHeight,
+                CaptureVideoScaleHeightAuto = Capture.VideoScaleHeightAuto,
+                CaptureVideoUseBitrate = Capture.VideoUseBitrate,
+                CaptureVideoBitrate = Capture.VideoBitrate,
+                CaptureVideoUseQualityLevel = Capture.VideoUseQualityLevel,
+                CaptureVideoQualityLevel = Capture.VideoQualityLevel,
+                CaptureVideoUseLossless = Capture.VideoUseLossless,
+                CaptureVideoEncoderThreadCount = Capture.VideoEncoderThreadCount,
+                CaptureVideoEncoderHardwareAcceleration = Capture.VideoEncoderHardwareAcceleration,
+                CaptureVideoEncoderHardwareAccelerationAllowNvenc = Capture.VideoEncoderHardwareAccelerationAllowNvenc,
+                CaptureVideoEncoderHardwareAccelerationAllowQsv = Capture.VideoEncoderHardwareAccelerationAllowQsv,
+                CaptureVideoEncoderHardwareAccelerationAllowVulkan = Capture.VideoEncoderHardwareAccelerationAllowVulkan,
+                CaptureAudioCodec = Capture.AudioCodec,
             };
 
             return configurationFile;
@@ -547,6 +719,25 @@ namespace Ryujinx.UI.Common.Configuration
             System.HleKernelThreadsCPUSetStaticCore.Value = false;
             System.PtcBackgroundThreadsCPUSet.Value = "*";
             System.PtcBackgroundThreadCount.Value = Math.Min(4, Math.Max(1, (Environment.ProcessorCount - 6) / 3));
+            Capture.BeginOnStart.Value = false;
+            Capture.OutputFormat.Value = CaptureOutputFormatValue.MPEGTS;
+            Capture.VideoCodec.Value = CaptureVideoCodecValue.H264;
+            Capture.VideoScaleEnabled.Value = false;
+            Capture.VideoScaleWidth.Value = 1280;
+            Capture.VideoScaleWidthAuto.Value = false;
+            Capture.VideoScaleHeight.Value = 720;
+            Capture.VideoScaleHeightAuto.Value = false;
+            Capture.VideoUseBitrate.Value = false;
+            Capture.VideoBitrate.Value = 15000000;
+            Capture.VideoUseQualityLevel.Value = true;
+            Capture.VideoQualityLevel.Value = 23;
+            Capture.VideoUseLossless.Value = false;
+            Capture.VideoEncoderThreadCount.Value = Math.Clamp(Environment.ProcessorCount / 3, 4, 8);
+            Capture.VideoEncoderHardwareAcceleration.Value = false;
+            Capture.VideoEncoderHardwareAccelerationAllowNvenc.Value = true;
+            Capture.VideoEncoderHardwareAccelerationAllowQsv.Value = true;
+            Capture.VideoEncoderHardwareAccelerationAllowVulkan.Value = false;
+            Capture.AudioCodec.Value = CaptureAudioCodecValue.AAC;
             Multiplayer.LanInterfaceId.Value = "0";
             Multiplayer.Mode.Value = MultiplayerMode.Disabled;
             Hid.EnableKeyboard.Value = false;
@@ -555,6 +746,8 @@ namespace Ryujinx.UI.Common.Configuration
             {
                 ToggleVsync = Key.F1,
                 ToggleMute = Key.F2,
+                StartCapture = Key.F6,
+                StopCapture = Key.F7,
                 Screenshot = Key.F8,
                 ShowUI = Key.F4,
                 Pause = Key.F5,
@@ -620,6 +813,39 @@ namespace Ryujinx.UI.Common.Configuration
         {
             bool configurationFileUpdated = false;
 
+            if (gameConfigurationFileFormat.Version < 2)
+            {
+                Logger.Warning?.Print(LogClass.Application, $"Outdated configuration version {gameConfigurationFileFormat.Version}, migrating to version 2.");
+
+                gameConfigurationFileFormat.CaptureBeginOnStart = false;
+                gameConfigurationFileFormat.CaptureOutputFormat = CaptureOutputFormatValue.MPEGTS;
+                gameConfigurationFileFormat.CaptureVideoCodec = CaptureVideoCodecValue.H264;
+                gameConfigurationFileFormat.CaptureVideoScaleEnabled = false;
+                gameConfigurationFileFormat.CaptureVideoScaleWidth = 1280;
+                gameConfigurationFileFormat.CaptureVideoScaleWidthAuto = false;
+                gameConfigurationFileFormat.CaptureVideoScaleHeight = 720;
+                gameConfigurationFileFormat.CaptureVideoScaleHeightAuto = false;
+                gameConfigurationFileFormat.CaptureVideoUseBitrate = false;
+                gameConfigurationFileFormat.CaptureVideoBitrate = 15000000;
+                gameConfigurationFileFormat.CaptureVideoUseQualityLevel = true;
+                gameConfigurationFileFormat.CaptureVideoQualityLevel = 23;
+                gameConfigurationFileFormat.CaptureVideoUseLossless = false;
+                gameConfigurationFileFormat.CaptureVideoEncoderThreadCount = Math.Clamp(Environment.ProcessorCount / 3, 4, 8);
+                gameConfigurationFileFormat.CaptureVideoEncoderHardwareAcceleration = false;
+                gameConfigurationFileFormat.CaptureVideoEncoderHardwareAccelerationAllowNvenc = true;
+                gameConfigurationFileFormat.CaptureVideoEncoderHardwareAccelerationAllowQsv = true;
+                gameConfigurationFileFormat.CaptureVideoEncoderHardwareAccelerationAllowVulkan = false;
+                gameConfigurationFileFormat.CaptureAudioCodec = CaptureAudioCodecValue.AAC;
+
+                if (gameConfigurationFileFormat.Hotkeys != null)
+                {
+                    gameConfigurationFileFormat.Hotkeys.StartCapture = Key.F6;
+                    gameConfigurationFileFormat.Hotkeys.StopCapture = Key.F7;
+                }
+
+                configurationFileUpdated = true;
+            }
+
             UseGameConfig.Value = gameConfigurationFileFormat.UseGameConfig;
             Graphics.ResScale.Value = gameConfigurationFileFormat.ResScale;
             Graphics.ResScaleCustom.Value = gameConfigurationFileFormat.ResScaleCustom;
@@ -673,6 +899,25 @@ namespace Ryujinx.UI.Common.Configuration
 
             Multiplayer.LanInterfaceId.Value = gameConfigurationFileFormat.MultiplayerLanInterfaceId;
             Multiplayer.Mode.Value = gameConfigurationFileFormat.MultiplayerMode;
+            Capture.BeginOnStart.Value = gameConfigurationFileFormat.CaptureBeginOnStart;
+            Capture.OutputFormat.Value = gameConfigurationFileFormat.CaptureOutputFormat;
+            Capture.VideoCodec.Value = gameConfigurationFileFormat.CaptureVideoCodec;
+            Capture.VideoScaleEnabled.Value = gameConfigurationFileFormat.CaptureVideoScaleEnabled;
+            Capture.VideoScaleWidth.Value = gameConfigurationFileFormat.CaptureVideoScaleWidth;
+            Capture.VideoScaleWidthAuto.Value = gameConfigurationFileFormat.CaptureVideoScaleWidthAuto;
+            Capture.VideoScaleHeight.Value = gameConfigurationFileFormat.CaptureVideoScaleHeight;
+            Capture.VideoScaleHeightAuto.Value = gameConfigurationFileFormat.CaptureVideoScaleHeightAuto;
+            Capture.VideoUseBitrate.Value = gameConfigurationFileFormat.CaptureVideoUseBitrate;
+            Capture.VideoBitrate.Value = gameConfigurationFileFormat.CaptureVideoBitrate;
+            Capture.VideoUseQualityLevel.Value = gameConfigurationFileFormat.CaptureVideoUseQualityLevel;
+            Capture.VideoQualityLevel.Value = gameConfigurationFileFormat.CaptureVideoQualityLevel;
+            Capture.VideoUseLossless.Value = gameConfigurationFileFormat.CaptureVideoUseLossless;
+            Capture.VideoEncoderThreadCount.Value = gameConfigurationFileFormat.CaptureVideoEncoderThreadCount;
+            Capture.VideoEncoderHardwareAcceleration.Value = gameConfigurationFileFormat.CaptureVideoEncoderHardwareAcceleration;
+            Capture.VideoEncoderHardwareAccelerationAllowNvenc.Value = gameConfigurationFileFormat.CaptureVideoEncoderHardwareAccelerationAllowNvenc;
+            Capture.VideoEncoderHardwareAccelerationAllowQsv.Value = gameConfigurationFileFormat.CaptureVideoEncoderHardwareAccelerationAllowQsv;
+            Capture.VideoEncoderHardwareAccelerationAllowVulkan.Value = gameConfigurationFileFormat.CaptureVideoEncoderHardwareAccelerationAllowVulkan;
+            Capture.AudioCodec.Value = gameConfigurationFileFormat.CaptureAudioCodec;
 
             if (configurationFileUpdated && !IsGlobalState)
             {

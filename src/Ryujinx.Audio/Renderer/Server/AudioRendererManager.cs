@@ -3,6 +3,7 @@ using Ryujinx.Audio.Renderer.Dsp;
 using Ryujinx.Audio.Renderer.Parameter;
 using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
+using Ryujinx.Media.Capture;
 using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
@@ -76,14 +77,18 @@ namespace Ryujinx.Audio.Renderer.Server
         /// </summary>
         private int _disposeState;
 
+        private readonly CaptureHandler _captureHandler;
+
         /// <summary>
         /// Create a new <see cref="AudioRendererManager"/>.
         /// </summary>
         /// <param name="tickSource">Tick source used to measure elapsed time.</param>
-        public AudioRendererManager(ITickSource tickSource)
+        public AudioRendererManager(ITickSource tickSource, CaptureHandler captureHandler)
         {
             Processor = new AudioProcessor();
             TickSource = tickSource;
+
+            _captureHandler = captureHandler;
             _sessionIds = new int[Constants.AudioRendererSessionCountMax];
             _sessions = new AudioRenderSystem[Constants.AudioRendererSessionCountMax];
             _activeSessionCount = 0;
@@ -182,7 +187,7 @@ namespace Ryujinx.Audio.Renderer.Server
             _isRunning = true;
 
             // TODO: virtual device mapping (IAudioDevice)
-            Processor.Start(_deviceDriver);
+            Processor.Start(_deviceDriver, _captureHandler);
 
             _workerThread = new Thread(SendCommands)
             {

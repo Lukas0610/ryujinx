@@ -3,6 +3,8 @@ namespace Ryujinx.Common.Configuration.Hid
     public class KeyboardHotkeys
     {
         public Key ToggleVsync { get; set; }
+        public Key StartCapture { get; set; }
+        public Key StopCapture { get; set; }
         public Key Screenshot { get; set; }
         public Key ShowUI { get; set; }
         public Key Pause { get; set; }

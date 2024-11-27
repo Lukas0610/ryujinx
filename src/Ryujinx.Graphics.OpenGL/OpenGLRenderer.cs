@@ -5,6 +5,7 @@ using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL.Image;
 using Ryujinx.Graphics.OpenGL.Queries;
 using Ryujinx.Graphics.Shader.Translation;
+using Ryujinx.Media.Capture;
 using System;
 
 namespace Ryujinx.Graphics.OpenGL
@@ -43,11 +44,11 @@ namespace Ryujinx.Graphics.OpenGL
 
         public bool PreferThreading => true;
 
-        public OpenGLRenderer()
+        public OpenGLRenderer(CaptureHandler captureHandler)
         {
             _pipeline = new Pipeline();
             _counters = new Counters();
-            _window = new Window(this);
+            _window = new Window(this, captureHandler);
             _textureCopy = new TextureCopy(this);
             _backgroundTextureCopy = new TextureCopy(this);
             TextureCopyIncompatible = new TextureCopyIncompatible(this);

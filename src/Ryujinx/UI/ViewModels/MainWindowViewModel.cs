@@ -91,9 +91,14 @@ namespace Ryujinx.Ava.UI.ViewModels
         private bool _statusBarVisible;
         private bool _gameConfigIsGlobal;
         private ReadOnlyObservableCollection<ApplicationData> _appsObservableList;
+        private bool _captureHandlerEnabled;
+        private bool _captureHandlerRunning;
+        private string _captureHandlerElapsedText;
 
         private string _showUiKey = "F4";
         private string _pauseKey = "F5";
+        private string _startCaptureKey = "F6";
+        private string _stopCaptureKey = "F7";
         private string _screenshotKey = "F8";
         private float _volume;
         private float _volumeBeforeMute;
@@ -315,6 +320,17 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool ShowHostIoStatusText
         {
             get => !_showLoadProgress && AppHost?.Device?.Configuration.EnableHostFsBuffering == true;
+        }
+
+        public string CaptureHandlerElapsedText
+        {
+            get => _captureHandlerElapsedText;
+            set
+            {
+                _captureHandlerElapsedText = value;
+
+                OnPropertyChanged();
+            }
         }
 
         public string GameStatusText
@@ -975,6 +991,28 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
+        public KeyGesture StartCaptureKey
+        {
+            get => KeyGesture.Parse(_startCaptureKey);
+            set
+            {
+                _startCaptureKey = value.ToString();
+
+                OnPropertyChanged();
+            }
+        }
+
+        public KeyGesture StopCaptureKey
+        {
+            get => KeyGesture.Parse(_stopCaptureKey);
+            set
+            {
+                _stopCaptureKey = value.ToString();
+
+                OnPropertyChanged();
+            }
+        }
+
         public KeyGesture ScreenshotKey
         {
             get => KeyGesture.Parse(_screenshotKey);
@@ -1006,6 +1044,32 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
+        public bool CaptureHandlerEnabled
+        {
+            get => _captureHandlerEnabled;
+            set
+            {
+                _captureHandlerEnabled = value;
+
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanStartCapture));
+                OnPropertyChanged(nameof(CanStopCapture));
+            }
+        }
+
+        public bool CaptureHandlerRunning
+        {
+            get => _captureHandlerRunning;
+            set
+            {
+                _captureHandlerRunning = value;
+
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CanStartCapture));
+                OnPropertyChanged(nameof(CanStopCapture));
+            }
+        }
+
         public ContentManager ContentManager { get; private set; }
         public IStorageProvider StorageProvider { get; private set; }
         public ApplicationLibrary ApplicationLibrary { get; private set; }
@@ -1034,6 +1098,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool IsGridMedium => ConfigurationState.Instance.UI.GridSize == 2;
         public bool IsGridLarge => ConfigurationState.Instance.UI.GridSize == 3;
         public bool IsGridHuge => ConfigurationState.Instance.UI.GridSize == 4;
+        public bool CanStartCapture => CaptureHandlerEnabled && !CaptureHandlerRunning;
+        public bool CanStopCapture => CaptureHandlerEnabled && CaptureHandlerRunning;
 
         #endregion
 
@@ -1401,6 +1467,16 @@ namespace Ryujinx.Ava.UI.ViewModels
                 ShowUiKey = new KeyGesture(showUiKey);
             }
 
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)gameConfig.Hid.Hotkeys.Value.StartCapture, out var startCaptureKey))
+            {
+                StartCaptureKey = new KeyGesture(startCaptureKey);
+            }
+
+            if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)gameConfig.Hid.Hotkeys.Value.StopCapture, out var stopCaptureKey))
+            {
+                StopCaptureKey = new KeyGesture(stopCaptureKey);
+            }
+
             if (AvaloniaKeyboardMappingHelper.TryGetAvaKey((Key)gameConfig.Hid.Hotkeys.Value.Screenshot, out var screenshotKey))
             {
                 ScreenshotKey = new KeyGesture(screenshotKey);
@@ -1415,6 +1491,21 @@ namespace Ryujinx.Ava.UI.ViewModels
         public void TakeScreenshot()
         {
             AppHost.ScreenshotRequested = true;
+        }
+
+        public void StartCapture()
+        {
+            // Start() will check whether the handler is disabled or already running
+            AppHost.Device.CaptureHandler.Start();
+        }
+
+        public void StopCapture()
+        {
+            Task.Run(() =>
+            {
+                // Stop() will check whether the handler is running
+                AppHost.Device.CaptureHandler.Stop();
+            });
         }
 
         public void HideUi()
@@ -1710,6 +1801,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 RendererHostControl,
                 InputManager,
                 application.Path,
+                application.Name,
                 application.Id,
                 application.IdString,
                 VirtualFileSystem,

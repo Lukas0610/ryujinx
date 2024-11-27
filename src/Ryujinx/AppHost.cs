@@ -36,6 +36,7 @@ using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.Input;
 using Ryujinx.Input.HLE;
+using Ryujinx.Media.Capture;
 using Ryujinx.UI.App.Common;
 using Ryujinx.UI.Common;
 using Ryujinx.UI.Common.Configuration;
@@ -48,7 +49,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using static Ryujinx.Ava.UI.Helpers.Win32NativeInterop;
@@ -76,9 +76,9 @@ namespace Ryujinx.Ava
 
         private readonly long _ticksPerFrame;
         private readonly Stopwatch _chrono;
+        private readonly Timer _runtimeStatsTimer;
         private long _ticks;
 
-        private readonly Timer _hostFsStatsTimer;
         private readonly Stopwatch _hostFsStatsChrono;
         private long _hostFsStatsUpdateCounter;
         private long _hostFsIoLastTotal;
@@ -149,6 +149,7 @@ namespace Ryujinx.Ava
         public int Width { get; private set; }
         public int Height { get; private set; }
         public string ApplicationPath { get; private set; }
+        public string ApplicationName { get; private set; }
         public ulong ApplicationId { get; private set; }
         public string ApplicationIdString { get; private set; }
         public bool ScreenshotRequested { get; set; }
@@ -159,6 +160,7 @@ namespace Ryujinx.Ava
             RendererHost renderer,
             InputManager inputManager,
             string applicationPath,
+            string applicationName,
             ulong applicationId,
             string applicationIdString,
             VirtualFileSystem virtualFileSystem,
@@ -189,7 +191,9 @@ namespace Ryujinx.Ava
             ApplicationGameConfig = appGameConfig;
             NpadManager = _inputManager.CreateNpadManager();
             TouchScreenManager = _inputManager.CreateTouchScreenManager();
+
             ApplicationPath = applicationPath;
+            ApplicationName = applicationName;
             ApplicationId = applicationId;
             ApplicationIdString = applicationIdString;
             VirtualFileSystem = virtualFileSystem;
@@ -199,6 +203,7 @@ namespace Ryujinx.Ava
 
             _chrono = new Stopwatch();
             _ticksPerFrame = Stopwatch.Frequency / TargetFps;
+            _runtimeStatsTimer = new Timer(UpdateRuntimeStats, null, Timeout.Infinite, Timeout.Infinite);
 
             if (ApplicationPath.StartsWith("@SystemContent"))
             {
@@ -215,7 +220,6 @@ namespace Ryujinx.Ava
             _topLevel.PointerEntered += TopLevel_PointerEnteredOrMoved;
             _topLevel.PointerExited += TopLevel_PointerExited;
 
-            _hostFsStatsTimer = new Timer(UpdateHostFsStats, null, Timeout.Infinite, Timeout.Infinite);
             _hostFsStatsChrono = new Stopwatch();
 
             if (OperatingSystem.IsWindows())
@@ -369,7 +373,7 @@ namespace Ryujinx.Ava
 
         private void Renderer_ScreenCaptured(object sender, ScreenCaptureImageInfo e)
         {
-            if (e.Data.Length > 0 && e.Height > 0 && e.Width > 0)
+            if (e.FrameBuffer.Length > 0 && e.Height > 0 && e.Width > 0)
             {
                 Task.Run(() =>
                 {
@@ -403,7 +407,11 @@ namespace Ryujinx.Ava
                         var colorType = e.IsBgra ? SKColorType.Bgra8888 : SKColorType.Rgba8888;
                         using SKBitmap bitmap = new SKBitmap(new SKImageInfo(e.Width, e.Height, colorType, SKAlphaType.Premul));
 
-                        Marshal.Copy(e.Data, 0, bitmap.GetPixels(), e.Data.Length);
+                        unsafe
+                        {
+                            Span<byte> bitmapPixelsSpan = new Span<byte>((byte*)bitmap.GetPixels(), bitmap.ByteCount);
+                            e.FrameBuffer.ReadOnlySpan.CopyTo(bitmapPixelsSpan);
+                        }
 
                         using SKBitmap bitmapToSave = new SKBitmap(bitmap.Width, bitmap.Height);
                         using SKCanvas canvas = new SKCanvas(bitmapToSave);
@@ -426,7 +434,7 @@ namespace Ryujinx.Ava
             }
             else
             {
-                Logger.Error?.Print(LogClass.Application, $"Screenshot is empty. Size : {e.Data.Length} bytes. Resolution : {e.Width}x{e.Height}", "Screenshot");
+                Logger.Error?.Print(LogClass.Application, $"Screenshot is empty. Size : {e.FrameBuffer.Length} bytes. Resolution : {e.Width}x{e.Height}", "Screenshot");
             }
         }
 
@@ -438,12 +446,136 @@ namespace Ryujinx.Ava
             data.SaveTo(stream);
         }
 
+        private void HandleCaptureHandlerStateChanged(object sender, EventArgs e)
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _viewModel.CaptureHandlerEnabled = Device.CaptureHandler.Enabled;
+                _viewModel.CaptureHandlerRunning = Device.CaptureHandler.Running;
+            });
+        }
+
+        private void HandleCaptureHandlerCreateConfiguration(object sender, CaptureConfigurationEventArgs e)
+        {
+            // Output
+            e.Format = GameConfig.Capture.OutputFormat.Value switch
+            {
+                CaptureOutputFormatValue.Auto => CaptureOutputFormat.Auto,
+                CaptureOutputFormatValue.MKV => CaptureOutputFormat.MKV,
+                CaptureOutputFormatValue.MPEGTS => CaptureOutputFormat.MPEGTS,
+                _ => throw new NotImplementedException()
+            };
+
+            e.OutputPath = BuildCaptureOutputPath(e.Format);
+
+            // Video
+            e.VideoCodec = GameConfig.Capture.VideoCodec.Value switch
+            {
+                CaptureVideoCodecValue.Auto => CaptureVideoCodec.Auto,
+                CaptureVideoCodecValue.H264 => CaptureVideoCodec.H264,
+                CaptureVideoCodecValue.HEVC => CaptureVideoCodec.HEVC,
+                _ => throw new NotImplementedException()
+            };
+
+            if (GameConfig.Capture.VideoScaleEnabled &&
+                !(GameConfig.Capture.VideoScaleWidthAuto && GameConfig.Capture.VideoScaleHeightAuto))
+            {
+                e.VideoScaleWidth = !GameConfig.Capture.VideoScaleWidthAuto
+                    ? GameConfig.Capture.VideoScaleWidth
+                    : -1;
+
+                e.VideoScaleHeight = !GameConfig.Capture.VideoScaleHeightAuto
+                    ? GameConfig.Capture.VideoScaleHeight
+                    : -1;
+            }
+            else
+            {
+                e.VideoScaleWidth = 0;
+                e.VideoScaleHeight = 0;
+            }
+
+            e.VideoEncodingThreadCount = 8;
+            e.VideoAllowedHardwareDevices = CaptureVideoHardwareDevice.None;
+
+            if (GameConfig.Capture.VideoEncoderHardwareAcceleration)
+            {
+                if (GameConfig.Capture.VideoEncoderHardwareAccelerationAllowNvenc)
+                {
+                    e.VideoAllowedHardwareDevices |= CaptureVideoHardwareDevice.NVENC;
+                }
+
+                if (GameConfig.Capture.VideoEncoderHardwareAccelerationAllowQsv)
+                {
+                    e.VideoAllowedHardwareDevices |= CaptureVideoHardwareDevice.QSV;
+                }
+
+                if (GameConfig.Capture.VideoEncoderHardwareAccelerationAllowVulkan)
+                {
+                    e.VideoAllowedHardwareDevices |= CaptureVideoHardwareDevice.Vulkan;
+                }
+            }
+
+            // Video-Quality
+            e.VideoUseBitrate = GameConfig.Capture.VideoUseBitrate;
+            e.VideoBitrate = GameConfig.Capture.VideoBitrate;
+
+            e.VideoUseQualityLevel = GameConfig.Capture.VideoUseQualityLevel;
+            e.VideoQualityLevel = GameConfig.Capture.VideoQualityLevel;
+
+            e.VideoUseLossless = GameConfig.Capture.VideoUseLossless;
+
+            // Audio
+            e.AudioCodec = GameConfig.Capture.AudioCodec.Value switch
+            {
+                CaptureAudioCodecValue.Auto => CaptureAudioCodec.Auto,
+                CaptureAudioCodecValue.PCM => CaptureAudioCodec.PCM,
+                CaptureAudioCodecValue.AAC => CaptureAudioCodec.AAC,
+                CaptureAudioCodecValue.Opus => CaptureAudioCodec.Opus,
+                CaptureAudioCodecValue.Vorbis => CaptureAudioCodec.Vorbis,
+                _ => throw new NotImplementedException()
+            };
+        }
+
+        private string BuildCaptureOutputPath(CaptureOutputFormat format)
+        {
+            string directory = AppDataManager.Mode switch
+            {
+                AppDataManager.LaunchMode.Portable or AppDataManager.LaunchMode.Custom => Path.Combine(AppDataManager.BaseDirPath, "captures"),
+                _ => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "Ryujinx"),
+            };
+
+            string applicationName = Device.Processes.ActiveApplication.Name;
+            string sanitizedApplicationName = FileSystemUtils.SanitizeFileName(applicationName);
+            DateTime currentTime = DateTime.Now;
+
+            string extension = format switch
+            {
+                CaptureOutputFormat.MKV => "mkv",
+                CaptureOutputFormat.MPEGTS => "ts",
+                _ => throw new ArgumentException("Invalid capture format", nameof(format))
+            };
+
+            string filename = $"{sanitizedApplicationName}_{currentTime.Year}-{currentTime.Month:D2}-{currentTime.Day:D2}_{currentTime.Hour:D2}-{currentTime.Minute:D2}-{currentTime.Second:D2}.{extension}";
+
+            try
+            {
+                Directory.CreateDirectory(directory);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error?.Print(LogClass.Application, $"Failed to create directory at path {directory}. Error : {ex.GetType().Name}", "Capture");
+            }
+
+            return Path.Combine(directory, filename);
+        }
+
         public void Start()
         {
             CreateCrashMarker();
-            
+
             _hostFsStatsChrono.Start();
-            _hostFsStatsTimer.Change(0, 1000);
+
+            _runtimeStatsTimer.Change(0, 1000);
 
             if (OperatingSystem.IsWindows())
             {
@@ -577,6 +709,11 @@ namespace Ryujinx.Ava
             _gpuDoneEvent.WaitOne();
             _gpuDoneEvent.Dispose();
 
+            // Finalize the capture right after the GPU is done
+            Device.CaptureHandler.Disable();
+            Device.CaptureHandler.Stop();
+            Device.CaptureHandler.Dispose();
+
             DisplaySleep.Restore();
 
             NpadManager.Dispose();
@@ -611,7 +748,7 @@ namespace Ryujinx.Ava
             _gpuCancellationTokenSource.Cancel();
             _gpuCancellationTokenSource.Dispose();
 
-            _hostFsStatsTimer.Dispose();
+            _runtimeStatsTimer.Dispose();
             _chrono.Stop();
         }
 
@@ -877,6 +1014,12 @@ namespace Ryujinx.Ava
             // Initialize KeySet.
             VirtualFileSystem.ReloadKeySet();
 
+            // Initialize capture-handler
+            var captureHandler = new CaptureHandler();
+
+            captureHandler.StateChanged += HandleCaptureHandlerStateChanged;
+            captureHandler.CreateConfiguration += HandleCaptureHandlerCreateConfiguration;
+
             // Initialize Renderer.
             IRenderer renderer;
 
@@ -886,11 +1029,12 @@ namespace Ryujinx.Ava
                     Vk.GetApi(),
                     (RendererHost.EmbeddedWindow as EmbeddedWindowVulkan).CreateSurface,
                     VulkanHelper.GetRequiredInstanceExtensions,
-                    GameConfig.Graphics.PreferredGpu.Value);
+                    GameConfig.Graphics.PreferredGpu.Value,
+                    captureHandler);
             }
             else
             {
-                renderer = new OpenGLRenderer();
+                renderer = new OpenGLRenderer(captureHandler);
             }
 
             BackendThreading threadingMode = GameConfig.Graphics.BackendThreading;
@@ -940,7 +1084,7 @@ namespace Ryujinx.Ava
                                                  CPUSet.ParseOrDefault(GameConfig.System.PtcBackgroundThreadsCPUSet),
                                                  GameConfig.System.PtcBackgroundThreadCount);
 
-            Device = new Switch(configuration);
+            Device = new Switch(configuration, captureHandler);
         }
 
         private IHardwareDeviceDriver InitializeAudio()
@@ -1085,6 +1229,13 @@ namespace Ryujinx.Ava
                             _renderingStarted = true;
                             _viewModel.SwitchToRenderer(false);
                             InitStatus();
+
+                            Device.CaptureHandler.Enable();
+
+                            if (GameConfig.Capture.BeginOnStart)
+                            {
+                                Device.CaptureHandler.Start();
+                            }
                         }
 
                         Device.PresentFrame(() => (RendererHost.EmbeddedWindow as EmbeddedWindowOpenGL)?.SwapBuffers());
@@ -1108,8 +1259,9 @@ namespace Ryujinx.Ava
             (RendererHost.EmbeddedWindow as EmbeddedWindowOpenGL)?.MakeCurrent(true);
         }
 
-        private void UpdateHostFsStats(object state)
+        private void UpdateRuntimeStats(object state)
         {
+            // Host I/O
             Dictionary<string, IHostIOStat> hostFsStats = Device.HostFileSystem.GetStats().ToDictionary(x => x.Name);
 
             if (hostFsStats.TryGetValue("SizeOfFileReads", out IHostIOStat sizeOfHostFsFileReads) &&
@@ -1135,6 +1287,17 @@ namespace Ryujinx.Ava
                 Logger.Info?.Print(LogClass.IO, $"HostFS I/O stats: {hostFsStatsString}");
 
                 _hostFsStatsUpdateCounter = 0;
+            }
+
+            // Capture
+            if (Device.CaptureHandler.Running)
+            {
+                TimeSpan? elapsed = Device.CaptureHandler.Elapsed;
+                _viewModel.CaptureHandlerElapsedText = elapsed.HasValue ? elapsed.Value.ToString(@"hh\:mm\:ss") : "";
+            }
+            else
+            {
+                _viewModel.CaptureHandlerElapsedText = "";
             }
         }
 
@@ -1258,6 +1421,12 @@ namespace Ryujinx.Ava
                         case KeyboardHotkeyState.Screenshot:
                             ScreenshotRequested = true;
                             break;
+                        case KeyboardHotkeyState.StartCapture:
+                            _viewModel.StartCapture();
+                            break;
+                        case KeyboardHotkeyState.StopCapture:
+                            _viewModel.StopCapture();
+                            break;
                         case KeyboardHotkeyState.ShowUI:
                             _viewModel.ShowMenuAndStatusBar = !_viewModel.ShowMenuAndStatusBar;
                             break;
@@ -1345,6 +1514,14 @@ namespace Ryujinx.Ava
             if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.ToggleVsync))
             {
                 state = KeyboardHotkeyState.ToggleVSync;
+            }
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.StartCapture))
+            {
+                state = KeyboardHotkeyState.StartCapture;
+            }
+            else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.StopCapture))
+            {
+                state = KeyboardHotkeyState.StopCapture;
             }
             else if (_keyboardInterface.IsPressed((Key)GameConfig.Hid.Hotkeys.Value.Screenshot))
             {

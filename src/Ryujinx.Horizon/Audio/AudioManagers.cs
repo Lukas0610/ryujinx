@@ -6,6 +6,7 @@ using Ryujinx.Audio.Renderer.Device;
 using Ryujinx.Audio.Renderer.Server;
 using Ryujinx.Cpu;
 using Ryujinx.Horizon.Sdk.Audio;
+using Ryujinx.Media.Capture;
 using System;
 
 namespace Ryujinx.Horizon.Audio
@@ -18,12 +19,12 @@ namespace Ryujinx.Horizon.Audio
         public AudioRendererManager AudioRendererManager { get; }
         public VirtualDeviceSessionRegistry AudioDeviceSessionRegistry { get; }
 
-        public AudioManagers(IHardwareDeviceDriver audioDeviceDriver, ITickSource tickSource)
+        public AudioManagers(IHardwareDeviceDriver audioDeviceDriver, CaptureHandler captureHandler, ITickSource tickSource)
         {
             AudioManager = new AudioManager();
-            AudioOutputManager = new AudioOutputManager();
-            AudioInputManager = new AudioInputManager();
-            AudioRendererManager = new AudioRendererManager(tickSource);
+            AudioOutputManager = new AudioOutputManager(captureHandler);
+            AudioInputManager = new AudioInputManager(captureHandler);
+            AudioRendererManager = new AudioRendererManager(tickSource, captureHandler);
             AudioDeviceSessionRegistry = new VirtualDeviceSessionRegistry(audioDeviceDriver);
 
             IWritableEvent[] audioOutputRegisterBufferEvents = new IWritableEvent[Constants.AudioOutSessionCountMax];

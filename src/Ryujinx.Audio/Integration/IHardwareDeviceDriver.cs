@@ -1,4 +1,5 @@
 using Ryujinx.Audio.Common;
+using Ryujinx.Media.Capture;
 using Ryujinx.Memory;
 using System;
 using System.Threading;
@@ -18,7 +19,7 @@ namespace Ryujinx.Audio.Integration
 
         float Volume { get; set; }
 
-        IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount);
+        IHardwareDeviceSession OpenDeviceSession(Direction direction, CaptureHandler captureHandler, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount);
 
         ManualResetEvent GetUpdateRequiredEvent();
         ManualResetEvent GetPauseEvent();

@@ -1,8 +1,14 @@
 using OpenTK.Graphics.OpenGL;
+using Ryujinx.Common.Buffers;
+using Ryujinx.Common.Buffers.Unsafe;
 using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.OpenGL.Effects;
 using Ryujinx.Graphics.OpenGL.Effects.Smaa;
 using Ryujinx.Graphics.OpenGL.Image;
+using Ryujinx.Media;
+using Ryujinx.Media.Capture;
+using Ryujinx.Media.Capture.Encoder.Configuration;
+using Ryujinx.Media.Capture.Encoder.Frames;
 using System;
 
 namespace Ryujinx.Graphics.OpenGL
@@ -10,6 +16,7 @@ namespace Ryujinx.Graphics.OpenGL
     class Window : IWindow, IDisposable
     {
         private readonly OpenGLRenderer _renderer;
+        private readonly CaptureHandler _captureHandler;
 
         private bool _initialized;
 
@@ -28,13 +35,17 @@ namespace Ryujinx.Graphics.OpenGL
         private bool _isBgra;
         private TextureView _upscaledTexture;
 
+        public int Width => _width;
+        public int Height => _height;
+
         internal BackgroundContextWorker BackgroundContext { get; private set; }
 
         internal bool ScreenCaptureRequested { get; set; }
 
-        public Window(OpenGLRenderer renderer)
+        public Window(OpenGLRenderer renderer, CaptureHandler captureHandler)
         {
             _renderer = renderer;
+            _captureHandler = captureHandler;
         }
 
         public void Present(ITexture texture, ImageCrop crop, Action swapBuffersCallback)
@@ -149,11 +160,27 @@ namespace Ryujinx.Graphics.OpenGL
             int dstY0 = crop.FlipY ? dstPaddingY : _height - dstPaddingY;
             int dstY1 = crop.FlipY ? _height - dstPaddingY : dstPaddingY;
 
-            if (ScreenCaptureRequested)
-            {
-                CaptureFrame(srcX0, srcY0, srcX1, srcY1, view.Format.IsBgr(), crop.FlipX, crop.FlipY);
+            int width = srcX1 - srcX0;
+            int height = srcY1 - srcY0;
 
-                ScreenCaptureRequested = false;
+            _captureHandler.UpdateConfiguration(new VideoCaptureConfiguration()
+            {
+                Width = width,
+                Height = height,
+                PixelFormat = view.Info.Format.IsBgr() ? MediaPixelFormat.Bgra8888 : MediaPixelFormat.Rgba8888,
+            });
+
+            bool screenCaptureRequested = ScreenCaptureRequested;
+            bool captureHandlerRunning = _captureHandler.Running;
+
+            if (screenCaptureRequested || captureHandlerRunning)
+            {
+                CaptureFrame(srcX0, srcY0, width, height, view.Format.IsBgr(), crop.FlipX, crop.FlipY, screenCaptureRequested, captureHandlerRunning);
+
+                if (screenCaptureRequested)
+                {
+                    ScreenCaptureRequested = false;
+                }
             }
 
             if (_scalingFilter != null)
@@ -252,14 +279,42 @@ namespace Ryujinx.Graphics.OpenGL
             _initialized = true;
         }
 
-        public void CaptureFrame(int x, int y, int width, int height, bool isBgra, bool flipX, bool flipY)
+        public void CaptureFrame(int x, int y, int width, int height, bool isBgra, bool flipX, bool flipY, bool forScreenCapture, bool forCaptureHandler)
         {
-            long size = Math.Abs(4 * width * height);
-            byte[] bitmap = new byte[size];
+            int size = Math.Abs(4 * width * height);
+            IBuffer buffer = _captureHandler.VideoBufferPool.Rent(size);
 
-            GL.ReadPixels(x, y, width, height, isBgra ? PixelFormat.Bgra : PixelFormat.Rgba, PixelType.UnsignedByte, bitmap);
+            if (buffer is ArrayBuffer arrayBuffer)
+            {
+                GL.ReadPixels(x, y, width, height, isBgra ? PixelFormat.Bgra : PixelFormat.Rgba, PixelType.UnsignedByte, arrayBuffer.Array);
+            }
+            else if (buffer is UnsafeBuffer unsafeBuffer)
+            {
+                GL.ReadPixels(x, y, width, height, isBgra ? PixelFormat.Bgra : PixelFormat.Rgba, PixelType.UnsignedByte, unsafeBuffer.Pointer);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
 
-            _renderer.OnScreenCaptured(new ScreenCaptureImageInfo(width, height, isBgra, bitmap, flipX, flipY));
+            if (forScreenCapture)
+            {
+                _renderer.OnScreenCaptured(new ScreenCaptureImageInfo(buffer, width, height, isBgra, flipX, flipY));
+            }
+
+            if (forCaptureHandler)
+            {
+                // buffer will be disposed/returned when encoder is done with the input data
+                _captureHandler.EnqueueFrame(new VideoCaptureFrame()
+                {
+                    Flip = (flipX ? MediaImageFlip.Horizontal : MediaImageFlip.None) | (flipY ? MediaImageFlip.Vertical : MediaImageFlip.None),
+                    Buffer = buffer
+                });
+            }
+            else
+            {
+                buffer.Dispose();
+            }
         }
 
         public void Dispose()

@@ -3,6 +3,7 @@ using Ryujinx.Audio.Integration;
 using Ryujinx.Cpu;
 using Ryujinx.Horizon.Sdk.Account;
 using Ryujinx.Horizon.Sdk.Fs;
+using Ryujinx.Media.Capture;
 
 namespace Ryujinx.Horizon
 {
@@ -15,6 +16,7 @@ namespace Ryujinx.Horizon
         public IFsClient FsClient { get; }
         public IEmulatorAccountManager AccountManager { get; }
         public IHardwareDeviceDriver AudioDeviceDriver { get; }
+        public CaptureHandler CaptureHandler { get; }
         public ITickSource TickSource { get; }
 
         public HorizonOptions(
@@ -23,6 +25,7 @@ namespace Ryujinx.Horizon
             IFsClient fsClient,
             IEmulatorAccountManager accountManager,
             IHardwareDeviceDriver audioDeviceDriver,
+            CaptureHandler captureHandler,
             ITickSource tickSource)
         {
             IgnoreMissingServices = ignoreMissingServices;
@@ -31,6 +34,7 @@ namespace Ryujinx.Horizon
             FsClient = fsClient;
             AccountManager = accountManager;
             AudioDeviceDriver = audioDeviceDriver;
+            CaptureHandler = captureHandler;
             TickSource = tickSource;
         }
     }

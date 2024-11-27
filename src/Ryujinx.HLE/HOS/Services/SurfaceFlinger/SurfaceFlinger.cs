@@ -39,6 +39,8 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
 
         public long RenderLayerId { get; private set; }
 
+        public int SwapInterval => _swapInterval;
+
         private class Layer
         {
             public int ProducerBinderId;
@@ -79,6 +81,7 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
         private void UpdateSwapInterval(int swapInterval)
         {
             _swapInterval = swapInterval;
+            _device.CaptureHandler.SwapInterval = swapInterval;
 
             // If the swap interval is 0, Game VSync is disabled.
             if (_swapInterval == 0)

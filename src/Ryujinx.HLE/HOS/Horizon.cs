@@ -269,6 +269,7 @@ namespace Ryujinx.HLE.HOS
                 fsClient,
                 AccountManager,
                 Device.AudioDeviceDriver,
+                Device.CaptureHandler,
                 TickSource));
 
             foreach (var service in services)

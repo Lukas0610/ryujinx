@@ -41,6 +41,7 @@
             <settings:SettingsGraphicsView Name="GraphicsPage" />
             <settings:SettingsAudioView Name="AudioPage" />
             <settings:SettingsNetworkView Name="NetworkPage" />
+            <settings:SettingsCaptureView Name="CapturePage" />
             <settings:SettingsLoggingView Name="LoggingPage" />
         </Grid>
         <ui:NavigationView
@@ -100,6 +101,11 @@
                     Content="{locale:Locale SettingsTabNetwork}"
                     Tag="NetworkPage"
                     IconSource="Globe" />
+                <ui:NavigationViewItem
+                    IsEnabled="{Binding IsGameConfigEnabled}"
+                    Content="{locale:Locale SettingsTabCapture}"
+                    Tag="CapturePage"
+                    IconSource="Camera" />
                 <ui:NavigationViewItem
                     IsEnabled="{Binding IsGlobalConfigEnabled}"
                     Content="{locale:Locale SettingsTabLogging}"

@@ -10,6 +10,9 @@ namespace Ryujinx.Graphics.GAL.Multithreading
         private readonly ThreadedRenderer _renderer;
         private readonly IRenderer _impl;
 
+        public int Width => _impl.Window.Width;
+        public int Height => _impl.Window.Height;
+
         public ThreadedWindow(ThreadedRenderer renderer, IRenderer impl)
         {
             _renderer = renderer;

@@ -119,6 +119,9 @@ namespace Ryujinx.Ava.UI.Windows
                     case "NetworkPage":
                         NavPanel.Content = NetworkPage;
                         break;
+                    case "CapturePage":
+                        NavPanel.Content = CapturePage;
+                        break;
                     case "LoggingPage":
                         NavPanel.Content = LoggingPage;
                         break;

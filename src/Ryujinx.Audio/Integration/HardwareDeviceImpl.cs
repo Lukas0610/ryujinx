@@ -1,4 +1,5 @@
 using Ryujinx.Audio.Common;
+using Ryujinx.Media.Capture;
 using System;
 using System.Runtime.InteropServices;
 
@@ -13,9 +14,9 @@ namespace Ryujinx.Audio.Integration
 
         private readonly byte[] _buffer;
 
-        public HardwareDeviceImpl(IHardwareDeviceDriver deviceDriver, uint channelCount, uint sampleRate)
+        public HardwareDeviceImpl(IHardwareDeviceDriver deviceDriver, CaptureHandler captureHandler, uint channelCount, uint sampleRate)
         {
-            _session = deviceDriver.OpenDeviceSession(IHardwareDeviceDriver.Direction.Output, null, SampleFormat.PcmInt16, sampleRate, channelCount);
+            _session = deviceDriver.OpenDeviceSession(IHardwareDeviceDriver.Direction.Output, captureHandler, null, SampleFormat.PcmInt16, sampleRate, channelCount);
             _channelCount = channelCount;
             _sampleRate = sampleRate;
             _currentBufferTag = 0;

@@ -1,6 +1,7 @@
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Logging;
+using Ryujinx.Media.Capture;
 using Ryujinx.Memory;
 using System;
 using System.Diagnostics;
@@ -15,6 +16,8 @@ namespace Ryujinx.Audio.Output
     public class AudioOutputManager : IDisposable
     {
         private readonly Lock _lock = new();
+
+        private readonly CaptureHandler _captureHandler;
 
         /// <summary>
         /// Lock used for session allocation.
@@ -54,8 +57,10 @@ namespace Ryujinx.Audio.Output
         /// <summary>
         /// Create a new <see cref="AudioOutputManager"/>.
         /// </summary>
-        public AudioOutputManager()
+        public AudioOutputManager(CaptureHandler captureHandler)
         {
+            _captureHandler = captureHandler;
+
             _sessionIds = new int[Constants.AudioOutSessionCountMax];
             _sessions = new AudioOutputSystem[Constants.AudioOutSessionCountMax];
             _activeSessionCount = 0;
@@ -193,7 +198,7 @@ namespace Ryujinx.Audio.Output
 
             _sessionsBufferEvents[sessionId].Clear();
 
-            IHardwareDeviceSession deviceSession = _deviceDriver.OpenDeviceSession(IHardwareDeviceDriver.Direction.Output, memoryManager, sampleFormat, parameter.SampleRate, parameter.ChannelCount);
+            IHardwareDeviceSession deviceSession = _deviceDriver.OpenDeviceSession(IHardwareDeviceDriver.Direction.Output, _captureHandler, memoryManager, sampleFormat, parameter.SampleRate, parameter.ChannelCount);
 
             AudioOutputSystem audioOut = new(this, _lock, deviceSession, _sessionsBufferEvents[sessionId]);
 

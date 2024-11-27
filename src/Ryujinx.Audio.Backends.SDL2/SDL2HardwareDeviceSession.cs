@@ -1,10 +1,14 @@
 using Ryujinx.Audio.Backends.Common;
 using Ryujinx.Audio.Common;
+using Ryujinx.Common.Buffers;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
+using Ryujinx.Media;
+using Ryujinx.Media.Capture;
+using Ryujinx.Media.Capture.Encoder.Configuration;
+using Ryujinx.Media.Capture.Encoder.Frames;
 using Ryujinx.Memory;
 using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Threading;
 
@@ -15,6 +19,8 @@ namespace Ryujinx.Audio.Backends.SDL2
     class SDL2HardwareDeviceSession : HardwareDeviceSessionOutputBase
     {
         private readonly SDL2HardwareDeviceDriver _driver;
+        private readonly CaptureHandler _captureHandler;
+        private readonly int _captureAudioSessionIndex;
         private readonly ConcurrentQueue<SDL2AudioBuffer> _queuedBuffers;
         private readonly DynamicRingBuffer _ringBuffer;
         private ulong _playedSampleCount;
@@ -28,9 +34,12 @@ namespace Ryujinx.Audio.Backends.SDL2
         private float _volume;
         private readonly ushort _nativeSampleFormat;
 
-        public SDL2HardwareDeviceSession(SDL2HardwareDeviceDriver driver, IVirtualMemoryManager memoryManager, SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount) : base(memoryManager, requestedSampleFormat, requestedSampleRate, requestedChannelCount)
+        public SDL2HardwareDeviceSession(SDL2HardwareDeviceDriver driver, CaptureHandler captureHandler, IVirtualMemoryManager memoryManager,SampleFormat requestedSampleFormat, uint requestedSampleRate, uint requestedChannelCount)
+            : base(memoryManager, requestedSampleFormat, requestedSampleRate, requestedChannelCount)
         {
             _driver = driver;
+            _captureHandler = captureHandler;
+            _captureAudioSessionIndex = captureHandler.GetNextAudioSessionIndex();
             _updateRequiredEvent = _driver.GetUpdateRequiredEvent();
             _queuedBuffers = new ConcurrentQueue<SDL2AudioBuffer>();
             _ringBuffer = new DynamicRingBuffer();
@@ -104,6 +113,38 @@ namespace Ryujinx.Audio.Backends.SDL2
 
                 // Apply volume to written data
                 SDL_MixAudioFormat(stream, pStreamSrc, _nativeSampleFormat, (uint)samples.Length, (int)(_driver.Volume * _volume * SDL_MIX_MAXVOLUME));
+            }
+
+            _captureHandler.UpdateConfiguration(new AudioCaptureConfiguration()
+            {
+                SessionIndex = _captureAudioSessionIndex,
+                SampleFormat = RequestedSampleFormat switch
+                {
+                    SampleFormat.PcmInt8 => MediaSampleFormat.PcmInt8,
+                    SampleFormat.PcmInt16 => MediaSampleFormat.PcmInt16,
+                    SampleFormat.PcmInt32 => MediaSampleFormat.PcmInt32,
+                    SampleFormat.PcmFloat => MediaSampleFormat.PcmFloat,
+                    _ => throw new ArgumentException()
+                },
+                SampleRate = RequestedSampleRate,
+                SampleCount = _sampleCount,
+                ChannelCount = RequestedChannelCount,
+            });
+
+            if (_captureHandler?.Running == true)
+            {
+                IBuffer buffer = _captureHandler.AudioBufferPool.Rent(streamSpan.Length);
+
+                streamSpan.CopyTo(buffer.Span);
+
+                _captureHandler.EnqueueFrame(new AudioCaptureFrame()
+                {
+                    SessionIndex = _captureAudioSessionIndex,
+                    Buffer = buffer,
+                    FrameBufferSampleCount = frameCount,
+                });
+
+                // buffer will be disposed/returned when encoder is done with the input data
             }
 
             ulong sampleCount = GetSampleCount(samples.Length);

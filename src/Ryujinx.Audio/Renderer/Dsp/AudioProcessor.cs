@@ -3,6 +3,7 @@ using Ryujinx.Audio.Renderer.Dsp.Command;
 using Ryujinx.Audio.Renderer.Utils;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Media.Capture;
 using System;
 using System.Threading;
 
@@ -59,7 +60,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             return 2;
         }
 
-        public void Start(IHardwareDeviceDriver deviceDriver)
+        public void Start(IHardwareDeviceDriver deviceDriver, CaptureHandler captureHandler)
         {
             OutputDevices = new IHardwareDevice[Constants.AudioRendererSessionCountMax];
 
@@ -68,7 +69,7 @@ namespace Ryujinx.Audio.Renderer.Dsp
             for (int i = 0; i < OutputDevices.Length; i++)
             {
                 // TODO: Don't hardcode sample rate.
-                OutputDevices[i] = new HardwareDeviceImpl(deviceDriver, channelCount, Constants.TargetSampleRate);
+                OutputDevices[i] = new HardwareDeviceImpl(deviceDriver, captureHandler, channelCount, Constants.TargetSampleRate);
             }
 
             _mailbox = new Mailbox<MailboxMessage>();

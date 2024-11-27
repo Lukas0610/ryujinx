@@ -5,6 +5,7 @@ using Ryujinx.Graphics.Shader;
 using Ryujinx.Graphics.Shader.Translation;
 using Ryujinx.Graphics.Vulkan.MoltenVK;
 using Ryujinx.Graphics.Vulkan.Queries;
+using Ryujinx.Media.Capture;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.EXT;
 using Silk.NET.Vulkan.Extensions.KHR;
@@ -25,6 +26,8 @@ namespace Ryujinx.Graphics.Vulkan
         private VulkanPhysicalDevice _physicalDevice;
         private Device _device;
         private WindowBase _window;
+
+        private readonly CaptureHandler _captureHandler;
 
         private bool _initialized;
 
@@ -103,11 +106,13 @@ namespace Ryujinx.Graphics.Vulkan
 
         public event EventHandler<ScreenCaptureImageInfo> ScreenCaptured;
 
-        public VulkanRenderer(Vk api, Func<Instance, Vk, SurfaceKHR> surfaceFunc, Func<string[]> requiredExtensionsFunc, string preferredGpuId)
+        public VulkanRenderer(Vk api, Func<Instance, Vk, SurfaceKHR> surfaceFunc, Func<string[]> requiredExtensionsFunc, string preferredGpuId, CaptureHandler captureHandler)
         {
             _getSurface = surfaceFunc;
             _getRequiredExtensions = requiredExtensionsFunc;
             _preferredGpuId = preferredGpuId;
+            _captureHandler = captureHandler;
+
             Api = api;
             Shaders = new HashSet<ShaderCollection>();
             Textures = new HashSet<ITexture>();
@@ -499,7 +504,7 @@ namespace Ryujinx.Graphics.Vulkan
 
             QueueFamilyIndex = queueFamilyIndex;
 
-            _window = new Window(this, _surface, _physicalDevice.PhysicalDevice, _device);
+            _window = new Window(this, _surface, _physicalDevice.PhysicalDevice, _device, _captureHandler);
 
             _initialized = true;
         }

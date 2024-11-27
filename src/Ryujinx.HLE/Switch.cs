@@ -9,9 +9,9 @@ using Ryujinx.HLE.HOS.Services.Apm;
 using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.Loaders.Processes;
 using Ryujinx.HLE.UI;
+using Ryujinx.Media.Capture;
 using Ryujinx.Memory;
 using System;
-using System.Threading;
 
 namespace Ryujinx.HLE
 {
@@ -19,6 +19,7 @@ namespace Ryujinx.HLE
     {
         public HLEConfiguration Configuration { get; }
         public IHardwareDeviceDriver AudioDeviceDriver { get; }
+        public CaptureHandler CaptureHandler { get; }
         public MemoryBlock Memory { get; }
         public GpuContext Gpu { get; }
         public VirtualFileSystem FileSystem { get; }
@@ -35,7 +36,7 @@ namespace Ryujinx.HLE
 
         public bool IsFrameAvailable => Gpu.Window.IsFrameAvailable;
 
-        public Switch(HLEConfiguration configuration)
+        public Switch(HLEConfiguration configuration, CaptureHandler captureHandler)
         {
             ArgumentNullException.ThrowIfNull(configuration.GpuRenderer);
             ArgumentNullException.ThrowIfNull(configuration.AudioDeviceDriver);
@@ -44,6 +45,7 @@ namespace Ryujinx.HLE
             Configuration = configuration;
             FileSystem = Configuration.VirtualFileSystem;
             UIHandler = Configuration.HostUIHandler;
+            CaptureHandler = captureHandler;
 
             HostFileSystem = new HostFileSystem(configuration.EnableHostFsBuffering,
                                                 configuration.EnableHostFsBufferingPrefetch,

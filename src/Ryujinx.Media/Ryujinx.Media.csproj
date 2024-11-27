@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FFmpeg.AutoGen.Bindings.DynamicallyLoaded" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ryujinx.Common\Ryujinx.Common.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,6 +1,7 @@
 using OpenTK.Audio.OpenAL;
 using Ryujinx.Audio.Common;
 using Ryujinx.Audio.Integration;
+using Ryujinx.Media.Capture;
 using Ryujinx.Memory;
 using System;
 using System.Collections.Concurrent;
@@ -73,7 +74,7 @@ namespace Ryujinx.Audio.Backends.OpenAL
             }
         }
 
-        public IHardwareDeviceSession OpenDeviceSession(Direction direction, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
+        public IHardwareDeviceSession OpenDeviceSession(Direction direction, CaptureHandler captureHandler, IVirtualMemoryManager memoryManager, SampleFormat sampleFormat, uint sampleRate, uint channelCount)
         {
             if (channelCount == 0)
             {

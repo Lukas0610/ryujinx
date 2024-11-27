@@ -2,7 +2,6 @@ using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using LibHac.Bcat;
 using LibHac.Tools.FsSystem;
 using Ryujinx.Audio.Backends.OpenAL;
 using Ryujinx.Audio.Backends.SDL2;
@@ -26,10 +25,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TimeZone = Ryujinx.Ava.UI.Models.TimeZone;
 
@@ -260,6 +259,66 @@ namespace Ryujinx.Ava.UI.ViewModels
         [ObservableProperty]
         private int _multiplayerModeIndex;
 
+        [ObservableProperty]
+        private bool _captureBeginOnStart;
+
+        [ObservableProperty]
+        private int _captureOutputFormat;
+
+        [ObservableProperty]
+        private int _captureVideoCodec;
+
+        [ObservableProperty]
+        private bool _captureVideoScaleEnabled;
+
+        [ObservableProperty]
+        private int _captureVideoScaleWidth;
+
+        [ObservableProperty]
+        private bool _captureVideoScaleWidthAuto;
+
+        [ObservableProperty]
+        private int _captureVideoScaleHeight;
+
+        [ObservableProperty]
+        private bool _captureVideoScaleHeightAuto;
+
+        [ObservableProperty]
+        private bool _captureVideoUseAuto;
+
+        [ObservableProperty]
+        private bool _captureVideoUseBitrate;
+
+        [ObservableProperty]
+        private long _captureVideoBitrate;
+
+        [ObservableProperty]
+        private bool _captureVideoUseQualityLevel;
+
+        [ObservableProperty]
+        private int _captureVideoQualityLevel;
+
+        [ObservableProperty]
+        private bool _captureVideoUseLossless;
+
+        [ObservableProperty]
+        private int _captureVideoEncoderThreadCount;
+
+        [ObservableProperty]
+        private bool _captureVideoEncoderHardwareAcceleration;
+
+        [ObservableProperty]
+        private bool _captureVideoEncoderHardwareAccelerationAllowNvenc;
+
+        [ObservableProperty]
+        private bool _captureVideoEncoderHardwareAccelerationAllowQsv;
+
+        [ObservableProperty]
+        private bool _captureVideoEncoderHardwareAccelerationAllowVulkan;
+
+        [ObservableProperty]
+        private int _captureAudioCodec;
+
         public float CustomResolutionScale
         {
             get => _customResolutionScale;
@@ -320,8 +379,9 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public bool IsScalingFilterActive
             => ScalingFilter == (int)Ryujinx.Common.Configuration.ScalingFilter.Fsr;
+
         public bool IsVulkanSelected
-        => GraphicsBackendIndex == 0;
+            => GraphicsBackendIndex == 0;
 
         public string ScalingFilterLevelText
             => ScalingFilterLevel.ToString("0");
@@ -482,6 +542,38 @@ namespace Ryujinx.Ava.UI.ViewModels
                     break;
                 case nameof(MultiplayerModeIndex):
                     GameConfig.Multiplayer.Mode.Value = (MultiplayerMode)MultiplayerModeIndex;
+                    break;
+                case nameof(CaptureVideoUseAuto):
+                    if (CaptureVideoUseAuto)
+                    {
+                        CaptureVideoUseBitrate = false;
+                        CaptureVideoUseQualityLevel = false;
+                        CaptureVideoUseLossless = false;
+                    }
+                    break;
+                case nameof(CaptureVideoUseBitrate):
+                    if (CaptureVideoUseBitrate)
+                    {
+                        CaptureVideoUseAuto = false;
+                        CaptureVideoUseQualityLevel = false;
+                        CaptureVideoUseLossless = false;
+                    }
+                    break;
+                case nameof(CaptureVideoUseQualityLevel):
+                    if (CaptureVideoUseQualityLevel)
+                    {
+                        CaptureVideoUseAuto = false;
+                        CaptureVideoUseBitrate = false;
+                        CaptureVideoUseLossless = false;
+                    }
+                    break;
+                case nameof(CaptureVideoUseLossless):
+                    if (CaptureVideoUseLossless)
+                    {
+                        CaptureVideoUseAuto = false;
+                        CaptureVideoUseBitrate = false;
+                        CaptureVideoUseQualityLevel = false;
+                    }
                     break;
             }
         }
@@ -677,8 +769,30 @@ namespace Ryujinx.Ava.UI.ViewModels
             // Network
             EnableInternetAccess = GameConfig.System.EnableInternetAccess;
             // LAN interface index is loaded asynchronously in PopulateNetworkInterfaces()
-
             MultiplayerModeIndex = (int)GameConfig.Multiplayer.Mode.Value;
+
+            // Capture
+            CaptureBeginOnStart = GameConfig.Capture.BeginOnStart.Value;
+            CaptureOutputFormat = (int)GameConfig.Capture.OutputFormat.Value;
+            CaptureVideoCodec = (int)GameConfig.Capture.VideoCodec.Value;
+            CaptureVideoScaleEnabled = GameConfig.Capture.VideoScaleEnabled.Value;
+            CaptureVideoScaleWidth = GameConfig.Capture.VideoScaleWidth.Value;
+            CaptureVideoScaleWidthAuto = GameConfig.Capture.VideoScaleWidthAuto.Value;
+            CaptureVideoScaleHeight = GameConfig.Capture.VideoScaleHeight.Value;
+            CaptureVideoScaleHeightAuto = GameConfig.Capture.VideoScaleHeightAuto.Value;
+            CaptureVideoUseBitrate = GameConfig.Capture.VideoUseBitrate.Value;
+            CaptureVideoBitrate = GameConfig.Capture.VideoBitrate.Value / 1000;
+            CaptureVideoUseQualityLevel = GameConfig.Capture.VideoUseQualityLevel.Value;
+            CaptureVideoQualityLevel = GameConfig.Capture.VideoQualityLevel.Value;
+            CaptureVideoUseLossless = GameConfig.Capture.VideoUseLossless.Value;
+            CaptureVideoEncoderThreadCount = GameConfig.Capture.VideoEncoderThreadCount.Value;
+            CaptureVideoEncoderHardwareAcceleration = GameConfig.Capture.VideoEncoderHardwareAcceleration.Value;
+            CaptureVideoEncoderHardwareAccelerationAllowNvenc = GameConfig.Capture.VideoEncoderHardwareAccelerationAllowNvenc.Value;
+            CaptureVideoEncoderHardwareAccelerationAllowQsv = GameConfig.Capture.VideoEncoderHardwareAccelerationAllowQsv.Value;
+            CaptureVideoEncoderHardwareAccelerationAllowVulkan = GameConfig.Capture.VideoEncoderHardwareAccelerationAllowVulkan.Value;
+            CaptureAudioCodec = (int)GameConfig.Capture.AudioCodec.Value;
+
+            CaptureVideoUseAuto = !CaptureVideoUseBitrate && !CaptureVideoUseQualityLevel && !CaptureVideoUseLossless;
         }
 
         private void ApplyValuesToConfiguration()
@@ -802,6 +916,27 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             GameConfig.Multiplayer.LanInterfaceId.Value = _networkInterfaces[NetworkInterfaceList[NetworkInterfaceIndex]];
             GameConfig.Multiplayer.Mode.Value = (MultiplayerMode)MultiplayerModeIndex;
+
+            // Capture
+            GameConfig.Capture.BeginOnStart.Value = CaptureBeginOnStart;
+            GameConfig.Capture.OutputFormat.Value = (CaptureOutputFormatValue)CaptureOutputFormat;
+            GameConfig.Capture.VideoCodec.Value = (CaptureVideoCodecValue)CaptureVideoCodec;
+            GameConfig.Capture.VideoScaleEnabled.Value = CaptureVideoScaleEnabled;
+            GameConfig.Capture.VideoScaleWidth.Value = CaptureVideoScaleWidth;
+            GameConfig.Capture.VideoScaleWidthAuto.Value = CaptureVideoScaleWidthAuto;
+            GameConfig.Capture.VideoScaleHeight.Value = CaptureVideoScaleHeight;
+            GameConfig.Capture.VideoScaleHeightAuto.Value = CaptureVideoScaleHeightAuto;
+            GameConfig.Capture.VideoUseBitrate.Value = CaptureVideoUseBitrate;
+            GameConfig.Capture.VideoBitrate.Value = CaptureVideoBitrate * 1000;
+            GameConfig.Capture.VideoUseQualityLevel.Value = CaptureVideoUseQualityLevel;
+            GameConfig.Capture.VideoQualityLevel.Value = CaptureVideoQualityLevel;
+            GameConfig.Capture.VideoUseLossless.Value = CaptureVideoUseLossless;
+            GameConfig.Capture.VideoEncoderThreadCount.Value = CaptureVideoEncoderThreadCount;
+            GameConfig.Capture.VideoEncoderHardwareAcceleration.Value = CaptureVideoEncoderHardwareAcceleration;
+            GameConfig.Capture.VideoEncoderHardwareAccelerationAllowNvenc.Value = CaptureVideoEncoderHardwareAccelerationAllowNvenc;
+            GameConfig.Capture.VideoEncoderHardwareAccelerationAllowQsv.Value = CaptureVideoEncoderHardwareAccelerationAllowQsv;
+            GameConfig.Capture.VideoEncoderHardwareAccelerationAllowVulkan.Value = CaptureVideoEncoderHardwareAccelerationAllowVulkan;
+            GameConfig.Capture.AudioCodec.Value = (CaptureAudioCodecValue)CaptureAudioCodec;
 
             MainWindow.UpdateGraphicsConfig(GameConfig);
 
