@@ -26,7 +26,7 @@ namespace ARMeilleure.Translation.PTC
     class Sptc : IPtc
     {
 
-        private const uint InternalVersion = 2; //! To be incremented manually for each change to the ARMeilleure project.
+        private const uint InternalVersion = 3; //! To be incremented manually for each change to the ARMeilleure project.
         private const long DataOffset = 0x1000;
 
         private const int ReportRefreshRate = 50; // ms.
