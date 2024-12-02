@@ -11,6 +11,11 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <EnableWebViewApplet>false</EnableWebViewApplet>
+    <DefineConstants Condition=" '$(EnableWebViewApplet)' == 'true' ">$(DefineConstants);ENABLE_WEBVIEW_APPLET</DefineConstants>
+  </PropertyGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
     <Exec Command="codesign --entitlements '$(ProjectDir)..\..\distribution\macos\entitlements.xml' -f --deep -s $(SigningCertificate) '$(TargetDir)$(TargetName)'" />
   </Target>
@@ -53,7 +58,7 @@
     <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" />
     <PackageReference Include="SPB" />
     <PackageReference Include="SharpZipLib" />
-    <PackageReference Include="WebViewControl-Avalonia" />
+    <PackageReference Include="WebViewControl-Avalonia" Condition=" '$(EnableWebViewApplet)' == 'true' " />
   </ItemGroup>
 
   <ItemGroup>

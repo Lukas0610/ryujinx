@@ -7,7 +7,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:locale="clr-namespace:Ryujinx.Ava.Common.Locale"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:webview="clr-namespace:WebViewControl;assembly=WebViewControl.Avalonia"
     xmlns:views="using:Ryujinx.Ava.UI.Applet"
     Title="{locale:Locale BrowserWindowTitleEmpty}"
     Width="1280"
@@ -17,13 +16,9 @@
     
     <Window.KeyBindings>
         <KeyBinding Gesture="Escape" Command="{Binding Close}" />
-        <KeyBinding Gesture="F12" Command="{Binding ShowWebViewDevTools}" />
+        <KeyBinding Gesture="F12" Command="{Binding ShowWebViewDeveloperTools}" />
     </Window.KeyBindings>
 
-    <webview:WebView x:Name="WebView"
-                     Focusable="True"
-                     AllowDeveloperTools="True"
-                     DisableBuiltinContextMenus="True"
-                     DisableFileDialogs="True "/>
+    <ContentControl x:Name="WebViewContainer" />
     
 </Window>
