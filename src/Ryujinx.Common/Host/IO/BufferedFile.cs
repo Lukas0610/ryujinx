@@ -100,7 +100,7 @@ namespace Ryujinx.Common.Host.IO
             {
                 // Only allow to initialize/open an instance once.
                 // Run this check within the locked region to ensure that all callers have a fully initialized/open instance
-                if (Interlocked.CompareExchange(ref _opened, 0, 1) != 0)
+                if (Interlocked.CompareExchange(ref _opened, 1, 0) != 0)
                     return;
 
                 var fileStreamOptions = _sequentialScan ? FileOptions.SequentialScan : FileOptions.None;
