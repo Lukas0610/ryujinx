@@ -26,9 +26,9 @@ namespace Ryujinx.HLE.UI
         bool DisplayMessageDialog(ControllerAppletUIArgs args);
 
         /// <summary>
-        /// Displays an Input Dialog box to the user and blocks until text is entered.
+        /// Displays an Browser Window to the user and blocks until the window is closed
         /// </summary>
-        /// <returns>True when OK is pressed, False otherwise. Also returns True on internal errors</returns>
+        /// <returns>Returns data to be provided to the calling application</returns>
         BrowserUIResult DisplayBrowserDialog(BrowserUIArgs args);
 
         /// <summary>
