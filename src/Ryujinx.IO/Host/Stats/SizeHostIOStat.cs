@@ -1,6 +1,6 @@
 using Ryujinx.Common.Utilities;
 
-namespace Ryujinx.Common.Host.IO.Stats
+namespace Ryujinx.IO.Host.Stats
 {
 
     public sealed class SizeHostIOStat : IHostIOStat

@@ -1,12 +1,11 @@
-using Ryujinx.Common.Host.IO.Memory;
-using Ryujinx.Common.Host.IO.Stats;
+using Ryujinx.IO.Host.Buffer.Memory;
+using Ryujinx.IO.Host.Stats;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Ryujinx.Common.Host.IO
+namespace Ryujinx.IO.Host.Buffer
 {
 
     public sealed class BufferedFile : IDisposable
@@ -144,7 +143,7 @@ namespace Ryujinx.Common.Host.IO
         /// <param name="progressDelegate"></param>
         /// <returns></returns>
         public bool Prefetch(CancellationToken cancellationToken,
-                             HostFileSystemRequestProgressDelegate progressDelegate)
+                             IOProgressChangedDelegate progressDelegate)
         {
             ObjectDisposedException.ThrowIf(IsDisposed(), this);
 
@@ -221,7 +220,7 @@ namespace Ryujinx.Common.Host.IO
                     long dataDelta = current - lastPosition;
                     double speed = dataDelta / timeDelta.TotalSeconds;
 
-                    progressDelegate(new(Path, current, _length, speed));
+                    progressDelegate(this, new(Path, current, _length, speed));
 
                     lastTime = nowTime;
                     lastPosition = _fileStream.Position;
@@ -230,7 +229,7 @@ namespace Ryujinx.Common.Host.IO
                 {
                     // In case we skip reading parts of the file, still indicate
                     // the file to have been fully read into memory for better UX
-                    progressDelegate(new(Path, _length, _length, 0));
+                    progressDelegate(this, new(Path, _length, _length, 0));
                 }
             }
         }

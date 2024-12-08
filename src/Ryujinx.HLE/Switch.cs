@@ -1,7 +1,7 @@
 using Ryujinx.Audio.Backends.CompatLayer;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common.Configuration;
-using Ryujinx.Common.Host;
+using Ryujinx.IO.Host;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;

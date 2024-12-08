@@ -19,7 +19,7 @@ using Ryujinx.Ava.UI.Renderer;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
-using Ryujinx.Common.Host;
+using Ryujinx.IO.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
@@ -45,6 +45,7 @@ using System.Threading.Tasks;
 using Key = Ryujinx.Input.Key;
 using MissingKeyException = LibHac.Common.Keys.MissingKeyException;
 using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
+using Ryujinx.IO;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
@@ -1265,7 +1266,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             }
         }
 
-        private void DeviceHostFileSystem_RequestProgress(HostFileSystemRequestProgressEventArgs e)
+        private void DeviceHostFileSystem_RequestProgress(object sender, IOProgressChangedEventArgs e)
         {
             Dispatcher.UIThread.Post((() =>
             {
@@ -1365,7 +1366,7 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             IsGameLoading = true;
 
-            AppHost.Device.HostFileSystem.RequestProgress += DeviceHostFileSystem_RequestProgress;
+            AppHost.Device.HostFileSystem.PrefetchProgressChanged += DeviceHostFileSystem_RequestProgress;
 
             if (AppHost?.LoadTitle() == true)
             {

@@ -90,6 +90,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ryujinx.HLE.Generators", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.Media", "src\Ryujinx.Media\Ryujinx.Media.csproj", "{2636D9D6-06F5-4400-88CE-D9B99CEAA1AD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ryujinx.IO", "src\Ryujinx.IO\Ryujinx.IO.csproj", "{3E0B1191-64AC-4233-B6D1-9A3411821201}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -256,6 +258,10 @@ Global
 		{2636D9D6-06F5-4400-88CE-D9B99CEAA1AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2636D9D6-06F5-4400-88CE-D9B99CEAA1AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2636D9D6-06F5-4400-88CE-D9B99CEAA1AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E0B1191-64AC-4233-B6D1-9A3411821201}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E0B1191-64AC-4233-B6D1-9A3411821201}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E0B1191-64AC-4233-B6D1-9A3411821201}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E0B1191-64AC-4233-B6D1-9A3411821201}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,7 @@
-using Ryujinx.Common.Host.IO.Stats;
+using Ryujinx.IO.Host.Stats;
 using System.Collections.Generic;
 
-namespace Ryujinx.Common.Host.IO.Memory
+namespace Ryujinx.IO.Host.Buffer.Memory
 {
 
     public interface IBufferMemoryManager

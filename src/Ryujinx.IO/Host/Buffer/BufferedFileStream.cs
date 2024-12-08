@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace Ryujinx.Common.Host.IO
+namespace Ryujinx.IO.Host.Buffer
 {
 
     internal class BufferedFileStream : Stream

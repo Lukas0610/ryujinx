@@ -1,7 +1,6 @@
-using System.Drawing;
 using System.Threading;
 
-namespace Ryujinx.Common.Host.IO
+namespace Ryujinx.IO.Host.Buffer
 {
 
     public sealed class BufferedFilePage

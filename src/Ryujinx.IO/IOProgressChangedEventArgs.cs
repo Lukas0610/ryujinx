@@ -1,9 +1,9 @@
 using System;
 
-namespace Ryujinx.Common.Host
+namespace Ryujinx.IO
 {
 
-    public sealed class HostFileSystemRequestProgressEventArgs : EventArgs
+    public sealed class IOProgressChangedEventArgs : EventArgs
     {
 
         public string Path { get; }
@@ -14,7 +14,7 @@ namespace Ryujinx.Common.Host
 
         public double Speed { get; }
 
-        internal HostFileSystemRequestProgressEventArgs(string path, long current, long total, double speed)
+        internal IOProgressChangedEventArgs(string path, long current, long total, double speed)
         {
             Path = path;
             Current = current;

@@ -1,7 +1,7 @@
-using Ryujinx.Common.Host.IO.Memory;
+using Ryujinx.IO.Host.Buffer.Memory;
 using System;
 
-namespace Ryujinx.Common.Host.IO
+namespace Ryujinx.IO.Host.Buffer
 {
 
     public sealed class BufferedFileOptions

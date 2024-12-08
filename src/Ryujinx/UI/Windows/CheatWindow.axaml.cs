@@ -2,7 +2,7 @@ using Avalonia.Collections;
 using LibHac.Tools.FsSystem;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Models;
-using Ryujinx.Common.Host;
+using Ryujinx.IO.Host;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
 using Ryujinx.UI.App.Common;

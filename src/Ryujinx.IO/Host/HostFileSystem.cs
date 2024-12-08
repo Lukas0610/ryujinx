@@ -1,6 +1,6 @@
-using Ryujinx.Common.Host.IO;
-using Ryujinx.Common.Host.IO.Memory;
-using Ryujinx.Common.Host.IO.Stats;
+using Ryujinx.IO.Host.Buffer;
+using Ryujinx.IO.Host.Buffer.Memory;
+using Ryujinx.IO.Host.Stats;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace Ryujinx.Common.Host
+namespace Ryujinx.IO.Host
 {
 
     public sealed class HostFileSystem : IDisposable
@@ -24,7 +24,7 @@ namespace Ryujinx.Common.Host
 
         private bool _disposed = false;
 
-        public event HostFileSystemRequestProgressDelegate RequestProgress;
+        public event IOProgressChangedDelegate PrefetchProgressChanged;
 
         public bool RequestsCancelled => _cancellationTokenSource.IsCancellationRequested;
 
@@ -172,7 +172,7 @@ namespace Ryujinx.Common.Host
             {
                 // In case the prefetching failed for reasons other than manual cancellation, fall back to default I/O.
                 // If the failure was due to cancellation, return NULL
-                if (!bufferedFile.Prefetch(cancellationToken, RequestProgress))
+                if (!bufferedFile.Prefetch(cancellationToken, PrefetchProgressChanged))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {

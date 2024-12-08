@@ -1,5 +1,4 @@
 using ARMeilleure.State;
-using Ryujinx.Common.Host.IO.Stats;
 using Ryujinx.Common.Logging;
 using System;
 using System.Collections.Concurrent;

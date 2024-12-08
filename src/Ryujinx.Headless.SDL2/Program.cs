@@ -8,7 +8,7 @@ using Ryujinx.Common.Configuration.Hid.Controller;
 using Ryujinx.Common.Configuration.Hid.Controller.Motion;
 using Ryujinx.Common.Configuration.Hid.Keyboard;
 using Ryujinx.Common.GraphicsDriver;
-using Ryujinx.Common.Host;
+using Ryujinx.IO.Host;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Logging.Targets;
 using Ryujinx.Common.SystemInterop;

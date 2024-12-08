@@ -1,9 +1,8 @@
-using Ryujinx.Common.Collections;
-using Ryujinx.Common.Host.IO.Stats;
+using Ryujinx.IO.Host.Stats;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Ryujinx.Common.Host.IO.Memory
+namespace Ryujinx.IO.Host.Buffer.Memory
 {
 
     /// <summary>
@@ -31,7 +30,7 @@ namespace Ryujinx.Common.Host.IO.Memory
 
         public long NumberOfEvictedPages
         {
-            get => _counterEvictedPages;
+            get => Interlocked.Read(ref _counterEvictedPages);
         }
 
         public PrioritizingRefBufferMemoryManager(long maxSize)
@@ -58,7 +57,7 @@ namespace Ryujinx.Common.Host.IO.Memory
             foreach (IHostIOStat baseStat in base.GetStats())
                 yield return baseStat;
 
-            yield return new CounterHostIOStat("NumberOfEvictedPages", _counterEvictedPages);
+            yield return new CounterHostIOStat("NumberOfEvictedPages", Interlocked.Read(ref _counterEvictedPages));
         }
 
         /// <inheritdoc />
@@ -179,7 +178,7 @@ namespace Ryujinx.Common.Host.IO.Memory
         /// <inheritdoc />
         public bool ShouldEvict()
         {
-            return _maxSize > 0 && _maxSize <= _currentSize;
+            return _maxSize > 0 && _maxSize <= Interlocked.Read(ref _currentSize);
         }
 
         private bool EvictOldestPage()

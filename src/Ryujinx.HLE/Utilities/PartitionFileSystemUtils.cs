@@ -3,7 +3,7 @@ using LibHac.Fs.Fsa;
 using LibHac.FsSystem;
 using LibHac.Tools.Fs;
 using LibHac.Tools.FsSystem;
-using Ryujinx.Common.Host;
+using Ryujinx.IO.Host;
 using Ryujinx.HLE.FileSystem;
 using System.IO;
 
