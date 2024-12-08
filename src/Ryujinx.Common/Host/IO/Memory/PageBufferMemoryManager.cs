@@ -17,12 +17,12 @@ namespace Ryujinx.Common.Host.IO.Memory
 
         public long NumberOfAllocatedPages
         {
-            get => _counterAllocatedPages;
+            get => Interlocked.Read(ref _counterAllocatedPages);
         }
 
         public long SizeOfAllocatedMemory
         {
-            get => _counterAllocatedMemory;
+            get => Interlocked.Read(ref _counterAllocatedMemory);
         }
 
         /// <inheritdoc />
@@ -68,8 +68,8 @@ namespace Ryujinx.Common.Host.IO.Memory
         /// <inheritdoc />
         public virtual IEnumerable<IHostIOStat> GetStats()
         {
-            yield return new CounterHostIOStat("NumberOfAllocatedPages", _counterAllocatedPages);
-            yield return new SizeHostIOStat("SizeOfAllocatedMemory", _counterAllocatedMemory);
+            yield return new CounterHostIOStat("NumberOfAllocatedPages", Interlocked.Read(ref _counterAllocatedPages));
+            yield return new SizeHostIOStat("SizeOfAllocatedMemory", Interlocked.Read(ref _counterAllocatedMemory));
         }
 
     }
