@@ -200,6 +200,12 @@
                     <MenuItem Header="{locale:Locale MenuBarToolsInstallFileTypes}" Click="InstallFileTypes_Click"/>
                     <MenuItem Header="{locale:Locale MenuBarToolsUninstallFileTypes}" Click="UninstallFileTypes_Click"/>
                 </MenuItem>
+                <MenuItem Header="{locale:Locale MenuBarToolsFFmpeg}">
+                    <MenuItem Header="{locale:Locale MenuBarToolsFFmpegShowInformations}" Click="ShowFFmpegInformations_Click"/>
+                    <MenuItem Header="{locale:Locale MenuBarToolsFFmpegDownloadLibraries}" Click="DownloadFFmpegLibraries_Click"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="{locale:Locale MenuBarToolsOpenRuntimesDirectory}" Click="OpenRuntimesDirectory_Click"/>
             </MenuItem>
             <MenuItem VerticalAlignment="Center" Header="{locale:Locale MenuBarView}">
                 <MenuItem VerticalAlignment="Center" Header="{locale:Locale MenuBarViewWindow}">

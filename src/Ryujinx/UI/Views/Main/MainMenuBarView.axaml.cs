@@ -9,16 +9,20 @@ using Ryujinx.Ava.UI.Helpers;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Utilities;
+using Ryujinx.Media;
 using Ryujinx.Modules;
 using Ryujinx.UI.App.Common;
 using Ryujinx.UI.Common;
 using Ryujinx.UI.Common.Configuration;
 using Ryujinx.UI.Common.Helper;
+using Ryujinx.UI.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Ryujinx.Ava.UI.Views.Main
 {
@@ -243,6 +247,69 @@ namespace Ryujinx.Ava.UI.Views.Main
             {
                 await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogUninstallFileTypesErrorMessage]);
             }
+        }
+
+        private async void ShowFFmpegInformations_Click(object sender, RoutedEventArgs e)
+        {
+            if (!FFmpegModule.IsInitialized)
+            {
+                await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogFFmpegNotInstalledMessage], string.Empty, LocaleManager.Instance[LocaleKeys.InputDialogOk], string.Empty, string.Empty);
+                return;
+            }
+
+            string infoText = FFmpegModule.BuildInfoText(FFmpegModuleInfo.Library | FFmpegModuleInfo.Codecs | FFmpegModuleInfo.Formats);
+            await ContentDialogHelper.CreateDebugOutputDialog(infoText, LocaleManager.Instance[LocaleKeys.DialogShowFFmpegInformationsTitle]);
+        }
+
+        private async void DownloadFFmpegLibraries_Click(object sender, RoutedEventArgs e)
+        {
+            if (FFmpegModule.IsInitialized)
+            {
+                await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogDownloadFFmpegLibrariesAlreadyInstalledMessage], string.Empty, LocaleManager.Instance[LocaleKeys.InputDialogOk], string.Empty, string.Empty);
+                return;
+            }
+
+            if (!FFmpegDownloader.CanDownloadOnCurrentPlatform())
+            {
+                await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogDownloadFFmpegLibrariesPlatformNotSupportedMessage], string.Empty, LocaleManager.Instance[LocaleKeys.InputDialogOk], string.Empty, string.Empty);
+                return;
+            }
+
+            FFmpegDownloader downloader = new FFmpegDownloader();
+
+            downloader.RunBackground(FFmpegDownloader.Source.Release);
+
+            await ContentDialogHelper.ShowProgressDialog(
+                LocaleManager.Instance[LocaleKeys.DialogDownloadFFmpegLibrariesTitle],
+                LocaleManager.Instance[LocaleKeys.DialogDownloadFFmpegLibrariesTitle],
+                downloader.ProgressReporter);
+
+            if (downloader.WaitForBackgroundRun())
+            {
+                if (FFmpegModule.Initialize(Program.AppDataNativeRuntimesDirectory))
+                {
+                    ViewModel.RefreshFFmpegModuleState();
+                    await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogDownloadFFmpegLibrariesSuccessMessage], string.Empty, LocaleManager.Instance[LocaleKeys.InputDialogOk], string.Empty, string.Empty);
+                }
+                else
+                {
+                    await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.DialogDownloadFFmpegLibrariesLoadingErrorMessage], string.Empty, LocaleManager.Instance[LocaleKeys.InputDialogOk], string.Empty, string.Empty);
+                }
+            }
+            else
+            {
+                await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance[LocaleKeys.DialogDownloadFFmpegLibrariesDownloadErrorMessage]);
+            }
+        }
+
+        private void OpenRuntimesDirectory_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Directory.Exists(Program.AppDataNativeRuntimesDirectory))
+            {
+                Directory.CreateDirectory(Program.AppDataNativeRuntimesDirectory);
+            }
+
+            OpenHelper.OpenFolder(Program.AppDataNativeRuntimesDirectory);
         }
 
         private async void ChangeWindowSize_Click(object sender, RoutedEventArgs e)

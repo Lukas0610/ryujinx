@@ -9,9 +9,12 @@ using FluentAvalonia.UI.Controls;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Windows;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Utilities;
+using Ryujinx.UI.Helpers;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TextCopy;
 
 namespace Ryujinx.Ava.UI.Helpers
 {
@@ -22,13 +25,14 @@ namespace Ryujinx.Ava.UI.Helpers
 
         private async static Task<UserResult> ShowContentDialog(
              string title,
-             object content,
+             Control content,
              string primaryButton,
              string secondaryButton,
              string closeButton,
              UserResult primaryButtonResult = UserResult.Ok,
              ManualResetEvent deferResetEvent = null,
-             TypedEventHandler<ContentDialog, ContentDialogButtonClickEventArgs> deferCloseAction = null)
+             TypedEventHandler<ContentDialog, ContentDialogButtonClickEventArgs> deferCloseAction = null,
+             double? contentDialogMaxWidth = null)
         {
             UserResult result = UserResult.None;
 
@@ -44,6 +48,11 @@ namespace Ryujinx.Ava.UI.Helpers
                     result = primaryButtonResult;
                 }),
             };
+
+            if (contentDialogMaxWidth.HasValue)
+            {
+                contentDialog.Styles.Resources["ContentDialogMaxWidth"] = contentDialogMaxWidth.Value + 50;
+            }
 
             contentDialog.SecondaryButtonCommand = MiniCommand.Create(() =>
             {
@@ -61,6 +70,199 @@ namespace Ryujinx.Ava.UI.Helpers
             {
                 contentDialog.PrimaryButtonClick += deferCloseAction;
             }
+
+            await ShowAsync(contentDialog);
+
+            return result;
+        }
+
+        public async static Task<UserResult> ShowProgressDialog(
+            string title,
+            string defaultText,
+            UIProgressReporter progressReporter)
+        {
+            UserResult result = UserResult.None;
+
+            Grid content = new()
+            {
+                RowDefinitions = new RowDefinitions { new(), new() },
+                ColumnDefinitions = new ColumnDefinitions { new(GridLength.Auto), new(GridLength.Star) },
+
+                MinWidth = 500,
+                MinHeight = 80,
+            };
+
+            // Icon
+            SymbolIcon icon = new()
+            {
+                Symbol = Symbol.Download,
+                Margin = new Thickness(10),
+                FontSize = 40,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+
+            Grid.SetColumn(icon, 0);
+            Grid.SetRowSpan(icon, 2);
+            Grid.SetRow(icon, 0);
+            content.Children.Add(icon);
+
+            // Text
+            TextBlock textLabel = new()
+            {
+                Text = defaultText ?? "",
+                Margin = new Thickness(5),
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 450,
+            };
+
+            Grid.SetColumn(textLabel, 1);
+            Grid.SetRow(textLabel, 0);
+            content.Children.Add(textLabel);
+
+            //
+            // Progress
+            //
+            Grid progressContent = new()
+            {
+                RowDefinitions = new RowDefinitions { new(), new() },
+                ColumnDefinitions = new ColumnDefinitions { new(GridLength.Star), new(GridLength.Star) }
+            };
+
+            Grid.SetColumn(progressContent, 1);
+            Grid.SetRow(progressContent, 1);
+            content.Children.Add(progressContent);
+
+            // Value Label
+            TextBlock progressValueLabel = new()
+            {
+                Text = "0 / 0",
+                Margin = new Thickness(5),
+                TextAlignment = TextAlignment.Left,
+                TextWrapping = TextWrapping.Wrap,
+            };
+
+            Grid.SetColumn(progressValueLabel, 0);
+            Grid.SetRow(progressValueLabel, 0);
+            progressContent.Children.Add(progressValueLabel);
+
+            // Speed Label
+            TextBlock progressSpeedLabel = new()
+            {
+                Text = "0",
+                Margin = new Thickness(5),
+                TextAlignment = TextAlignment.Right,
+                TextWrapping = TextWrapping.Wrap,
+            };
+
+            Grid.SetColumn(progressSpeedLabel, 1);
+            Grid.SetRow(progressSpeedLabel, 0);
+            progressContent.Children.Add(progressSpeedLabel);
+
+            // Progress-Bar
+            ProgressBar progressBar = new()
+            {
+                Margin = new Thickness(5),
+            };
+
+            Grid.SetColumn(progressBar, 0);
+            Grid.SetColumnSpan(progressBar, 2);
+            Grid.SetRow(progressBar, 1);
+            progressContent.Children.Add(progressBar);
+
+            //
+            // Dialog
+            //
+            ContentDialog contentDialog = new()
+            {
+                Title = title,
+                Content = content,
+                PrimaryButtonText = LocaleManager.Instance[LocaleKeys.InputDialogCancel],
+                PrimaryButtonCommand = MiniCommand.Create(() =>
+                {
+                    progressReporter.Cancel();
+                    result = UserResult.Cancel;
+                }),
+            };
+
+            progressReporter.ProgressChanged += (s, e) =>
+            {
+                Dispatcher.UIThread.Invoke(() =>
+                {
+                    textLabel.Text = !string.IsNullOrEmpty(e.Text) ? e.Text : " ";
+
+                    progressValueLabel.IsVisible = e.HasTotal;
+                    progressSpeedLabel.IsVisible = e.HasSpeed;
+
+                    if (e.HasTotal)
+                    {
+                        switch (progressReporter.Type)
+                        {
+                            case ProgressType.Amount:
+                                progressValueLabel.Text = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogProgressFormatAmountCurrentWithTotal, e.Current, e.Total);
+                                break;
+                            case ProgressType.Bytes:
+                                string current = ReadableStringUtils.FormatSize(e.Current);
+                                string total = ReadableStringUtils.FormatSize(e.Total);
+
+                                progressValueLabel.Text = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogProgressFormatBytesCurrentWithTotal, current, total);
+                                break;
+                        }
+
+                        progressBar.IsIndeterminate = false;
+                        progressBar.Maximum = e.Total;
+                        progressBar.Value = e.Current;
+                    }
+                    else
+                    {
+                        if (e.HasCurrent)
+                        {
+                            switch (progressReporter.Type)
+                            {
+                                case ProgressType.Amount:
+                                    progressValueLabel.Text = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogProgressFormatAmountCurrentOnly, e.Current);
+                                    break;
+                                case ProgressType.Bytes:
+                                    string current = ReadableStringUtils.FormatSize(e.Current);
+
+                                    progressValueLabel.Text = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogProgressFormatBytesCurrentOnly, current);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            progressValueLabel.Text = " ";
+                        }
+
+                        progressBar.IsIndeterminate = true;
+                        progressBar.Maximum = 100;
+                        progressBar.Value = 50;
+                    }
+
+                    if (e.HasSpeed)
+                    {
+                        switch (progressReporter.Type)
+                        {
+                            case ProgressType.Amount:
+                                progressSpeedLabel.Text = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogProgressFormatAmountSpeed, e.Speed);
+                                break;
+                            case ProgressType.Bytes:
+                                string speed = ReadableStringUtils.FormatSize(e.Speed);
+
+                                progressSpeedLabel.Text = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogProgressFormatBytesSpeed, speed);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        progressSpeedLabel.Text = " ";
+                    }
+                });
+            };
+
+            progressReporter.Finished += (s, e) =>
+            {
+                Dispatcher.UIThread.Invoke(() => contentDialog.Hide(ContentDialogResult.None));
+            };
 
             await ShowAsync(contentDialog);
 
@@ -209,6 +411,49 @@ namespace Ryujinx.Ava.UI.Helpers
                 "",
                 closeButton,
                 (int)Symbol.Important);
+        }
+
+        public static async Task<UserResult> CreateDebugOutputDialog(
+            string text,
+            string title)
+        {
+            Grid content = new()
+            {
+                RowDefinitions = new RowDefinitions { new(GridLength.Auto), new() },
+                ColumnDefinitions = new ColumnDefinitions { new(GridLength.Star) },
+
+                Width = 850,
+                MinHeight = 80,
+            };
+
+            Button clipboardButton = new()
+            {
+                Content = LocaleManager.Instance[LocaleKeys.DialogDebugOutputCopyToClipboard],
+                Margin = new Thickness(5),
+            };
+
+            clipboardButton.Click += async (s, e) =>
+            {
+                await ClipboardService.SetTextAsync(text);
+            };
+
+            Grid.SetColumn(clipboardButton, 0);
+            Grid.SetRow(clipboardButton, 0);
+            content.Children.Add(clipboardButton);
+
+            TextBlock textBlock = new()
+            {
+                Text = text,
+                Margin = new Thickness(5),
+                TextWrapping = TextWrapping.Wrap,
+                FontFamily = FontFamily.Parse("Courier New"),
+            };
+
+            Grid.SetColumn(textBlock, 0);
+            Grid.SetRow(textBlock, 1);
+            content.Children.Add(textBlock);
+
+            return await ShowContentDialog(title, content, LocaleManager.Instance[LocaleKeys.InputDialogOk], string.Empty, string.Empty, contentDialogMaxWidth: 850);
         }
 
         internal static async Task<UserResult> CreateConfirmationDialog(

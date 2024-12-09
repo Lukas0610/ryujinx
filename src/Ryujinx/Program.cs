@@ -41,6 +41,8 @@ namespace Ryujinx.Ava
 
         private const int UserAppConfigDepth = 20;
 
+        public static string AppDataNativeRuntimesDirectory { get; private set; }
+
         public static void Main(string[] args)
         {
             Version = ReleaseInformation.Version;
@@ -117,8 +119,10 @@ namespace Ryujinx.Ava
             // Initialize the configuration.
             ConfigurationState.Initialize();
 
+            AppDataNativeRuntimesDirectory = CommonRuntimeInformation.GetNativeRuntimesDirectory(AppDataManager.BaseDirPath);
+
             // Initialize the Ryujinx.Media FFmpeg module
-            FFmpegModule.Initialize(CommonRuntimeInformation.GetNativeRuntimesDirectory(AppDataManager.BaseDirPath));
+            FFmpegModule.Initialize(AppDataNativeRuntimesDirectory);
 
             // Initialize the logger system.
             LoggerModule.Initialize();

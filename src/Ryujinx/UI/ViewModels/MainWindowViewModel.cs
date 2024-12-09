@@ -46,6 +46,7 @@ using Key = Ryujinx.Input.Key;
 using MissingKeyException = LibHac.Common.Keys.MissingKeyException;
 using ShaderCacheLoadingState = Ryujinx.Graphics.Gpu.Shader.ShaderCacheState;
 using Ryujinx.IO;
+using Ryujinx.Media;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
@@ -1102,6 +1103,8 @@ namespace Ryujinx.Ava.UI.ViewModels
         public bool CanStartCapture => CaptureHandlerEnabled && !CaptureHandlerRunning;
         public bool CanStopCapture => CaptureHandlerEnabled && CaptureHandlerRunning;
 
+        public bool FFmpegModuleIsInitialized => FFmpegModule.IsInitialized;
+
         #endregion
 
         #region PrivateMethods
@@ -2123,6 +2126,11 @@ namespace Ryujinx.Ava.UI.ViewModels
                     XCIFileTrimThread.Start();
                 }
             }
+        }
+
+        public void RefreshFFmpegModuleState()
+        {
+            OnPropertyChanged(nameof(FFmpegModuleIsInitialized));
         }
 
         #endregion
